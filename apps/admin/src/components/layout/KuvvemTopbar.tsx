@@ -2,6 +2,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { Search, Command as CmdIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { kullanCmdKStore } from "@/hooks/use-cmd-k";
+import { MobilMenuButon } from "./KuvvemSidebar";
 import { KuvvemKullaniciMenu } from "./KuvvemKullaniciMenu";
 import { KuvvemBildirimMenu } from "./KuvvemBildirimMenu";
 
@@ -12,7 +13,10 @@ export function KuvvemTopbar() {
   const parcalar = yol.split("/").filter(Boolean);
 
   return (
-    <header className="sticky top-0 z-[30] flex h-14 items-center gap-3 border-b border-kenarlik bg-yuzey-yukseltilmis/80 px-4 backdrop-blur-md">
+    <header className="sticky top-0 z-[30] flex h-14 items-center gap-3 border-b border-kenarlik bg-yuzey/80 px-4 backdrop-blur-md">
+      {/* Mobile hamburger */}
+      <MobilMenuButon />
+
       {/* Breadcrumb */}
       <nav aria-label="Konum" className="flex items-center gap-1.5 text-[13px]">
         <span className="text-metin-ikinci">Kuvvem</span>
@@ -39,7 +43,7 @@ export function KuvvemTopbar() {
         )}
       </nav>
 
-      {/* Arama (Cmd+K tetikleyici) */}
+      {/* Arama (Cmd+K) */}
       <button
         type="button"
         onClick={ac}

@@ -241,6 +241,60 @@
   }
 }
 
+/* ─── Sidebar Styles (KIS pattern) ─── */
+
+@layer components {
+  .sidebar-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    color: var(--renk-metin-ikinci);
+  }
+
+  .sidebar-item:hover {
+    background: color-mix(in oklch, var(--renk-birincil) 10%, transparent);
+    color: var(--renk-metin);
+  }
+
+  .sidebar-item.active {
+    background: color-mix(in oklch, var(--renk-birincil) 15%, transparent);
+    color: var(--renk-birincil);
+  }
+
+  .sidebar-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 1.5rem;
+    border-radius: 0 9999px 9999px 0;
+    background: var(--renk-birincil);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--renk-kenarlik);
+    border-radius: 9999px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--renk-kenarlik-guclu);
+  }
+}
+
 /* Scrollbar — Linear tarzı ince */
 @layer base {
   ::-webkit-scrollbar {
