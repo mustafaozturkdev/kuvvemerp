@@ -53,7 +53,7 @@ export const kullanAuthStore = create<AuthDurum>()(
 
           // /me -> kullanici bilgisi al
           const meCevap = await apiIstemci.get<{
-            kullanici: { id: string; email: string; roller: string[] };
+            kullanici: { id: string; email: string; ad: string; soyad: string; adSoyad: string; roller: string[] };
             tenant: { id: string; slug: string };
           }>("/auth/me", { headers: { Authorization: `Bearer ${accessToken}` } });
 
@@ -61,7 +61,7 @@ export const kullanAuthStore = create<AuthDurum>()(
           const kullanici: Kullanici = {
             id: 0,
             publicId: me.kullanici.id,
-            adSoyad: "",
+            adSoyad: me.kullanici.adSoyad || me.kullanici.email,
             email: me.kullanici.email,
             rol: me.kullanici.roller[0] ?? "kullanici",
             izinler: [],

@@ -1,7 +1,8 @@
 import { useRouterState } from "@tanstack/react-router";
-import { Search, Command as CmdIcon } from "lucide-react";
+import { Search, Command as CmdIcon, Sun, Moon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { kullanCmdKStore } from "@/hooks/use-cmd-k";
+import { kullanTema } from "@/hooks/use-tema";
 import { MobilMenuButon } from "./KuvvemSidebar";
 import { KuvvemKullaniciMenu } from "./KuvvemKullaniciMenu";
 import { KuvvemBildirimMenu } from "./KuvvemBildirimMenu";
@@ -10,6 +11,7 @@ export function KuvvemTopbar() {
   const { t } = useTranslation();
   const yol = useRouterState({ select: (s) => s.location.pathname });
   const ac = kullanCmdKStore((s) => s.ac);
+  const { tema, temaToggle } = kullanTema();
   const parcalar = yol.split("/").filter(Boolean);
 
   return (
@@ -55,6 +57,15 @@ export function KuvvemTopbar() {
         <kbd className="ml-auto hidden items-center gap-0.5 rounded border border-kenarlik bg-yuzey-yukseltilmis px-1.5 py-0.5 font-mono text-[10px] md:inline-flex">
           <CmdIcon className="h-3 w-3" />K
         </kbd>
+      </button>
+
+      {/* Tema toggle */}
+      <button
+        onClick={temaToggle}
+        className="p-2 rounded-lg hover:bg-yuzey-yukseltilmis transition-colors"
+        title={tema === "koyu" ? "Acik tema" : "Koyu tema"}
+      >
+        {tema === "koyu" ? <Sun className="h-4 w-4 text-metin-ikinci" /> : <Moon className="h-4 w-4 text-metin-ikinci" />}
       </button>
 
       <KuvvemBildirimMenu />

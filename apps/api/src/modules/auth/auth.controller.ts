@@ -72,11 +72,31 @@ export class AuthController {
   async me(
     @Tenant() tenant: TenantBilgi,
     @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Req() req: FastifyRequest,
   ) {
+    // JWT'de email yok — DB'den cek
+    let email = kullanici.email || '';
+    let ad = '';
+    let soyad = '';
+    if (req.prisma) {
+      const dbKullanici = await req.prisma.kullanici.findUnique({
+        where: { publicId: kullanici.publicId },
+        select: { email: true, ad: true, soyad: true },
+      });
+      if (dbKullanici) {
+        email = dbKullanici.email;
+        ad = dbKullanici.ad;
+        soyad = dbKullanici.soyad;
+      }
+    }
+
     return {
       kullanici: {
         id: kullanici.publicId,
-        email: kullanici.email,
+        email,
+        ad,
+        soyad,
+        adSoyad: `${ad} ${soyad}`.trim(),
         roller: kullanici.roller,
       },
       tenant: {

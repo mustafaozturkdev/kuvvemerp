@@ -52,7 +52,7 @@ async function bootstrap(): Promise<void> {
   const { TenantService } = await import('./tenant/tenant.service.js');
   const tenantService = app.get(TenantService);
 
-  fastifyInstance.addHook('onRequest', async (req: any) => {
+  fastifyInstance.addHook('onRequest', async (req: any, reply: any) => {
     req.istekId = req.id;
 
     // Saglik + root bypass
@@ -71,9 +71,12 @@ async function bootstrap(): Promise<void> {
       req.tenant = tenant;
       req.prisma = client;
     } catch (err: any) {
-      // Auth endpoint'leri @Public, tenant olmadan da geçmemeli
-      // Hata middleware'de next(err) yerine burada set ediyoruz
-      req.tenantHata = err;
+      req.raw.statusCode = 404;
+      return reply.status(404).send({
+        veri: null,
+        hata: { kod: 'TENANT_BULUNAMADI', mesaj: err.message ?? 'Tenant bulunamadi' },
+        meta: { istekId: req.id },
+      });
     }
   });
 
