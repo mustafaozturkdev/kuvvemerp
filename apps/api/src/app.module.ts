@@ -18,6 +18,7 @@ import { SaglikModule } from './modules/saglik/saglik.module.js';
 import { SistemAyarModule } from './modules/sistem-ayar/sistem-ayar.module.js';
 import { MagazaModule } from './modules/magaza/magaza.module.js';
 import { YetkiModule } from './modules/yetki/yetki.module.js';
+import { PersonelModule } from './modules/personel/personel.module.js';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { YetkiModule } from './modules/yetki/yetki.module.js';
     SistemAyarModule,
     MagazaModule,
     YetkiModule,
+    PersonelModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

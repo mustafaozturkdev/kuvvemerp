@@ -148,6 +148,29 @@ export const KOMUT_LISTESI: Komut[] = [
     hedef: "/fatura",
   },
 
+  // Personel
+  {
+    id: "goto-personel",
+    etiket: "Personel",
+    ikon: Users,
+    grup: "sayfa",
+    grupBaslik: "Sayfalar",
+    kisayol: ["G", "P"],
+    hedef: "/ayarlar/personel",
+    izin: "personel.goruntule",
+    anahtarKelime: ["personel", "calisan", "staff"],
+  },
+  {
+    id: "yeni-personel",
+    etiket: "Yeni Personel",
+    ikon: UserPlus,
+    grup: "hizli-eylem",
+    grupBaslik: "Hizli Eylemler",
+    hedef: "/ayarlar/personel",
+    izin: "personel.yonet",
+    anahtarKelime: ["personel", "calisan", "ekle"],
+  },
+
   // Sistem
   {
     id: "tema-degistir",

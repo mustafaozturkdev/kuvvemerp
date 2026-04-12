@@ -1,12 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { MagazaOlusturGirdi, MagazaGuncelleGirdi } from '@kuvvem/contracts';
 import { TenantClient } from '@kuvvem/database';
-
-// PHP parity alanlar
-const MAGAZA_ALANLARI = [
-  'kod', 'ad', 'tip', 'adres', 'telefon', 'cep', 'email', 'ip',
-  'instagram', 'eFaturaOnEk', 'eArsivOnEk', 'paraBirimiKod',
-  'ilAdi', 'ilceAdi', 'ulkeKodu', 'harita',
-] as const;
 
 @Injectable()
 export class MagazaService {
@@ -54,44 +48,51 @@ export class MagazaService {
     return m;
   }
 
-  async olustur(prisma: TenantClient, girdi: Record<string, unknown>, olusturanId: bigint) {
+  async olustur(prisma: TenantClient, girdi: MagazaOlusturGirdi, olusturanId: bigint) {
     const firma = await prisma.firma.findFirst();
-    const g = girdi as any;
     return prisma.magaza.create({
       data: {
         firmaId: firma!.id,
-        kod: g.kod,
-        ad: g.ad,
-        tip: g.tip ?? 'sube',
-        ilAdi: g.ilAdi ?? null,
-        ilceAdi: g.ilceAdi ?? null,
-        adres: g.adres ?? null,
-        telefon: g.telefon ?? null,
-        cep: g.cep ?? null,
-        email: g.email ?? null,
-        ip: g.ip ?? null,
-        instagram: g.instagram ?? null,
-        eFaturaOnEk: g.eFaturaOnEk ?? null,
-        eArsivOnEk: g.eArsivOnEk ?? null,
-        harita: g.harita ?? null,
-        paraBirimiKod: g.paraBirimiKod ?? 'TRY',
-        ulkeKodu: g.ulkeKodu ?? 'TR',
+        kod: girdi.kod,
+        ad: girdi.ad,
+        tip: girdi.tip ?? 'sube',
+        ilAdi: girdi.ilAdi ?? null,
+        ilceAdi: girdi.ilceAdi ?? null,
+        adres: girdi.adres ?? null,
+        telefon: girdi.telefon ?? null,
+        cep: girdi.cep ?? null,
+        email: girdi.email ?? null,
+        ip: girdi.ip ?? null,
+        instagram: girdi.instagram ?? null,
+        eFaturaOnEk: girdi.eFaturaOnEk ?? null,
+        eArsivOnEk: girdi.eArsivOnEk ?? null,
+        harita: girdi.harita ?? null,
+        paraBirimiKod: girdi.paraBirimiKod ?? 'TRY',
+        ulkeKodu: girdi.ulkeKodu ?? 'TR',
         olusturanKullaniciId: olusturanId,
       },
     });
   }
 
-  async guncelle(prisma: TenantClient, id: number, girdi: Record<string, unknown>, guncelleyenId: bigint) {
+  async guncelle(prisma: TenantClient, id: number, girdi: MagazaGuncelleGirdi, guncelleyenId: bigint) {
     await this.detay(prisma, id);
-    const data: Record<string, unknown> = { guncelleyenKullaniciId: guncelleyenId };
-    for (const alan of MAGAZA_ALANLARI) {
-      if (girdi[alan] !== undefined) {
-        data[alan] = girdi[alan];
-      }
-    }
     return prisma.magaza.update({
       where: { id: BigInt(id) },
-      data,
+      data: {
+        ...girdi,
+        guncelleyenKullaniciId: guncelleyenId,
+      },
+    });
+  }
+
+  async aktiflikToggle(prisma: TenantClient, id: number, guncelleyenId: bigint) {
+    const m = await this.detay(prisma, id);
+    return prisma.magaza.update({
+      where: { id: BigInt(id) },
+      data: {
+        aktifMi: !m.aktifMi,
+        guncelleyenKullaniciId: guncelleyenId,
+      },
     });
   }
 }

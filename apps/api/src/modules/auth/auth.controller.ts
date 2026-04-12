@@ -74,19 +74,56 @@ export class AuthController {
     @CurrentKullanici() kullanici: KullaniciBilgi,
     @Req() req: FastifyRequest,
   ) {
-    // JWT'de email yok — DB'den cek
     let email = kullanici.email || '';
     let ad = '';
     let soyad = '';
+    let yetkiKodlari: string[] = [];
+    let magazalar: Array<{ id: bigint; kod: string; ad: string; varsayilanMi: boolean }> = [];
+
     if (req.prisma) {
       const dbKullanici = await req.prisma.kullanici.findUnique({
         where: { publicId: kullanici.publicId },
-        select: { email: true, ad: true, soyad: true },
+        select: {
+          id: true,
+          email: true,
+          ad: true,
+          soyad: true,
+          roller: {
+            select: {
+              rol: {
+                select: {
+                  kod: true,
+                  yetkiler: { select: { yetki: { select: { kod: true } } } },
+                },
+              },
+            },
+          },
+          magazalar: {
+            select: {
+              varsayilanMi: true,
+              magaza: { select: { id: true, kod: true, ad: true } },
+            },
+          },
+        },
       });
       if (dbKullanici) {
         email = dbKullanici.email;
         ad = dbKullanici.ad;
         soyad = dbKullanici.soyad;
+        // Tum roller uzerinden benzersiz yetki kodlarini topla
+        const yetkiSet = new Set<string>();
+        for (const kr of dbKullanici.roller) {
+          for (const ry of kr.rol.yetkiler) {
+            yetkiSet.add(ry.yetki.kod);
+          }
+        }
+        yetkiKodlari = Array.from(yetkiSet).sort();
+        magazalar = dbKullanici.magazalar.map((m) => ({
+          id: m.magaza.id,
+          kod: m.magaza.kod,
+          ad: m.magaza.ad,
+          varsayilanMi: m.varsayilanMi,
+        }));
       }
     }
 
@@ -98,6 +135,8 @@ export class AuthController {
         soyad,
         adSoyad: `${ad} ${soyad}`.trim(),
         roller: kullanici.roller,
+        yetkiler: yetkiKodlari,
+        magazalar,
       },
       tenant: {
         id: tenant.id,

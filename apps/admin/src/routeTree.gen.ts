@@ -16,6 +16,7 @@ import { Route as YetkiliUrunListeRouteImport } from './routes/_yetkili.urun.lis
 import { Route as YetkiliCariListeRouteImport } from './routes/_yetkili.cari.liste'
 import { Route as YetkiliCariCariIdRouteImport } from './routes/_yetkili.cari.$cariId'
 import { Route as YetkiliAyarlarRollerRouteImport } from './routes/_yetkili.ayarlar.roller'
+import { Route as YetkiliAyarlarPersonelRouteImport } from './routes/_yetkili.ayarlar.personel'
 import { Route as YetkiliAyarlarKullanicilarRouteImport } from './routes/_yetkili.ayarlar.kullanicilar'
 import { Route as YetkiliAyarlarGenelRouteImport } from './routes/_yetkili.ayarlar.genel'
 import { Route as YetkiliAyarlarFirmaSubelerRouteImport } from './routes/_yetkili.ayarlar.firma.subeler'
@@ -55,6 +56,11 @@ const YetkiliAyarlarRollerRoute = YetkiliAyarlarRollerRouteImport.update({
   path: '/ayarlar/roller',
   getParentRoute: () => YetkiliRoute,
 } as any)
+const YetkiliAyarlarPersonelRoute = YetkiliAyarlarPersonelRouteImport.update({
+  id: '/ayarlar/personel',
+  path: '/ayarlar/personel',
+  getParentRoute: () => YetkiliRoute,
+} as any)
 const YetkiliAyarlarKullanicilarRoute =
   YetkiliAyarlarKullanicilarRouteImport.update({
     id: '/ayarlar/kullanicilar',
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/giris': typeof GirisRoute
   '/ayarlar/genel': typeof YetkiliAyarlarGenelRoute
   '/ayarlar/kullanicilar': typeof YetkiliAyarlarKullanicilarRoute
+  '/ayarlar/personel': typeof YetkiliAyarlarPersonelRoute
   '/ayarlar/roller': typeof YetkiliAyarlarRollerRoute
   '/cari/$cariId': typeof YetkiliCariCariIdRoute
   '/cari/liste': typeof YetkiliCariListeRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/': typeof YetkiliIndexRoute
   '/ayarlar/genel': typeof YetkiliAyarlarGenelRoute
   '/ayarlar/kullanicilar': typeof YetkiliAyarlarKullanicilarRoute
+  '/ayarlar/personel': typeof YetkiliAyarlarPersonelRoute
   '/ayarlar/roller': typeof YetkiliAyarlarRollerRoute
   '/cari/$cariId': typeof YetkiliCariCariIdRoute
   '/cari/liste': typeof YetkiliCariListeRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/_yetkili/': typeof YetkiliIndexRoute
   '/_yetkili/ayarlar/genel': typeof YetkiliAyarlarGenelRoute
   '/_yetkili/ayarlar/kullanicilar': typeof YetkiliAyarlarKullanicilarRoute
+  '/_yetkili/ayarlar/personel': typeof YetkiliAyarlarPersonelRoute
   '/_yetkili/ayarlar/roller': typeof YetkiliAyarlarRollerRoute
   '/_yetkili/cari/$cariId': typeof YetkiliCariCariIdRoute
   '/_yetkili/cari/liste': typeof YetkiliCariListeRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/giris'
     | '/ayarlar/genel'
     | '/ayarlar/kullanicilar'
+    | '/ayarlar/personel'
     | '/ayarlar/roller'
     | '/cari/$cariId'
     | '/cari/liste'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ayarlar/genel'
     | '/ayarlar/kullanicilar'
+    | '/ayarlar/personel'
     | '/ayarlar/roller'
     | '/cari/$cariId'
     | '/cari/liste'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/_yetkili/'
     | '/_yetkili/ayarlar/genel'
     | '/_yetkili/ayarlar/kullanicilar'
+    | '/_yetkili/ayarlar/personel'
     | '/_yetkili/ayarlar/roller'
     | '/_yetkili/cari/$cariId'
     | '/_yetkili/cari/liste'
@@ -213,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof YetkiliAyarlarRollerRouteImport
       parentRoute: typeof YetkiliRoute
     }
+    '/_yetkili/ayarlar/personel': {
+      id: '/_yetkili/ayarlar/personel'
+      path: '/ayarlar/personel'
+      fullPath: '/ayarlar/personel'
+      preLoaderRoute: typeof YetkiliAyarlarPersonelRouteImport
+      parentRoute: typeof YetkiliRoute
+    }
     '/_yetkili/ayarlar/kullanicilar': {
       id: '/_yetkili/ayarlar/kullanicilar'
       path: '/ayarlar/kullanicilar'
@@ -248,6 +267,7 @@ interface YetkiliRouteChildren {
   YetkiliIndexRoute: typeof YetkiliIndexRoute
   YetkiliAyarlarGenelRoute: typeof YetkiliAyarlarGenelRoute
   YetkiliAyarlarKullanicilarRoute: typeof YetkiliAyarlarKullanicilarRoute
+  YetkiliAyarlarPersonelRoute: typeof YetkiliAyarlarPersonelRoute
   YetkiliAyarlarRollerRoute: typeof YetkiliAyarlarRollerRoute
   YetkiliCariCariIdRoute: typeof YetkiliCariCariIdRoute
   YetkiliCariListeRoute: typeof YetkiliCariListeRoute
@@ -260,6 +280,7 @@ const YetkiliRouteChildren: YetkiliRouteChildren = {
   YetkiliIndexRoute: YetkiliIndexRoute,
   YetkiliAyarlarGenelRoute: YetkiliAyarlarGenelRoute,
   YetkiliAyarlarKullanicilarRoute: YetkiliAyarlarKullanicilarRoute,
+  YetkiliAyarlarPersonelRoute: YetkiliAyarlarPersonelRoute,
   YetkiliAyarlarRollerRoute: YetkiliAyarlarRollerRoute,
   YetkiliCariCariIdRoute: YetkiliCariCariIdRoute,
   YetkiliCariListeRoute: YetkiliCariListeRoute,

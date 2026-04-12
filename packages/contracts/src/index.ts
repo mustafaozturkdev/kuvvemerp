@@ -4,3 +4,5 @@ export * from './kullanici.js';
 export * from './cari.js';
 export * from './ortak.js';
 export * from './sistem.js';
+export * from './magaza.js';
+export * from './personel.js';

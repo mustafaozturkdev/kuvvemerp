@@ -38,6 +38,19 @@ model SistemAyar {
   haftaningunuBaslangic   Int       @default(1) @map("haftaningunu_baslangic") @db.SmallInt
   tema                    String    @default("sistem") @db.VarChar(20)
   markaRengi              String?   @map("marka_rengi") @db.VarChar(20)
+  // Firma iletisim & konum (PHP parity — K3 fix)
+  kisaAd                  String?   @map("kisa_ad") @db.VarChar(100)
+  sahipAdi                String?   @map("sahip_adi") @db.VarChar(200)
+  email                   String?   @db.Citext
+  bildirimEmail           String?   @map("bildirim_email") @db.Citext
+  telefon                 String?   @db.VarChar(30)
+  cep                     String?   @db.VarChar(30)
+  faks                    String?   @db.VarChar(30)
+  il                      String?   @db.VarChar(50)
+  ilce                    String?   @db.VarChar(50)
+  adres                   String?   @db.Text
+  vergiDairesi            String?   @map("vergi_dairesi") @db.VarChar(100)
+  vergiNo                 String?   @map("vergi_no") @db.VarChar(50)
   moduller                Json      @default("{}") @db.JsonB
   numaraSerileri          Json      @default("{}") @map("numara_serileri") @db.JsonB
   eFaturaAyar             Json      @default("{}") @map("e_fatura_ayar") @db.JsonB
@@ -132,6 +145,9 @@ model Kullanici {
   auditLoglar               AuditLog[]
   sistemAyarVersiyonlari    SistemAyarVersiyon[]         @relation("SistemAyarVersiyonOlusturan")
   ikiFaYedekKullanimlar     Kullanici2FaYedekKullanim[]
+  personelOlusturanlar      Personel[]                   @relation("personelOlusturan")
+  personelGuncelleyenler    Personel[]                   @relation("personelGuncelleyen")
+  personelOdemeOlusturanlar PersonelOdeme[]               @relation("personelOdemeOlusturan")
 
   @@map("kullanici")
 }
@@ -937,6 +953,7 @@ model Magaza {
   belgeNumaraSerileri BelgeNumaraSerisi[]
   siparisler          Siparis[]
   stoklar             UrunStok[]
+  personeller         PersonelMagaza[]
 
   @@unique([firmaId, kod])
   @@map("magaza")
@@ -4969,6 +4986,67 @@ model ApiCagriLog {
   @@map("api_cagri_log")
 }
 
+// ================================================================
+// MODUL 17 — PERSONEL
+// ================================================================
+
+model Personel {
+  id                      BigInt    @id @default(autoincrement())
+  publicId                String    @unique @default(uuid()) @map("public_id") @db.Uuid
+  adiSoyadi               String    @map("adi_soyadi") @db.VarChar(200)
+  tc                      String?   @db.Char(11)
+  unvan                   String?   @db.VarChar(100)
+  cep                     String?   @db.VarChar(15)
+  mailAdresi              String?   @map("mail_adresi") @db.Citext
+  iseGiris                DateTime? @map("ise_giris") @db.Date
+  istenCikis              DateTime? @map("isten_cikis") @db.Date
+  maas                    Decimal   @default(0) @db.Decimal(15, 2)
+  maasGunu                Int       @default(1) @map("maas_gunu") @db.SmallInt
+  iban                    String?   @db.VarChar(34)
+  aktifMi                 Boolean   @default(true) @map("aktif_mi")
+  olusturanKullaniciId    BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId  BigInt?   @map("guncelleyen_kullanici_id")
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  olusturanKullanici Kullanici? @relation("personelOlusturan", fields: [olusturanKullaniciId], references: [id], onDelete: SetNull)
+  guncelleyenKullanici Kullanici? @relation("personelGuncelleyen", fields: [guncelleyenKullaniciId], references: [id], onDelete: SetNull)
+  magazalar          PersonelMagaza[]
+  odemeler           PersonelOdeme[]
+
+  @@map("personel")
+}
+
+model PersonelMagaza {
+  id                      BigInt   @id @default(autoincrement())
+  personelId              BigInt   @map("personel_id")
+  magazaId                BigInt   @map("magaza_id")
+  olusturmaTarihi         DateTime @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  personel Personel @relation(fields: [personelId], references: [id], onDelete: Cascade)
+  magaza   Magaza   @relation(fields: [magazaId], references: [id], onDelete: Cascade)
+
+  @@unique([personelId, magazaId])
+  @@map("personel_magaza")
+}
+
+model PersonelOdeme {
+  id                      BigInt   @id @default(autoincrement())
+  publicId                String   @unique @default(uuid()) @map("public_id") @db.Uuid
+  personelId              BigInt   @map("personel_id")
+  tip                     String   @db.VarChar(20) // hakedis, odeme, mahsup
+  tutar                   Decimal  @db.Decimal(15, 2)
+  aciklama                String?  @db.Text
+  tarih                   DateTime @db.Date
+  olusturanKullaniciId    BigInt?  @map("olusturan_kullanici_id")
+  olusturmaTarihi         DateTime @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  personel Personel   @relation(fields: [personelId], references: [id], onDelete: Cascade)
+  olusturanKullanici Kullanici? @relation("personelOdemeOlusturan", fields: [olusturanKullaniciId], references: [id], onDelete: SetNull)
+
+  @@map("personel_odeme")
+}
+
 // ============================================================
-// SON — TUM 16 MODUL TAMAMLANDI
+// SON — TUM 17 MODUL TAMAMLANDI
 // ============================================================

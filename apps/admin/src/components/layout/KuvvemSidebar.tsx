@@ -133,6 +133,11 @@ const MENU: MenuOge[] = [
       { baslik: "Mizan", hedef: "/muhasebe/mizan", ikon: BarChart3 },
     ],
   },
+  {
+    baslik: "Personel",
+    hedef: "/ayarlar/personel",
+    ikon: Users,
+  },
   { baslik: "Raporlar", hedef: "/rapor", ikon: BarChart3 },
   {
     baslik: "Ayarlar",

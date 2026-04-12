@@ -53,18 +53,25 @@ export const kullanAuthStore = create<AuthDurum>()(
 
           // /me -> kullanici bilgisi al
           const meCevap = await apiIstemci.get<{
-            kullanici: { id: string; email: string; ad: string; soyad: string; adSoyad: string; roller: string[] };
+            kullanici: {
+              id: string; email: string; ad: string; soyad: string; adSoyad: string;
+              roller: string[]; yetkiler: string[];
+              magazalar: Array<{ id: number; kod: string; ad: string; varsayilanMi: boolean }>;
+            };
             tenant: { id: string; slug: string };
           }>("/auth/me", { headers: { Authorization: `Bearer ${accessToken}` } });
 
           const me = meCevap.data;
+          const varsayilanMagaza = me.kullanici.magazalar?.find((m) => m.varsayilanMi);
           const kullanici: Kullanici = {
             id: 0,
             publicId: me.kullanici.id,
             adSoyad: me.kullanici.adSoyad || me.kullanici.email,
             email: me.kullanici.email,
             rol: me.kullanici.roller[0] ?? "kullanici",
-            izinler: [],
+            izinler: me.kullanici.yetkiler ?? [],
+            magazalar: me.kullanici.magazalar ?? [],
+            aktifMagazaId: varsayilanMagaza?.id ?? null,
           };
           set({
             accessToken,

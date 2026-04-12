@@ -1,8 +1,10 @@
 import { Body, Controller, Get, Put, Req } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
+import { SistemAyarGuncelleGirdi, SistemAyarGuncelleSemasi } from '@kuvvem/contracts';
 import { SistemAyarService } from './sistem-ayar.service.js';
 import { CurrentKullanici } from '../../common/decorators/kullanici.decorator.js';
 import { RequireYetki } from '../../common/decorators/yetki.decorator.js';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import type { KullaniciBilgi } from '../../common/types/request.js';
 
 @Controller('api/v1/ayar')
@@ -20,8 +22,8 @@ export class SistemAyarController {
   async guncelle(
     @Req() req: FastifyRequest,
     @CurrentKullanici() kullanici: KullaniciBilgi,
-    @Body() girdi: Record<string, unknown>,
+    @Body(new ZodValidationPipe(SistemAyarGuncelleSemasi)) girdi: SistemAyarGuncelleGirdi,
   ) {
-    return this.sistemAyarService.guncelle(req.prisma!, girdi as any, kullanici.id);
+    return this.sistemAyarService.guncelle(req.prisma!, girdi, kullanici.id);
   }
 }

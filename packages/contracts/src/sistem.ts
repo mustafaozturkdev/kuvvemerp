@@ -12,12 +12,38 @@ export type RolOlusturGirdi = z.infer<typeof RolOlusturSemasi>;
 export const RolGuncelleSemasi = RolOlusturSemasi.partial();
 export type RolGuncelleGirdi = z.infer<typeof RolGuncelleSemasi>;
 
-// ─── Sistem Ayar ───
+// ─── Sistem Ayar (Firma bilgileri dahil) ───
 
 export const SistemAyarGuncelleSemasi = z.object({
-  anahtar: z.string(),
-  deger: z.string(),
-});
+  firmaAdi: z.string().max(200).optional(),
+  kisaAd: z.string().max(100).optional().nullable(),
+  sahipAdi: z.string().max(200).optional().nullable(),
+  firmaLogoUrl: z.string().max(500).optional().nullable(),
+  firmaFaviconUrl: z.string().max(500).optional().nullable(),
+  // Iletisim
+  email: z.string().email().optional().nullable(),
+  bildirimEmail: z.string().email().optional().nullable(),
+  telefon: z.string().max(30).optional().nullable(),
+  cep: z.string().max(30).optional().nullable(),
+  faks: z.string().max(30).optional().nullable(),
+  // Konum
+  il: z.string().max(50).optional().nullable(),
+  ilce: z.string().max(50).optional().nullable(),
+  adres: z.string().max(500).optional().nullable(),
+  // Vergi
+  vergiDairesi: z.string().max(100).optional().nullable(),
+  vergiNo: z.string().max(50).optional().nullable(),
+  // Bolgesel
+  varsayilanDil: z.string().length(2).optional(),
+  varsayilanParaBirimi: z.string().length(3).optional(),
+  zamanDilimi: z.string().max(50).optional(),
+  ulkeKodu: z.string().length(2).optional(),
+  tarihFormati: z.string().max(20).optional(),
+  saatFormati: z.string().max(10).optional(),
+  // Gorsel
+  tema: z.string().max(20).optional(),
+  markaRengi: z.string().max(20).optional().nullable(),
+}).strict();
 export type SistemAyarGuncelleGirdi = z.infer<typeof SistemAyarGuncelleSemasi>;
 
 // ─── Şifre Değiştir ───

@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, Post, Req } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
+import { MagazaOlusturGirdi, MagazaOlusturSemasi, MagazaGuncelleGirdi, MagazaGuncelleSemasi } from '@kuvvem/contracts';
 import { MagazaService } from './magaza.service.js';
 import { CurrentKullanici } from '../../common/decorators/kullanici.decorator.js';
 import { RequireYetki } from '../../common/decorators/yetki.decorator.js';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import type { KullaniciBilgi } from '../../common/types/request.js';
 
 @Controller('api/v1/magaza')
@@ -26,9 +28,9 @@ export class MagazaController {
   async olustur(
     @Req() req: FastifyRequest,
     @CurrentKullanici() kullanici: KullaniciBilgi,
-    @Body() girdi: Record<string, unknown>,
+    @Body(new ZodValidationPipe(MagazaOlusturSemasi)) girdi: MagazaOlusturGirdi,
   ) {
-    return this.magazaService.olustur(req.prisma!, girdi as any, kullanici.id);
+    return this.magazaService.olustur(req.prisma!, girdi, kullanici.id);
   }
 
   @Patch(':id')
@@ -37,8 +39,19 @@ export class MagazaController {
     @Req() req: FastifyRequest,
     @CurrentKullanici() kullanici: KullaniciBilgi,
     @Param('id', ParseIntPipe) id: number,
-    @Body() girdi: Record<string, unknown>,
+    @Body(new ZodValidationPipe(MagazaGuncelleSemasi)) girdi: MagazaGuncelleGirdi,
   ) {
     return this.magazaService.guncelle(req.prisma!, id, girdi, kullanici.id);
+  }
+
+  @Patch(':id/aktiflik')
+  @RequireYetki('magaza.yonet')
+  @HttpCode(HttpStatus.OK)
+  async aktiflikToggle(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.magazaService.aktiflikToggle(req.prisma!, id, kullanici.id);
   }
 }
