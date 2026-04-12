@@ -43,6 +43,12 @@ export const SistemAyarGuncelleSemasi = z.object({
   // Gorsel
   tema: z.string().max(20).optional(),
   markaRengi: z.string().max(20).optional().nullable(),
+  // Gorsel & Belge (O1/O6/O7)
+  imzaUrl: z.string().max(500).optional().nullable(),
+  teklifLogoUrl: z.string().max(500).optional().nullable(),
+  fisGenisligi: z.number().int().min(40).max(120).optional().nullable(),
+  fisMesaji: z.string().max(10000).optional().nullable(),
+  teklifAciklama: z.string().max(10000).optional().nullable(),
 });
 export type SistemAyarGuncelleGirdi = z.infer<typeof SistemAyarGuncelleSemasi>;
 

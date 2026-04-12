@@ -67,6 +67,12 @@ export class SistemAyarService {
         ...(girdi.adres !== undefined && { adres: girdi.adres }),
         ...(girdi.vergiDairesi !== undefined && { vergiDairesi: girdi.vergiDairesi }),
         ...(girdi.vergiNo !== undefined && { vergiNo: girdi.vergiNo }),
+        // Gorsel & Belge (O1/O6/O7)
+        ...(girdi.imzaUrl !== undefined && { imzaUrl: girdi.imzaUrl }),
+        ...(girdi.teklifLogoUrl !== undefined && { teklifLogoUrl: girdi.teklifLogoUrl }),
+        ...(girdi.fisGenisligi !== undefined && { fisGenisligi: girdi.fisGenisligi }),
+        ...(girdi.fisMesaji !== undefined && { fisMesaji: girdi.fisMesaji }),
+        ...(girdi.teklifAciklama !== undefined && { teklifAciklama: girdi.teklifAciklama }),
       },
     });
   }

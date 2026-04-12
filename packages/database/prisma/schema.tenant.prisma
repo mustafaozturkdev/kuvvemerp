@@ -51,6 +51,12 @@ model SistemAyar {
   adres                   String?   @db.Text
   vergiDairesi            String?   @map("vergi_dairesi") @db.VarChar(100)
   vergiNo                 String?   @map("vergi_no") @db.VarChar(50)
+  // Gorsel & Belge ayarlari (PHP parity — O1/O6/O7 fix)
+  imzaUrl                 String?   @map("imza_url") @db.Text
+  teklifLogoUrl           String?   @map("teklif_logo_url") @db.Text
+  fisGenisligi            Int?      @default(80) @map("fis_genisligi") @db.SmallInt
+  fisMesaji               String?   @map("fis_mesaji") @db.Text
+  teklifAciklama          String?   @map("teklif_aciklama") @db.Text
   moduller                Json      @default("{}") @db.JsonB
   numaraSerileri          Json      @default("{}") @map("numara_serileri") @db.JsonB
   eFaturaAyar             Json      @default("{}") @map("e_fatura_ayar") @db.JsonB
