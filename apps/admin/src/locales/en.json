@@ -1,0 +1,76 @@
+{
+  "genel": {
+    "kaydet": "Save",
+    "iptal": "Cancel",
+    "sil": "Delete",
+    "duzenle": "Edit",
+    "ara": "Search",
+    "yukleniyor": "Loading...",
+    "hata": "An error occurred",
+    "basarili": "Success",
+    "kapat": "Close",
+    "evet": "Yes",
+    "hayir": "No",
+    "yeni-ekle": "Add New",
+    "detay": "Detail",
+    "filtrele": "Filter",
+    "disa-aktar": "Export",
+    "secilenler": "Selected",
+    "toplam": "Total",
+    "sayfa": "Page",
+    "bos-listenmek": "No records found"
+  },
+  "giris": {
+    "baslik": "Sign in to your account",
+    "altyazi": "Welcome to the Kuvvem ERP platform",
+    "email": "Email",
+    "sifre": "Password",
+    "beni-hatirla": "Remember me",
+    "giris-yap": "Sign In",
+    "sifremi-unuttum": "Forgot password?",
+    "hatali-bilgi": "Invalid email or password",
+    "slogan": "Retail, e-commerce and accounting on one platform."
+  },
+  "menu": {
+    "anasayfa": "Dashboard",
+    "cari": "Customers",
+    "urun": "Products",
+    "siparis": "Orders",
+    "stok": "Inventory",
+    "muhasebe": "Accounting",
+    "rapor": "Reports",
+    "ayarlar": "Settings"
+  },
+  "dashboard": {
+    "baslik": "Owner Panel",
+    "altyazi": "Your store's pulse today",
+    "bugunku-ciro": "Today's Revenue",
+    "siparis-sayisi": "Orders",
+    "yeni-musteri": "New Customers",
+    "acik-siparis": "Open Orders",
+    "son-siparisler": "Recent Orders",
+    "hizli-eylemler": "Quick Actions",
+    "gun-oncesine-gore": "vs yesterday"
+  },
+  "cari": {
+    "liste-baslik": "Customers",
+    "yeni-ekle": "New Customer",
+    "kod": "Customer Code",
+    "unvan": "Title",
+    "telefon": "Phone",
+    "bakiye": "Balance",
+    "email": "Email",
+    "vergi-no": "Tax ID",
+    "detay-baslik": "Customer Detail"
+  },
+  "urun": {
+    "liste-baslik": "Products",
+    "yeni-ekle": "New Product",
+    "kod": "Product Code",
+    "ad": "Product Name",
+    "kategori": "Category",
+    "stok": "Stock",
+    "fiyat": "Price",
+    "durum": "Status"
+  }
+}

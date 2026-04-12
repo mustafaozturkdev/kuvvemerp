@@ -1,0 +1,76 @@
+{
+  "genel": {
+    "kaydet": "Kaydet",
+    "iptal": "İptal",
+    "sil": "Sil",
+    "duzenle": "Düzenle",
+    "ara": "Ara",
+    "yukleniyor": "Yükleniyor...",
+    "hata": "Hata oluştu",
+    "basarili": "İşlem başarılı",
+    "kapat": "Kapat",
+    "evet": "Evet",
+    "hayir": "Hayır",
+    "yeni-ekle": "Yeni Ekle",
+    "detay": "Detay",
+    "filtrele": "Filtrele",
+    "disa-aktar": "Dışa Aktar",
+    "secilenler": "Seçilenler",
+    "toplam": "Toplam",
+    "sayfa": "Sayfa",
+    "bos-listenmek": "Kayıt bulunamadı"
+  },
+  "giris": {
+    "baslik": "Hesabınıza giriş yapın",
+    "altyazi": "Kuvvem ERP platformuna hoş geldiniz",
+    "email": "E-posta",
+    "sifre": "Şifre",
+    "beni-hatirla": "Beni hatırla",
+    "giris-yap": "Giriş Yap",
+    "sifremi-unuttum": "Şifremi Unuttum",
+    "hatali-bilgi": "E-posta veya şifre hatalı",
+    "slogan": "Perakende, e-ticaret ve muhasebe tek platformda."
+  },
+  "menu": {
+    "anasayfa": "Anasayfa",
+    "cari": "Müşteriler",
+    "urun": "Ürünler",
+    "siparis": "Siparişler",
+    "stok": "Stok",
+    "muhasebe": "Muhasebe",
+    "rapor": "Raporlar",
+    "ayarlar": "Ayarlar"
+  },
+  "dashboard": {
+    "baslik": "Patron Paneli",
+    "altyazi": "Mağazanızın bugünkü nabzı",
+    "bugunku-ciro": "Bugünkü Ciro",
+    "siparis-sayisi": "Sipariş Sayısı",
+    "yeni-musteri": "Yeni Müşteri",
+    "acik-siparis": "Açık Sipariş",
+    "son-siparisler": "Son Siparişler",
+    "hizli-eylemler": "Hızlı Eylemler",
+    "gun-oncesine-gore": "düne göre"
+  },
+  "cari": {
+    "liste-baslik": "Müşteriler",
+    "yeni-ekle": "Yeni Müşteri",
+    "kod": "Müşteri Kodu",
+    "unvan": "Ünvan",
+    "telefon": "Telefon",
+    "bakiye": "Bakiye",
+    "email": "E-posta",
+    "vergi-no": "Vergi No",
+    "detay-baslik": "Müşteri Detayı"
+  },
+  "urun": {
+    "liste-baslik": "Ürünler",
+    "yeni-ekle": "Yeni Ürün",
+    "kod": "Ürün Kodu",
+    "ad": "Ürün Adı",
+    "kategori": "Kategori",
+    "stok": "Stok",
+    "fiyat": "Fiyat",
+    "durum": "Durum"
+  }
+}

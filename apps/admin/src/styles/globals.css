@@ -1,0 +1,261 @@
+@import "tailwindcss";
+
+/* ============================================================================
+ * Kuvvem v2 — Design Tokens (design-tokens.md 1:1)
+ * OKLCH renk uzayı + semantik isimlendirme + light/dark/high-contrast
+ * ========================================================================== */
+
+@theme {
+  --color-birincil: var(--renk-birincil);
+  --color-birincil-hover: var(--renk-birincil-hover);
+  --color-birincil-zemin: var(--renk-birincil-zemin);
+  --color-ikincil: var(--renk-ikincil);
+  --color-aksan: var(--renk-aksan);
+  --color-basarili: var(--renk-basarili);
+  --color-basarili-zemin: var(--renk-basarili-zemin);
+  --color-uyari: var(--renk-uyari);
+  --color-uyari-zemin: var(--renk-uyari-zemin);
+  --color-tehlike: var(--renk-tehlike);
+  --color-tehlike-zemin: var(--renk-tehlike-zemin);
+  --color-bilgi: var(--renk-bilgi);
+  --color-bilgi-zemin: var(--renk-bilgi-zemin);
+  --color-arkaplan: var(--renk-arkaplan);
+  --color-yuzey: var(--renk-yuzey);
+  --color-yuzey-yukseltilmis: var(--renk-yuzey-yukseltilmis);
+  --color-yuzey-batik: var(--renk-yuzey-batik);
+  --color-kenarlik: var(--renk-kenarlik);
+  --color-kenarlik-guclu: var(--renk-kenarlik-guclu);
+  --color-metin: var(--renk-metin);
+  --color-metin-ikinci: var(--renk-metin-ikinci);
+  --color-metin-pasif: var(--renk-metin-pasif);
+
+  /* shadcn köprüsü */
+  --color-background: var(--renk-arkaplan);
+  --color-foreground: var(--renk-metin);
+  --color-card: var(--renk-yuzey-yukseltilmis);
+  --color-card-foreground: var(--renk-metin);
+  --color-popover: var(--renk-yuzey-yukseltilmis);
+  --color-popover-foreground: var(--renk-metin);
+  --color-primary: var(--renk-birincil);
+  --color-primary-foreground: var(--renk-birincil-on);
+  --color-secondary: var(--renk-yuzey);
+  --color-secondary-foreground: var(--renk-metin);
+  --color-muted: var(--renk-yuzey);
+  --color-muted-foreground: var(--renk-metin-ikinci);
+  --color-accent: var(--renk-yuzey);
+  --color-accent-foreground: var(--renk-metin);
+  --color-destructive: var(--renk-tehlike);
+  --color-destructive-foreground: var(--renk-tehlike-on);
+  --color-border: var(--renk-kenarlik);
+  --color-input: var(--renk-kenarlik);
+  --color-ring: var(--renk-kenarlik-odak);
+
+  --font-sans: "Inter Display", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  --shadow-sm: var(--golge-sm);
+  --shadow-md: var(--golge-md);
+  --shadow-lg: var(--golge-lg);
+  --shadow-xl: var(--golge-xl);
+
+  --ease-kuvvem: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-giris: cubic-bezier(0, 0, 0.2, 1);
+  --ease-cikis: cubic-bezier(0.4, 0, 1, 1);
+  --ease-zipla: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@layer base {
+  :root {
+    /* Brand */
+    --renk-birincil: oklch(0.55 0.22 260);
+    --renk-birincil-hover: oklch(0.48 0.22 260);
+    --renk-birincil-aktif: oklch(0.40 0.20 260);
+    --renk-birincil-zemin: oklch(0.95 0.04 260);
+    --renk-birincil-on: oklch(0.99 0 0);
+
+    --renk-ikincil: oklch(0.60 0.22 300);
+    --renk-ikincil-on: oklch(0.99 0 0);
+
+    --renk-aksan: oklch(0.78 0.18 180);
+    --renk-aksan-on: oklch(0.10 0 0);
+
+    /* Durum */
+    --renk-basarili: oklch(0.65 0.18 145);
+    --renk-basarili-zemin: oklch(0.95 0.06 145);
+    --renk-basarili-on: oklch(0.99 0 0);
+    --renk-uyari: oklch(0.78 0.16 75);
+    --renk-uyari-zemin: oklch(0.97 0.06 75);
+    --renk-uyari-on: oklch(0.18 0.05 75);
+    --renk-tehlike: oklch(0.63 0.22 25);
+    --renk-tehlike-zemin: oklch(0.96 0.04 25);
+    --renk-tehlike-on: oklch(0.99 0 0);
+    --renk-bilgi: oklch(0.65 0.15 230);
+    --renk-bilgi-zemin: oklch(0.96 0.04 230);
+    --renk-bilgi-on: oklch(0.99 0 0);
+
+    /* Surface */
+    --renk-arkaplan: oklch(0.99 0 0);
+    --renk-yuzey: oklch(0.97 0 0);
+    --renk-yuzey-yukseltilmis: oklch(1 0 0);
+    --renk-yuzey-batik: oklch(0.95 0 0);
+    --renk-kenarlik: oklch(0.92 0 0);
+    --renk-kenarlik-guclu: oklch(0.85 0 0);
+    --renk-kenarlik-odak: oklch(0.55 0.22 260);
+
+    /* Metin */
+    --renk-metin: oklch(0.20 0 0);
+    --renk-metin-ikinci: oklch(0.45 0 0);
+    --renk-metin-pasif: oklch(0.65 0 0);
+    --renk-metin-ters: oklch(0.99 0 0);
+    --renk-metin-bag: oklch(0.55 0.22 260);
+
+    --renk-ortu: oklch(0.10 0 0 / 0.50);
+
+    /* Grafik serileri */
+    --grafik-1: oklch(0.55 0.22 260);
+    --grafik-2: oklch(0.65 0.18 145);
+    --grafik-3: oklch(0.78 0.16 75);
+    --grafik-4: oklch(0.63 0.22 25);
+    --grafik-5: oklch(0.60 0.22 300);
+    --grafik-6: oklch(0.65 0.15 230);
+    --grafik-7: oklch(0.70 0.18 30);
+    --grafik-8: oklch(0.55 0.12 180);
+
+    /* Gölge */
+    --golge-sm: 0 1px 2px 0 oklch(0 0 0 / 0.05);
+    --golge-md: 0 2px 4px -1px oklch(0 0 0 / 0.06), 0 4px 8px -2px oklch(0 0 0 / 0.04);
+    --golge-lg: 0 4px 8px -2px oklch(0 0 0 / 0.08), 0 8px 24px -4px oklch(0 0 0 / 0.06);
+    --golge-xl: 0 8px 16px -4px oklch(0 0 0 / 0.10), 0 16px 40px -8px oklch(0 0 0 / 0.08);
+    --golge-odak: 0 0 0 3px oklch(0.55 0.22 260 / 0.30);
+
+    /* Z-index */
+    --z-acilir: 20;
+    --z-sabit: 30;
+    --z-ortu: 100;
+    --z-modal: 110;
+    --z-popover: 120;
+    --z-tooltip: 130;
+    --z-bildirim: 200;
+    --z-cmd-k: 300;
+
+    --radius: 0.5rem;
+  }
+
+  [data-tema="koyu"] {
+    --renk-birincil: oklch(0.70 0.18 260);
+    --renk-birincil-hover: oklch(0.75 0.18 260);
+    --renk-birincil-aktif: oklch(0.80 0.16 260);
+    --renk-birincil-zemin: oklch(0.25 0.08 260);
+    --renk-birincil-on: oklch(0.10 0 0);
+
+    --renk-ikincil: oklch(0.72 0.20 300);
+    --renk-ikincil-on: oklch(0.10 0 0);
+    --renk-aksan: oklch(0.82 0.16 180);
+    --renk-aksan-on: oklch(0.10 0 0);
+
+    --renk-basarili: oklch(0.72 0.18 145);
+    --renk-basarili-zemin: oklch(0.22 0.06 145);
+    --renk-uyari: oklch(0.82 0.16 75);
+    --renk-uyari-zemin: oklch(0.25 0.06 75);
+    --renk-tehlike: oklch(0.70 0.22 25);
+    --renk-tehlike-zemin: oklch(0.25 0.06 25);
+    --renk-bilgi: oklch(0.72 0.14 230);
+    --renk-bilgi-zemin: oklch(0.22 0.04 230);
+
+    --renk-arkaplan: oklch(0.15 0 0);
+    --renk-yuzey: oklch(0.18 0 0);
+    --renk-yuzey-yukseltilmis: oklch(0.22 0 0);
+    --renk-yuzey-batik: oklch(0.13 0 0);
+    --renk-kenarlik: oklch(0.28 0 0);
+    --renk-kenarlik-guclu: oklch(0.38 0 0);
+    --renk-kenarlik-odak: oklch(0.70 0.18 260);
+
+    --renk-metin: oklch(0.96 0 0);
+    --renk-metin-ikinci: oklch(0.72 0 0);
+    --renk-metin-pasif: oklch(0.50 0 0);
+    --renk-metin-ters: oklch(0.15 0 0);
+    --renk-metin-bag: oklch(0.75 0.16 260);
+
+    --renk-ortu: oklch(0 0 0 / 0.70);
+
+    --golge-sm: 0 1px 2px 0 oklch(0 0 0 / 0.40);
+    --golge-md: 0 2px 4px -1px oklch(0 0 0 / 0.50), 0 4px 8px -2px oklch(0 0 0 / 0.30);
+    --golge-lg: 0 4px 8px -2px oklch(0 0 0 / 0.60), 0 8px 24px -4px oklch(0 0 0 / 0.40);
+    --golge-xl: 0 8px 16px -4px oklch(0 0 0 / 0.70), 0 16px 40px -8px oklch(0 0 0 / 0.50);
+    --golge-odak: 0 0 0 3px oklch(0.70 0.18 260 / 0.40);
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: var(--renk-kenarlik);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--renk-metin);
+    background: var(--renk-arkaplan);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss01", "ss03";
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--renk-arkaplan);
+    color: var(--renk-metin);
+  }
+
+  .para-gosterim,
+  [data-para] {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono);
+  }
+
+  *:focus-visible {
+    outline: none;
+    box-shadow: var(--golge-odak);
+    border-radius: var(--radius-md);
+  }
+
+  ::selection {
+    background: var(--renk-birincil-zemin);
+    color: var(--renk-metin);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrollbar — Linear tarzı ince */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--renk-kenarlik);
+    border-radius: 10px;
+    border: 2px solid var(--renk-arkaplan);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--renk-kenarlik-guclu);
+  }
+}

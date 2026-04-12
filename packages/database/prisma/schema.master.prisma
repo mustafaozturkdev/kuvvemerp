@@ -1,0 +1,283 @@
+// ============================================================
+// KUVVEM v2 — MASTER DATABASE (Platform/Tenant yonetimi)
+// ============================================================
+// Tek master DB — tum tenant'lar paylasir.
+// Kaynak: temp/v2/03-veritabani/00-master-db.sql
+// ============================================================
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../node_modules/.prisma/master"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL_MASTER")
+  extensions = [pgcrypto, pg_trgm, citext]
+}
+
+// ----------------------------------------------------------------
+// PLAN — SaaS abonelik planlari
+// ----------------------------------------------------------------
+model Plan {
+  id                  BigInt    @id @default(autoincrement())
+  kod                 String    @unique @db.VarChar(50)
+  ad                  String    @db.VarChar(100)
+  aciklama            String?   @db.Text
+  aylikUcret          Decimal   @map("aylik_ucret") @db.Decimal(18, 4)
+  yillikUcret         Decimal   @map("yillik_ucret") @db.Decimal(18, 4)
+  paraBirimiKod       String    @default("TRY") @map("para_birimi_kod") @db.Char(3)
+  maxMagaza           Int?      @map("max_magaza")
+  maxKullanici        Int?      @map("max_kullanici")
+  maxUrun             Int?      @map("max_urun")
+  maxAylikSiparis     Int?      @map("max_aylik_siparis")
+  maxAylikApiCagri    Int?      @map("max_aylik_api_cagri")
+  maxDiskMb           Int?      @map("max_disk_mb")
+  ozellikler          Json      @default("{}") @db.JsonB
+  sira                Int       @default(0)
+  populerMi           Boolean   @default(false) @map("populer_mi")
+  aktifMi             Boolean   @default(true) @map("aktif_mi")
+  olusturmaTarihi     DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi    DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  tenantlar           Tenant[]
+  abonelikler         Abonelik[]
+
+  @@map("plan")
+}
+
+// ----------------------------------------------------------------
+// TENANT — Her satir = bir DB
+// ----------------------------------------------------------------
+model Tenant {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                  String    @unique @db.VarChar(50)
+  ad                    String    @db.VarChar(200)
+  dbAdi                 String    @unique @map("db_adi") @db.VarChar(100)
+  dbSunucu              String?   @map("db_sunucu") @db.VarChar(200)
+  dbSemaVersiyonu       String?   @map("db_sema_versiyonu") @db.VarChar(20)
+  planId                BigInt    @map("plan_id")
+  durum                 String    @default("deneme") @db.VarChar(20)
+  denemeBaslangic       DateTime? @map("deneme_baslangic") @db.Timestamptz(6)
+  denemeBitis           DateTime? @map("deneme_bitis") @db.Timestamptz(6)
+  askiyaAlmaTarihi      DateTime? @map("askiya_alma_tarihi") @db.Timestamptz(6)
+  askiyaAlmaNedeni      String?   @map("askiya_alma_nedeni") @db.Text
+  iptalTarihi           DateTime? @map("iptal_tarihi") @db.Timestamptz(6)
+  iptalNedeni           String?   @map("iptal_nedeni") @db.Text
+  varsayilanDil         String    @default("tr") @map("varsayilan_dil") @db.Char(2)
+  varsayilanParaBirimi  String    @default("TRY") @map("varsayilan_para_birimi") @db.Char(3)
+  zamanDilimi           String    @default("Europe/Istanbul") @map("zaman_dilimi") @db.VarChar(50)
+  ulkeKodu              String    @default("TR") @map("ulke_kodu") @db.Char(2)
+  iletisimEmail         String    @map("iletisim_email") @db.Citext
+  iletisimTelefon       String?   @map("iletisim_telefon") @db.VarChar(30)
+  iletisimYetkiliAd     String?   @map("iletisim_yetkili_ad") @db.VarChar(200)
+  notlar                String?   @db.Text
+  etiketler             String[]
+  olusturmaTarihi       DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi      DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  plan                  Plan                        @relation(fields: [planId], references: [id], onDelete: Restrict)
+  domainler             TenantDomain[]
+  abonelikler           Abonelik[]
+  abonelikFaturalari    AbonelikFatura[]
+  kullanimMetrikleri    KullanimMetrikGunluk[]
+  platformLoglari       PlatformLog[]
+  backupler             TenantBackup[]
+  platformErisimleri    PlatformKullaniciTenant[]
+
+  @@index([durum])
+  @@index([iletisimEmail])
+  @@map("tenant")
+}
+
+// ----------------------------------------------------------------
+// TENANT_DOMAIN — Subdomain + custom domain
+// ----------------------------------------------------------------
+model TenantDomain {
+  id                    BigInt    @id @default(autoincrement())
+  tenantId              String    @map("tenant_id") @db.Uuid
+  domain                String    @unique @db.Citext
+  tip                   String    @db.VarChar(30)
+  cloudflareZoneId      String?   @map("cloudflare_zone_id") @db.VarChar(100)
+  cloudflareHostnameId  String?   @map("cloudflare_hostname_id") @db.VarChar(100)
+  sslDurum              String    @default("beklemede") @map("ssl_durum") @db.VarChar(20)
+  dogrulamaDurum        String    @default("beklemede") @map("dogrulama_durum") @db.VarChar(20)
+  dogrulamaTokeni       String?   @map("dogrulama_tokeni") @db.VarChar(100)
+  dogrulamaYontemi      String?   @map("dogrulama_yontemi") @db.VarChar(20)
+  sonDogrulamaDenemesi  DateTime? @map("son_dogrulama_denemesi") @db.Timestamptz(6)
+  varsayilanMi          Boolean   @default(false) @map("varsayilan_mi")
+  aktifMi               Boolean   @default(true) @map("aktif_mi")
+  olusturmaTarihi       DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  tenant                Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([aktifMi])
+  @@map("tenant_domain")
+}
+
+// ----------------------------------------------------------------
+// PLATFORM_KULLANICI — Master kullanicilar
+// ----------------------------------------------------------------
+model PlatformKullanici {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String    @unique @db.Citext
+  sifreHash         String    @map("sifre_hash") @db.VarChar(255)
+  ad                String    @db.VarChar(100)
+  soyad             String    @db.VarChar(100)
+  telefon           String?   @db.VarChar(30)
+  avatarUrl         String?   @map("avatar_url") @db.Text
+  rol               String    @db.VarChar(20)
+  ikiFaktorAktif    Boolean   @default(false) @map("iki_faktor_aktif")
+  ikiFaktorSecret   String?   @map("iki_faktor_secret") @db.VarChar(100)
+  sonGirisTarihi    DateTime? @map("son_giris_tarihi") @db.Timestamptz(6)
+  sonGirisIp        String?   @map("son_giris_ip") @db.Inet
+  aktifMi           Boolean   @default(true) @map("aktif_mi")
+  silindiMi         Boolean   @default(false) @map("silindi_mi")
+  olusturmaTarihi   DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi  DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  tenantErisimleri  PlatformKullaniciTenant[]
+
+  @@map("platform_kullanici")
+}
+
+model PlatformKullaniciTenant {
+  platformKullaniciId String   @map("platform_kullanici_id") @db.Uuid
+  tenantId            String   @map("tenant_id") @db.Uuid
+  rol                 String   @db.VarChar(50)
+  olusturmaTarihi     DateTime @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  platformKullanici   PlatformKullanici @relation(fields: [platformKullaniciId], references: [id], onDelete: Cascade)
+  tenant              Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([platformKullaniciId, tenantId])
+  @@map("platform_kullanici_tenant")
+}
+
+// ----------------------------------------------------------------
+// ABONELIK
+// ----------------------------------------------------------------
+model Abonelik {
+  id                      BigInt    @id @default(autoincrement())
+  tenantId                String    @map("tenant_id") @db.Uuid
+  planId                  BigInt    @map("plan_id")
+  durum                   String    @db.VarChar(20)
+  yenilemeTipi            String    @default("aylik") @map("yenileme_tipi") @db.VarChar(20)
+  baslangicTarihi         DateTime  @map("baslangic_tarihi") @db.Timestamptz(6)
+  bitisTarihi             DateTime? @map("bitis_tarihi") @db.Timestamptz(6)
+  sonrakiFaturaTarihi     DateTime? @map("sonraki_fatura_tarihi") @db.Timestamptz(6)
+  iptalTarihi             DateTime? @map("iptal_tarihi") @db.Timestamptz(6)
+  iptalDonemSonuMu        Boolean   @default(true) @map("iptal_donem_sonu_mu")
+  iptalNedeni             String?   @map("iptal_nedeni") @db.Text
+  stripeSubscriptionId    String?   @unique @map("stripe_subscription_id") @db.VarChar(100)
+  stripeCustomerId        String?   @map("stripe_customer_id") @db.VarChar(100)
+  indirimKodu             String?   @map("indirim_kodu") @db.VarChar(50)
+  indirimOrani            Decimal?  @default(0) @map("indirim_orani") @db.Decimal(5, 2)
+  indirimBitisTarihi      DateTime? @map("indirim_bitis_tarihi") @db.Timestamptz(6)
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  tenant                  Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan                    Plan              @relation(fields: [planId], references: [id], onDelete: Restrict)
+  faturalar               AbonelikFatura[]
+
+  @@index([tenantId])
+  @@index([durum])
+  @@map("abonelik")
+}
+
+// ----------------------------------------------------------------
+// ABONELIK_FATURA
+// ----------------------------------------------------------------
+model AbonelikFatura {
+  id                      BigInt    @id @default(autoincrement())
+  abonelikId              BigInt    @map("abonelik_id")
+  tenantId                String    @map("tenant_id") @db.Uuid
+  faturaNo                String    @unique @map("fatura_no") @db.VarChar(50)
+  araToplam               Decimal   @map("ara_toplam") @db.Decimal(18, 4)
+  indirimTutari           Decimal   @default(0) @map("indirim_tutari") @db.Decimal(18, 4)
+  vergiTutari             Decimal   @default(0) @map("vergi_tutari") @db.Decimal(18, 4)
+  toplamTutar             Decimal   @map("toplam_tutar") @db.Decimal(18, 4)
+  paraBirimiKod           String    @map("para_birimi_kod") @db.Char(3)
+  durum                   String    @db.VarChar(20)
+  odemeTarihi             DateTime? @map("odeme_tarihi") @db.Timestamptz(6)
+  sonOdemeTarihi          DateTime  @map("son_odeme_tarihi") @db.Timestamptz(6)
+  odemeYontemi            String?   @map("odeme_yontemi") @db.VarChar(50)
+  stripeInvoiceId         String?   @unique @map("stripe_invoice_id") @db.VarChar(100)
+  stripePaymentIntentId   String?   @map("stripe_payment_intent_id") @db.VarChar(100)
+  pdfUrl                  String?   @map("pdf_url") @db.Text
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  abonelik                Abonelik @relation(fields: [abonelikId], references: [id], onDelete: Restrict)
+  tenant                  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId])
+  @@index([durum])
+  @@map("abonelik_fatura")
+}
+
+// ----------------------------------------------------------------
+// KULLANIM_METRIK_GUNLUK
+// ----------------------------------------------------------------
+model KullanimMetrikGunluk {
+  tarih                 DateTime @db.Date
+  tenantId              String   @map("tenant_id") @db.Uuid
+  siparisSayisi         Int      @default(0) @map("siparis_sayisi")
+  apiCagriSayisi        Int      @default(0) @map("api_cagri_sayisi")
+  aktifKullaniciSayisi  Int      @default(0) @map("aktif_kullanici_sayisi")
+  diskKullanimiMb       Int      @default(0) @map("disk_kullanimi_mb")
+  urunSayisi            Int      @default(0) @map("urun_sayisi")
+  magazaSayisi          Int      @default(0) @map("magaza_sayisi")
+  ciroTry               Decimal  @default(0) @map("ciro_try") @db.Decimal(18, 4)
+
+  tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@id([tarih, tenantId])
+  @@index([tenantId, tarih])
+  @@map("kullanim_metrik_gunluk")
+}
+
+// ----------------------------------------------------------------
+// PLATFORM_LOG
+// ----------------------------------------------------------------
+model PlatformLog {
+  id              BigInt    @id @default(autoincrement())
+  tenantId        String?   @map("tenant_id") @db.Uuid
+  seviye          String    @db.VarChar(10)
+  kategori        String    @db.VarChar(50)
+  mesaj           String    @db.Text
+  metadata        Json?     @db.JsonB
+  olusturmaTarihi DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  tenant          Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, olusturmaTarihi])
+  @@index([kategori, olusturmaTarihi])
+  @@index([seviye, olusturmaTarihi])
+  @@map("platform_log")
+}
+
+// ----------------------------------------------------------------
+// TENANT_BACKUP
+// ----------------------------------------------------------------
+model TenantBackup {
+  id                    BigInt    @id @default(autoincrement())
+  tenantId              String    @map("tenant_id") @db.Uuid
+  tip                   String    @db.VarChar(20)
+  durum                 String    @db.VarChar(20)
+  dosyaYolu             String?   @map("dosya_yolu") @db.Text
+  dosyaBoyutuMb         Decimal?  @map("dosya_boyutu_mb") @db.Decimal(12, 2)
+  sikistirmaOrani       Decimal?  @map("sikistirma_orani") @db.Decimal(5, 2)
+  baslangicTarihi       DateTime  @default(now()) @map("baslangic_tarihi") @db.Timestamptz(6)
+  bitisTarihi           DateTime? @map("bitis_tarihi") @db.Timestamptz(6)
+  sureSaniye            Int?      @map("sure_saniye")
+  hataMesaji            String?   @map("hata_mesaji") @db.Text
+  saklamaSonTarihi      DateTime? @map("saklama_son_tarihi") @db.Timestamptz(6)
+
+  tenant                Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, baslangicTarihi])
+  @@map("tenant_backup")
+}

@@ -1,0 +1,34 @@
+{
+  "name": "kuvvem-v2",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kuvvem v2 — Multi-tenant SaaS ERP monorepo",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "db:generate": "pnpm --filter @kuvvem/database prisma:generate",
+    "db:migrate:master": "pnpm --filter @kuvvem/database prisma:migrate:master",
+    "db:migrate:tenant": "pnpm --filter @kuvvem/database prisma:migrate:tenant",
+    "db:seed": "pnpm --filter @kuvvem/database seed",
+    "tenant:create": "pnpm --filter @kuvvem/tools tenant:create"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "0.25.12"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "dotenv-cli": "^11.0.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.6.0"
+  }
+}

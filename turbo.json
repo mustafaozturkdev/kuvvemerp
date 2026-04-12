@@ -1,0 +1,35 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env", ".env.*"],
+  "globalEnv": [
+    "NODE_ENV",
+    "PORT",
+    "DATABASE_URL_MASTER",
+    "DATABASE_URL_TEMPLATE",
+    "JWT_SECRET",
+    "JWT_ACCESS_EXPIRY",
+    "JWT_REFRESH_EXPIRY",
+    "ARGON2_MEMORY_COST",
+    "ARGON2_TIME_COST"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    }
+  }
+}

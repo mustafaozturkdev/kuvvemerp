@@ -1,0 +1,515 @@
+// ============================================================
+// KUVVEM v2 — TENANT DATABASE
+// ============================================================
+// Her tenant kendi DB'sinde. Bu sema template.
+// Kaynak: temp/v2/03-veritabani/01-sistem.sql + 05-cari.sql + 06-urun.sql
+// ============================================================
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../node_modules/.prisma/tenant"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  // Runtime'da DATABASE_URL_TEMPLATE ile override edilir.
+  url        = env("DATABASE_URL_TENANT")
+  extensions = [pgcrypto, pg_trgm, citext, unaccent, ltree]
+}
+
+// ================================================================
+// SISTEM
+// ================================================================
+
+model SistemAyar {
+  id                      Int       @id @default(1)
+  tenantId                String    @map("tenant_id") @db.Uuid
+  firmaAdi                String    @map("firma_adi") @db.VarChar(200)
+  firmaLogoUrl            String?   @map("firma_logo_url") @db.Text
+  firmaFaviconUrl         String?   @map("firma_favicon_url") @db.Text
+  varsayilanDil           String    @default("tr") @map("varsayilan_dil") @db.Char(2)
+  desteklenenDiller       String[]  @default(["tr", "en"]) @map("desteklenen_diller") @db.Char(2)
+  varsayilanParaBirimi    String    @default("TRY") @map("varsayilan_para_birimi") @db.Char(3)
+  zamanDilimi             String    @default("Europe/Istanbul") @map("zaman_dilimi") @db.VarChar(50)
+  ulkeKodu                String    @default("TR") @map("ulke_kodu") @db.Char(2)
+  tarihFormati            String    @default("DD.MM.YYYY") @map("tarih_formati") @db.VarChar(20)
+  saatFormati             String    @default("HH:mm") @map("saat_formati") @db.VarChar(10)
+  haftaningunuBaslangic   Int       @default(1) @map("haftaningunu_baslangic") @db.SmallInt
+  tema                    String    @default("sistem") @db.VarChar(20)
+  markaRengi              String?   @map("marka_rengi") @db.VarChar(20)
+  moduller                Json      @default("{}") @db.JsonB
+  numaraSerileri          Json      @default("{}") @map("numara_serileri") @db.JsonB
+  eFaturaAyar             Json      @default("{}") @map("e_fatura_ayar") @db.JsonB
+  bildirimAyar            Json      @default("{}") @map("bildirim_ayar") @db.JsonB
+  varsayilanKurKaynagiId  BigInt?   @map("varsayilan_kur_kaynagi_id")
+  veriSaklamaYili         Int       @default(10) @map("veri_saklama_yili")
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  @@map("sistem_ayar")
+}
+
+model Kullanici {
+  id                      BigInt    @id @default(autoincrement())
+  publicId                String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  email                   String    @unique @db.Citext
+  sifreHash               String    @map("sifre_hash") @db.VarChar(255)
+  ad                      String    @db.VarChar(100)
+  soyad                   String    @db.VarChar(100)
+  telefon                 String?   @db.VarChar(30)
+  avatarUrl               String?   @map("avatar_url") @db.Text
+  dil                     String?   @db.Char(2)
+  zamanDilimi             String?   @map("zaman_dilimi") @db.VarChar(50)
+  ikiFaktorAktif          Boolean   @default(false) @map("iki_faktor_aktif")
+  ikiFaktorSecret         Bytes?    @map("iki_faktor_secret")
+  ikiFaktorYedekKodlar    String[]  @map("iki_faktor_yedek_kodlar")
+  sifreSonDegisim         DateTime? @map("sifre_son_degisim") @db.Timestamptz(6)
+  yanlisGirisSayisi       Int       @default(0) @map("yanlis_giris_sayisi")
+  kilitliSonTarih         DateTime? @map("kilitli_son_tarih") @db.Timestamptz(6)
+  sonGirisTarihi          DateTime? @map("son_giris_tarihi") @db.Timestamptz(6)
+  sonGirisIp              String?   @map("son_giris_ip") @db.Inet
+  sonAktiviteTarihi       DateTime? @map("son_aktivite_tarihi") @db.Timestamptz(6)
+  tercihler               Json      @default("{}") @db.JsonB
+  aktifMi                 Boolean   @default(true) @map("aktif_mi")
+  silindiMi               Boolean   @default(false) @map("silindi_mi")
+  silinmeTarihi           DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
+  silenKullaniciId        BigInt?   @map("silen_kullanici_id")
+  olusturanKullaniciId    BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId  BigInt?   @map("guncelleyen_kullanici_id")
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  roller                  KullaniciRol[]
+  oturumlar               Oturum[]
+  auditLoglari            AuditLog[]
+  olusturdugumCariler     Cari[]          @relation("CariOlusturan")
+  guncelledigimCariler    Cari[]          @relation("CariGuncelleyen")
+
+  @@index([aktifMi])
+  @@index([email])
+  @@map("kullanici")
+}
+
+model Rol {
+  id                      BigInt    @id @default(autoincrement())
+  kod                     String    @unique @db.VarChar(50)
+  ad                      String    @db.VarChar(100)
+  aciklama                String?   @db.Text
+  sistemRoluMu            Boolean   @default(false) @map("sistem_rolu_mu")
+  olusturanKullaniciId    BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId  BigInt?   @map("guncelleyen_kullanici_id")
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  yetkiler                RolYetki[]
+  kullanicilar            KullaniciRol[]
+
+  @@map("rol")
+}
+
+model Yetki {
+  id              BigInt    @id @default(autoincrement())
+  kod             String    @unique @db.VarChar(100)
+  modul           String    @db.VarChar(50)
+  eylem           String    @db.VarChar(50)
+  ad              String    @db.VarChar(200)
+  aciklama        String?   @db.Text
+  riskliMi        Boolean   @default(false) @map("riskli_mi")
+  olusturmaTarihi DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  roller          RolYetki[]
+
+  @@index([modul])
+  @@map("yetki")
+}
+
+model RolYetki {
+  rolId                BigInt   @map("rol_id")
+  yetkiId              BigInt   @map("yetki_id")
+  olusturanKullaniciId BigInt?  @map("olusturan_kullanici_id")
+  olusturmaTarihi      DateTime @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  rol                  Rol      @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  yetki                Yetki    @relation(fields: [yetkiId], references: [id], onDelete: Cascade)
+
+  @@id([rolId, yetkiId])
+  @@map("rol_yetki")
+}
+
+model KullaniciRol {
+  kullaniciId          BigInt    @map("kullanici_id")
+  rolId                BigInt    @map("rol_id")
+  aktifBaslangic       DateTime? @map("aktif_baslangic") @db.Date
+  aktifBitis           DateTime? @map("aktif_bitis") @db.Date
+  olusturanKullaniciId BigInt?   @map("olusturan_kullanici_id")
+  olusturmaTarihi      DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  kullanici            Kullanici @relation(fields: [kullaniciId], references: [id], onDelete: Cascade)
+  rol                  Rol       @relation(fields: [rolId], references: [id], onDelete: Cascade)
+
+  @@id([kullaniciId, rolId])
+  @@map("kullanici_rol")
+}
+
+model Oturum {
+  id                 BigInt    @id @default(autoincrement())
+  publicId           String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  kullaniciId        BigInt    @map("kullanici_id")
+  refreshTokenHash   String    @unique @map("refresh_token_hash") @db.VarChar(255)
+  cihazBilgisi       String?   @map("cihaz_bilgisi") @db.Text
+  cihazTipi          String?   @map("cihaz_tipi") @db.VarChar(20)
+  cihazParmakIzi     String?   @map("cihaz_parmak_izi") @db.VarChar(255)
+  tarayici           String?   @db.VarChar(50)
+  isletimSistemi     String?   @map("isletim_sistemi") @db.VarChar(50)
+  olusturmaIp        String?   @map("olusturma_ip") @db.Inet
+  sonKullanimIp      String?   @map("son_kullanim_ip") @db.Inet
+  konumUlke          String?   @map("konum_ulke") @db.Char(2)
+  konumSehir         String?   @map("konum_sehir") @db.VarChar(100)
+  riskSkoru          Int       @default(0) @map("risk_skoru") @db.SmallInt
+  olusturmaTarihi    DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  sonKullanimTarihi  DateTime  @default(now()) @map("son_kullanim_tarihi") @db.Timestamptz(6)
+  sonKullanimBitis   DateTime  @map("son_kullanim_bitis") @db.Timestamptz(6)
+  iptalEdildiMi      Boolean   @default(false) @map("iptal_edildi_mi")
+  iptalTarihi        DateTime? @map("iptal_tarihi") @db.Timestamptz(6)
+  iptalNedeni        String?   @map("iptal_nedeni") @db.VarChar(100)
+
+  kullanici          Kullanici @relation(fields: [kullaniciId], references: [id], onDelete: Cascade)
+  auditLoglari       AuditLog[]
+
+  @@index([kullaniciId])
+  @@map("oturum")
+}
+
+model ApiAnahtar {
+  id                   BigInt    @id @default(autoincrement())
+  publicId             String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  ad                   String    @db.VarChar(200)
+  aciklama             String?   @db.Text
+  anahtarHash          String    @unique @map("anahtar_hash") @db.VarChar(255)
+  onEk                 String    @map("on_ek") @db.VarChar(20)
+  yetkiler             String[]  @default([])
+  izinVerilenIp        String[]  @default([]) @map("izin_verilen_ip")
+  rateLimitDakika      Int?      @map("rate_limit_dakika")
+  rateLimitGun         Int?      @map("rate_limit_gun")
+  olusturanKullaniciId BigInt?   @map("olusturan_kullanici_id")
+  sonKullanimTarihi    DateTime? @map("son_kullanim_tarihi") @db.Timestamptz(6)
+  sonKullanimIp        String?   @map("son_kullanim_ip") @db.Inet
+  sonKullanimBitis     DateTime? @map("son_kullanim_bitis") @db.Timestamptz(6)
+  iptalEdildiMi        Boolean   @default(false) @map("iptal_edildi_mi")
+  iptalTarihi          DateTime? @map("iptal_tarihi") @db.Timestamptz(6)
+  olusturmaTarihi      DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  auditLoglari         AuditLog[]
+
+  @@map("api_anahtar")
+}
+
+// AUDIT_LOG: SQL'de partitioned; Prisma bunu "normal tablo" olarak gorur.
+// Migration PARTITION BY RANGE seklinde manuel SQL ile uygulanir.
+model AuditLog {
+  id                BigInt    @default(autoincrement())
+  kullaniciId       BigInt?   @map("kullanici_id")
+  apiAnahtarId      BigInt?   @map("api_anahtar_id")
+  oturumId          BigInt?   @map("oturum_id")
+  eylem             String    @db.VarChar(50)
+  yetkiKodu         String?   @map("yetki_kodu") @db.VarChar(100)
+  tabloAdi          String?   @map("tablo_adi") @db.VarChar(100)
+  kayitId           BigInt?   @map("kayit_id")
+  eskiVeri          Json?     @map("eski_veri") @db.JsonB
+  yeniVeri          Json?     @map("yeni_veri") @db.JsonB
+  degisimAlanlari   String[]  @map("degisim_alanlari")
+  aciklama          String?   @db.Text
+  ipAdresi          String?   @map("ip_adresi") @db.Inet
+  cihazBilgisi      String?   @map("cihaz_bilgisi") @db.Text
+  basariliMi        Boolean   @default(true) @map("basarili_mi")
+  hataMesaji        String?   @map("hata_mesaji") @db.Text
+  olusturmaTarihi   DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  kullanici         Kullanici?  @relation(fields: [kullaniciId], references: [id], onDelete: SetNull)
+  oturum            Oturum?     @relation(fields: [oturumId], references: [id], onDelete: SetNull)
+  apiAnahtar        ApiAnahtar? @relation(fields: [apiAnahtarId], references: [id], onDelete: SetNull)
+
+  @@id([id, olusturmaTarihi])
+  @@index([kullaniciId, olusturmaTarihi])
+  @@index([tabloAdi, kayitId])
+  @@index([olusturmaTarihi])
+  @@index([eylem])
+  @@map("audit_log")
+}
+
+// ================================================================
+// CARI
+// ================================================================
+
+model CariGrup {
+  id                        BigInt    @id @default(autoincrement())
+  publicId                  String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  kod                       String    @unique @db.VarChar(50)
+  ad                        String    @db.VarChar(100)
+  aciklama                  String?   @db.Text
+  varsayilanIskontoOrani    Decimal   @default(0) @map("varsayilan_iskonto_orani") @db.Decimal(5, 2)
+  varsayilanVadeGun         Int?      @map("varsayilan_vade_gun")
+  fiyatListesiId            BigInt?   @map("fiyat_listesi_id")
+  renk                      String?   @db.VarChar(20)
+  ikon                      String?   @db.VarChar(50)
+  aktifMi                   Boolean   @default(true) @map("aktif_mi")
+  silindiMi                 Boolean   @default(false) @map("silindi_mi")
+  silinmeTarihi             DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
+  silenKullaniciId          BigInt?   @map("silen_kullanici_id")
+  olusturanKullaniciId      BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId    BigInt?   @map("guncelleyen_kullanici_id")
+  sira                      Int       @default(0)
+  olusturmaTarihi           DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi          DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  cariler                   Cari[]
+
+  @@map("cari_grup")
+}
+
+model Cari {
+  id                        BigInt    @id @default(autoincrement())
+  publicId                  String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  firmaId                   BigInt?   @map("firma_id")
+  kod                       String    @db.VarChar(50)
+  tip                       String    @default("musteri") @db.VarChar(20)
+  kisiTipi                  String    @map("kisi_tipi") @db.VarChar(20)
+  cariGrupId                BigInt?   @map("cari_grup_id")
+  ad                        String?   @db.VarChar(100)
+  soyad                     String?   @db.VarChar(100)
+  cinsiyet                  String?   @db.VarChar(20)
+  dogumTarihi               DateTime? @map("dogum_tarihi") @db.Date
+  unvan                     String?   @db.VarChar(300)
+  kisaAd                    String?   @map("kisa_ad") @db.VarChar(100)
+  yetkiliAdSoyad            String?   @map("yetkili_ad_soyad") @db.VarChar(200)
+  yetkiliGorev              String?   @map("yetkili_gorev") @db.VarChar(100)
+  vergiNo                   String?   @map("vergi_no") @db.VarChar(30)
+  vergiNoTipi               String?   @map("vergi_no_tipi") @db.VarChar(20)
+  dil                       String?   @db.Char(2)
+  ulkeKodu                  String?   @map("ulke_kodu") @db.Char(2)
+  paraBirimiKod             String    @map("para_birimi_kod") @db.Char(3)
+  iskontoOrani              Decimal   @default(0) @map("iskonto_orani") @db.Decimal(5, 2)
+  vadeGun                   Int       @default(0) @map("vade_gun")
+  krediLimiti               Decimal   @default(0) @map("kredi_limiti") @db.Decimal(18, 4)
+  krediLimitiAktifMi        Boolean   @default(false) @map("kredi_limiti_aktif_mi")
+  riskDurumu                String    @default("normal") @map("risk_durumu") @db.VarChar(20)
+  riskAciklama              String?   @map("risk_aciklama") @db.Text
+  vergiMuafMi               Boolean   @default(false) @map("vergi_muaf_mi")
+  portalAktif               Boolean   @default(false) @map("portal_aktif")
+  sadakatPuani              BigInt    @default(0) @map("sadakat_puani")
+  kaynak                    String?   @db.VarChar(50)
+  referansCariId            BigInt?   @map("referans_cari_id")
+  sektor                    String?   @db.VarChar(100)
+  calisanSayisi             Int?      @map("calisan_sayisi")
+  kvkkOnayMi                Boolean   @default(false) @map("kvkk_onay_mi")
+  kvkkOnayTarihi            DateTime? @map("kvkk_onay_tarihi") @db.Timestamptz(6)
+  pazarlamaEmailOnay        Boolean   @default(false) @map("pazarlama_email_onay")
+  pazarlamaSmsOnay          Boolean   @default(false) @map("pazarlama_sms_onay")
+  aktifMi                   Boolean   @default(true) @map("aktif_mi")
+  silindiMi                 Boolean   @default(false) @map("silindi_mi")
+  silinmeTarihi             DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
+  silenKullaniciId          BigInt?   @map("silen_kullanici_id")
+  olusturanKullaniciId      BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId    BigInt?   @map("guncelleyen_kullanici_id")
+  olusturmaTarihi           DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi          DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  cariGrup                  CariGrup?   @relation(fields: [cariGrupId], references: [id], onDelete: SetNull)
+  olusturan                 Kullanici?  @relation("CariOlusturan", fields: [olusturanKullaniciId], references: [id], onDelete: SetNull)
+  guncelleyen               Kullanici?  @relation("CariGuncelleyen", fields: [guncelleyenKullaniciId], references: [id], onDelete: SetNull)
+  adresler                  CariAdres[]
+
+  @@index([tip])
+  @@index([firmaId])
+  @@index([cariGrupId])
+  @@map("cari")
+}
+
+model CariAdres {
+  id                   BigInt    @id @default(autoincrement())
+  publicId             String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  cariId               BigInt    @map("cari_id")
+  baslik               String    @db.VarChar(100)
+  tip                  String    @default("genel") @db.VarChar(20)
+  yetkiliAdSoyad       String?   @map("yetkili_ad_soyad") @db.VarChar(200)
+  yetkiliTelefon       String?   @map("yetkili_telefon") @db.VarChar(30)
+  ulkeKodu             String    @map("ulke_kodu") @db.Char(2)
+  ilId                 BigInt?   @map("il_id")
+  ilceId               BigInt?   @map("ilce_id")
+  mahalle              String?   @db.VarChar(200)
+  sokak                String?   @db.VarChar(200)
+  binaNo               String?   @map("bina_no") @db.VarChar(20)
+  daireNo              String?   @map("daire_no") @db.VarChar(20)
+  postaKodu            String?   @map("posta_kodu") @db.VarChar(20)
+  adresSatir1          String    @map("adres_satir1") @db.Text
+  adresSatir2          String?   @map("adres_satir2") @db.Text
+  enlem                Decimal?  @db.Decimal(10, 7)
+  boylam               Decimal?  @db.Decimal(10, 7)
+  varsayilanFaturaMi   Boolean   @default(false) @map("varsayilan_fatura_mi")
+  varsayilanSevkMi     Boolean   @default(false) @map("varsayilan_sevk_mi")
+  dogrulanmisMi        Boolean   @default(false) @map("dogrulanmis_mi")
+  aktifMi              Boolean   @default(true) @map("aktif_mi")
+  olusturmaTarihi      DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi     DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  cari                 Cari      @relation(fields: [cariId], references: [id], onDelete: Cascade)
+
+  @@index([cariId])
+  @@map("cari_adres")
+}
+
+// ================================================================
+// URUN
+// ================================================================
+
+model Kategori {
+  id                      BigInt    @id @default(autoincrement())
+  publicId                String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  kod                     String    @unique @db.VarChar(50)
+  ad                      String    @db.VarChar(200)
+  aciklama                String?   @db.Text
+  ustKategoriId           BigInt?   @map("ust_kategori_id")
+  seviye                  Int       @default(1) @db.SmallInt
+  // ltree Prisma tarafindan tam desteklenmedigi icin String
+  yol                     String?   @db.Ltree
+  yolText                 String?   @map("yol_text") @db.Text
+  resimUrl                String?   @map("resim_url") @db.Text
+  ikon                    String?   @db.VarChar(50)
+  renk                    String?   @db.VarChar(20)
+  seoUrl                  String?   @map("seo_url") @db.VarChar(500)
+  seoBaslik               String?   @map("seo_baslik") @db.VarChar(255)
+  seoAciklama             String?   @map("seo_aciklama") @db.Text
+  seoAnahtarKelimeler     String[]  @map("seo_anahtar_kelimeler")
+  sira                    Int       @default(0)
+  aktifMi                 Boolean   @default(true) @map("aktif_mi")
+  eticaretAktif           Boolean   @default(true) @map("eticaret_aktif")
+  silindiMi               Boolean   @default(false) @map("silindi_mi")
+  silinmeTarihi           DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
+  silenKullaniciId        BigInt?   @map("silen_kullanici_id")
+  olusturanKullaniciId    BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId  BigInt?   @map("guncelleyen_kullanici_id")
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  ustKategori             Kategori?  @relation("KategoriHiyerarsi", fields: [ustKategoriId], references: [id], onDelete: Restrict)
+  altKategoriler          Kategori[] @relation("KategoriHiyerarsi")
+  urunler                 Urun[]
+
+  @@map("kategori")
+}
+
+model Marka {
+  id                BigInt    @id @default(autoincrement())
+  publicId          String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  kod               String    @unique @db.VarChar(50)
+  ad                String    @db.VarChar(200)
+  aciklama          String?   @db.Text
+  logoUrl           String?   @map("logo_url") @db.Text
+  webSitesi         String?   @map("web_sitesi") @db.VarChar(255)
+  ulkeKodu          String?   @map("ulke_kodu") @db.Char(2)
+  seoUrl            String?   @map("seo_url") @db.VarChar(500)
+  aktifMi           Boolean   @default(true) @map("aktif_mi")
+  sira              Int       @default(0)
+  silindiMi         Boolean   @default(false) @map("silindi_mi")
+  olusturmaTarihi   DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi  DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  urunler           Urun[]
+
+  @@map("marka")
+}
+
+model Urun {
+  id                      BigInt    @id @default(autoincrement())
+  publicId                String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  kod                     String    @unique @db.VarChar(50)
+  ad                      String    @db.VarChar(300)
+  aciklama                String?   @db.Text
+  kisaAciklama            String?   @map("kisa_aciklama") @db.VarChar(500)
+  kategoriId              BigInt?   @map("kategori_id")
+  markaId                 BigInt?   @map("marka_id")
+  tip                     String    @default("fiziksel") @db.VarChar(20)
+  anaBirimId              BigInt    @map("ana_birim_id")
+  vergiOraniId            BigInt?   @map("vergi_orani_id")
+  fiyatlarKdvDahilMi      Boolean   @default(true) @map("fiyatlar_kdv_dahil_mi")
+  gtipKodu                String?   @map("gtip_kodu") @db.VarChar(20)
+  mensheiUlkeKodu         String?   @map("menshei_ulke_kodu") @db.Char(2)
+  uretici                 String?   @db.VarChar(200)
+  stokTakibi              Boolean   @default(true) @map("stok_takibi")
+  seriNoTakibi            Boolean   @default(false) @map("seri_no_takibi")
+  lotTakibi               Boolean   @default(false) @map("lot_takibi")
+  garantiAy               Int?      @map("garanti_ay")
+  iskontoUygulanirMi      Boolean   @default(true) @map("iskonto_uygulanir_mi")
+  puanKazandirirMi        Boolean   @default(true) @map("puan_kazandirir_mi")
+  minimumSatisMiktar      Decimal?  @default(1) @map("minimum_satis_miktar") @db.Decimal(15, 4)
+  eticaretAktif           Boolean   @default(false) @map("eticaret_aktif")
+  eticaretSatilikMi       Boolean   @default(true) @map("eticaret_satilik_mi")
+  seoUrl                  String?   @map("seo_url") @db.VarChar(500)
+  seoBaslik               String?   @map("seo_baslik") @db.VarChar(255)
+  seoAciklama             String?   @map("seo_aciklama") @db.Text
+  seoAnahtarKelimeler     String[]  @map("seo_anahtar_kelimeler")
+  anaResimUrl             String?   @map("ana_resim_url") @db.Text
+  pazaryeriAktif          Boolean   @default(false) @map("pazaryeri_aktif")
+  aktifMi                 Boolean   @default(true) @map("aktif_mi")
+  silindiMi               Boolean   @default(false) @map("silindi_mi")
+  silinmeTarihi           DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
+  silenKullaniciId        BigInt?   @map("silen_kullanici_id")
+  olusturanKullaniciId    BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId  BigInt?   @map("guncelleyen_kullanici_id")
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  kategori                Kategori?     @relation(fields: [kategoriId], references: [id], onDelete: Restrict)
+  marka                   Marka?        @relation(fields: [markaId], references: [id], onDelete: Restrict)
+  varyantlar              UrunVaryant[]
+
+  @@index([kategoriId])
+  @@index([markaId])
+  @@index([aktifMi])
+  @@map("urun")
+}
+
+model UrunVaryant {
+  id                      BigInt    @id @default(autoincrement())
+  publicId                String    @unique @default(dbgenerated("gen_random_uuid()")) @map("public_id") @db.Uuid
+  urunId                  BigInt    @map("urun_id")
+  sku                     String    @unique @db.VarChar(100)
+  barkod                  String?   @db.VarChar(100)
+  modelNo                 String?   @map("model_no") @db.VarChar(100)
+  ureticiKodu             String?   @map("uretici_kodu") @db.VarChar(100)
+  tedarikciKodu           String?   @map("tedarikci_kodu") @db.VarChar(100)
+  varyantAd               String?   @map("varyant_ad") @db.VarChar(300)
+  varsayilanMi            Boolean   @default(false) @map("varsayilan_mi")
+  eksenKombinasyon        Json      @default("{}") @map("eksen_kombinasyon") @db.JsonB
+  paraBirimiKod           String    @map("para_birimi_kod") @db.Char(3)
+  vergiOraniId            BigInt?   @map("vergi_orani_id")
+  birimId                 BigInt?   @map("birim_id")
+  agirlikGr               Decimal?  @map("agirlik_gr") @db.Decimal(12, 2)
+  enCm                    Decimal?  @map("en_cm") @db.Decimal(10, 2)
+  boyCm                   Decimal?  @map("boy_cm") @db.Decimal(10, 2)
+  yukseklikCm             Decimal?  @map("yukseklik_cm") @db.Decimal(10, 2)
+  hacimDm3                Decimal?  @map("hacim_dm3") @db.Decimal(15, 4)
+  kritikStok              Decimal?  @default(0) @map("kritik_stok") @db.Decimal(15, 4)
+  minimumStok             Decimal?  @default(0) @map("minimum_stok") @db.Decimal(15, 4)
+  maksimumStok            Decimal?  @map("maksimum_stok") @db.Decimal(15, 4)
+  yenidenSiparisNoktasi   Decimal?  @map("yeniden_siparis_noktasi") @db.Decimal(15, 4)
+  yenidenSiparisMiktar    Decimal?  @map("yeniden_siparis_miktar") @db.Decimal(15, 4)
+  anaResimUrl             String?   @map("ana_resim_url") @db.Text
+  sira                    Int       @default(0)
+  aktifMi                 Boolean   @default(true) @map("aktif_mi")
+  silindiMi               Boolean   @default(false) @map("silindi_mi")
+  silinmeTarihi           DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
+  silenKullaniciId        BigInt?   @map("silen_kullanici_id")
+  olusturanKullaniciId    BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId  BigInt?   @map("guncelleyen_kullanici_id")
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @default(now()) @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  urun                    Urun      @relation(fields: [urunId], references: [id], onDelete: Cascade)
+
+  @@index([urunId])
+  @@index([sku])
+  @@index([barkod])
+  @@map("urun_varyant")
+}

@@ -1,0 +1,14 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@kuvvem/contracts(.*)$": "<rootDir>/../../packages/contracts/src$1",
+    "^@kuvvem/database(.*)$": "<rootDir>/../../packages/database/src$1"
+  },
+  "testTimeout": 30000
+}
