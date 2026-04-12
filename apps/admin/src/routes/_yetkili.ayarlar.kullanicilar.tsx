@@ -41,6 +41,7 @@ interface Kullanici {
   aktifMi: boolean;
   sonGirisTarihi: string | null;
   olusturmaTarihi: string;
+  roller?: Array<{ rol: { kod: string; ad: string } }>;
 }
 
 interface Rol {
@@ -135,6 +136,7 @@ function KullanicilarSayfa() {
                   <TableHead>Ad Soyad</TableHead>
                   <TableHead>E-posta</TableHead>
                   <TableHead>Telefon</TableHead>
+                  <TableHead>Rol</TableHead>
                   <TableHead>Durum</TableHead>
                   <TableHead>Son Giris</TableHead>
                   <TableHead className="w-[80px]">Islem</TableHead>
@@ -146,6 +148,15 @@ function KullanicilarSayfa() {
                     <TableCell className="font-medium">{k.ad} {k.soyad}</TableCell>
                     <TableCell className="text-metin-ikinci">{k.email}</TableCell>
                     <TableCell className="text-metin-ikinci">{k.telefon || "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {k.roller?.map((r) => (
+                          <Badge key={r.rol.kod} variant="outline" className="text-xs">
+                            {r.rol.ad}
+                          </Badge>
+                        )) ?? "-"}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={k.aktifMi ? "default" : "secondary"}>
                         {k.aktifMi ? "Aktif" : "Pasif"}
@@ -209,13 +220,14 @@ function KullaniciDrawer({
   onKaydet: () => void;
 }) {
   const duzenlemeMi = !!kullanici;
+  const mevcutRoller = kullanici?.roller?.map((r) => r.rol.kod) ?? [];
   const [form, setForm] = useState({
     ad: kullanici?.ad ?? "",
     soyad: kullanici?.soyad ?? "",
     email: kullanici?.email ?? "",
     telefon: kullanici?.telefon ?? "",
     sifre: "",
-    rolKodlari: [] as string[],
+    rolKodlari: mevcutRoller,
   });
   const [kaydediyor, setKaydediyor] = useState(false);
 
@@ -228,6 +240,7 @@ function KullaniciDrawer({
           soyad: form.soyad,
           email: form.email,
           telefon: form.telefon || null,
+          rolKodlari: form.rolKodlari,
         });
         toast.basarili("Kullanici guncellendi");
       } else {
@@ -297,7 +310,7 @@ function KullaniciDrawer({
             </div>
           )}
 
-          {!duzenlemeMi && roller.length > 0 && (
+          {roller.length > 0 && (
             <div>
               <label className="text-sm font-medium text-metin mb-2 block">Roller</label>
               <div className="space-y-2">

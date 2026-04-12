@@ -27,6 +27,7 @@ export class KullaniciService {
         aktifMi: true,
         sonGirisTarihi: true,
         olusturmaTarihi: true,
+        roller: { select: { rol: { select: { kod: true, ad: true } } } },
       },
     });
   }
@@ -105,7 +106,7 @@ export class KullaniciService {
     guncelleyenId: bigint,
   ) {
     await this.detay(prisma, id);
-    return prisma.kullanici.update({
+    const kullanici = await prisma.kullanici.update({
       where: { id: BigInt(id) },
       data: {
         ad: girdi.ad ?? undefined,
@@ -115,6 +116,28 @@ export class KullaniciService {
         guncelleyenKullaniciId: guncelleyenId,
       },
     });
+
+    // Rol guncelleme (varsa)
+    if (girdi.rolKodlari) {
+      // Mevcut rolleri sil
+      await prisma.kullaniciRol.deleteMany({ where: { kullaniciId: BigInt(id) } });
+      // Yeni rolleri ata
+      if (girdi.rolKodlari.length > 0) {
+        const roller = await prisma.rol.findMany({ where: { kod: { in: girdi.rolKodlari } } });
+        if (roller.length > 0) {
+          await prisma.kullaniciRol.createMany({
+            data: roller.map((r: { id: bigint }) => ({
+              kullaniciId: BigInt(id),
+              rolId: r.id,
+              olusturanKullaniciId: guncelleyenId,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
+    }
+
+    return kullanici;
   }
 
   async aktiflikToggle(prisma: TenantClient, id: number, guncelleyenId: bigint) {
