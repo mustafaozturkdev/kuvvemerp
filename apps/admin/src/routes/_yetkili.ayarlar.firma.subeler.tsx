@@ -9,7 +9,7 @@ import {
   Mail,
   X,
   Loader2,
-  Instagram,
+  AtSign,
   FileText,
   Globe,
 } from "lucide-react";
@@ -459,7 +459,7 @@ function SubeDrawer({
                   Instagram
                 </label>
                 <div className="relative">
-                  <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-metin-pasif" />
+                  <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-metin-pasif" />
                   <Input
                     value={form.instagram}
                     onChange={(e) => setForm({ ...form, instagram: e.target.value })}

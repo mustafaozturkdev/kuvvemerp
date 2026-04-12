@@ -43,7 +43,7 @@ export const SistemAyarGuncelleSemasi = z.object({
   // Gorsel
   tema: z.string().max(20).optional(),
   markaRengi: z.string().max(20).optional().nullable(),
-}).strict();
+});
 export type SistemAyarGuncelleGirdi = z.infer<typeof SistemAyarGuncelleSemasi>;
 
 // ─── Şifre Değiştir ───
