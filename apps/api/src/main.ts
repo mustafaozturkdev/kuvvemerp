@@ -45,6 +45,21 @@ async function bootstrap(): Promise<void> {
     console.warn('[api] @fastify/helmet bulunamadi, HTTP guvenlik header\'lari devre disi');
   }
 
+  // ── Multipart (dosya yukleme) ──
+  const multipart = await import('@fastify/multipart');
+  await app.register(multipart.default, {
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  });
+
+  // ── Static file serving (uploads/) ──
+  const fastifyStatic = await import('@fastify/static');
+  const pathModule = await import('node:path');
+  await app.register(fastifyStatic.default, {
+    root: pathModule.resolve(process.cwd(), 'uploads'),
+    prefix: '/uploads/',
+    decorateReply: false,
+  });
+
   // ── Request ID + Tenant Resolver (Fastify hook) ──
   const fastifyInstance = app.getHttpAdapter().getInstance();
 
@@ -57,7 +72,7 @@ async function bootstrap(): Promise<void> {
 
     // Saglik + root bypass
     const url = req.url ?? '';
-    if (url.startsWith('/saglik') || url === '/' || url.startsWith('/metrics') || url === '/favicon.ico') {
+    if (url.startsWith('/saglik') || url === '/' || url.startsWith('/metrics') || url === '/favicon.ico' || url.startsWith('/uploads/')) {
       return;
     }
 

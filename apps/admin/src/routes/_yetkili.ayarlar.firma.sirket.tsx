@@ -26,6 +26,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { LocationSelect } from "@/components/ui/location-select";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export const Route = createFileRoute("/_yetkili/ayarlar/firma/sirket")({
   component: SirketBilgileriSayfa,
@@ -350,42 +351,46 @@ function SirketBilgileriSayfa() {
           </CardTitle>
           <CardDescription>Logo, imza ve marka rengi</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-metin mb-1 block">Firma Logo URL</label>
-              <Input value={form.firmaLogoUrl} onChange={(e) => setForm({ ...form, firmaLogoUrl: e.target.value })} placeholder="https://cdn.example.com/logo.png" />
-              {form.firmaLogoUrl && (
-                <img src={form.firmaLogoUrl} alt="Logo" className="mt-2 h-12 object-contain rounded border border-kenarlik p-1" />
-              )}
-            </div>
-            <div>
-              <label className="text-sm font-medium text-metin mb-1 block">Imza URL</label>
-              <Input value={form.imzaUrl} onChange={(e) => setForm({ ...form, imzaUrl: e.target.value })} placeholder="https://cdn.example.com/imza.png" />
-              {form.imzaUrl && (
-                <img src={form.imzaUrl} alt="Imza" className="mt-2 h-10 object-contain rounded border border-kenarlik p-1" />
-              )}
-            </div>
+        <CardContent className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <ImageUpload
+              value={form.firmaLogoUrl}
+              onChange={(url) => setForm({ ...form, firmaLogoUrl: url ?? "" })}
+              endpoint="/upload/logo"
+              label="Firma Logo"
+              placeholder="Logo yukle (max 800px)"
+              maxWidth={160}
+              maxHeight={100}
+            />
+            <ImageUpload
+              value={form.imzaUrl}
+              onChange={(url) => setForm({ ...form, imzaUrl: url ?? "" })}
+              endpoint="/upload/imza"
+              label="Imza"
+              placeholder="Imza yukle (max 400x200)"
+              maxWidth={160}
+              maxHeight={80}
+            />
+            <ImageUpload
+              value={form.teklifLogoUrl}
+              onChange={(url) => setForm({ ...form, teklifLogoUrl: url ?? "" })}
+              endpoint="/upload/logo"
+              label="Teklif Logo"
+              placeholder="Teklif logosu yukle"
+              maxWidth={160}
+              maxHeight={100}
+            />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-metin mb-1 block">Teklif Logo URL</label>
-              <Input value={form.teklifLogoUrl} onChange={(e) => setForm({ ...form, teklifLogoUrl: e.target.value })} placeholder="https://cdn.example.com/teklif-logo.png" />
-              {form.teklifLogoUrl && (
-                <img src={form.teklifLogoUrl} alt="Teklif Logo" className="mt-2 h-12 object-contain rounded border border-kenarlik p-1" />
-              )}
-            </div>
-            <div>
-              <label className="text-sm font-medium text-metin mb-1 block">Marka Rengi</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={form.markaRengi || "#6366f1"}
-                  onChange={(e) => setForm({ ...form, markaRengi: e.target.value })}
-                  className="h-10 w-10 rounded-lg border border-kenarlik cursor-pointer"
-                />
-                <Input value={form.markaRengi} onChange={(e) => setForm({ ...form, markaRengi: e.target.value })} placeholder="#6366f1" className="max-w-[140px]" />
-              </div>
+          <div>
+            <label className="text-sm font-medium text-metin mb-1 block">Marka Rengi</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={form.markaRengi || "#6366f1"}
+                onChange={(e) => setForm({ ...form, markaRengi: e.target.value })}
+                className="h-10 w-10 rounded-lg border border-kenarlik cursor-pointer"
+              />
+              <Input value={form.markaRengi} onChange={(e) => setForm({ ...form, markaRengi: e.target.value })} placeholder="#6366f1" className="max-w-[140px]" />
             </div>
           </div>
         </CardContent>
