@@ -20,7 +20,7 @@ export class JwtGuard extends AuthGuard('jwt') {
     super();
   }
 
-  canActivate(context: ExecutionContext): ReturnType<AuthGuard['canActivate']> {
+  canActivate(context: ExecutionContext) {
     const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_META_KEY, [
       context.getHandler(),
       context.getClass(),

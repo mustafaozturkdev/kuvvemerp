@@ -1,7 +1,7 @@
 /**
  * Fastify Request augmentation — tenant + kullanici bilgileri her request'te tasinir.
  */
-import type { TenantClient } from '@kuvvem/database/tenant-client';
+import type { TenantClient } from '@kuvvem/database';
 
 export interface TenantBilgi {
   id: string;        // tenant uuid

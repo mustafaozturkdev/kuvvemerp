@@ -44,11 +44,28 @@ export const kullanAuthStore = create<AuthDurum>()(
         try {
           // Lazy import → circular import'u önle
           const { apiIstemci } = await import("./api-client");
-          const cevap = await apiIstemci.post<{
-            veri: { accessToken: string; refreshToken: string; kullanici: Kullanici };
+          // Login -> JWT token al
+          const tokenCevap = await apiIstemci.post<{
+            accessToken: string; refreshToken: string; accessTokenBitis: string;
           }>("/auth/giris", { email, sifre });
 
-          const { accessToken, refreshToken, kullanici } = cevap.data.veri;
+          const { accessToken, refreshToken } = tokenCevap.data;
+
+          // /me -> kullanici bilgisi al
+          const meCevap = await apiIstemci.get<{
+            kullanici: { id: string; email: string; roller: string[] };
+            tenant: { id: string; slug: string };
+          }>("/auth/me", { headers: { Authorization: `Bearer ${accessToken}` } });
+
+          const me = meCevap.data;
+          const kullanici: Kullanici = {
+            id: 0,
+            publicId: me.kullanici.id,
+            adSoyad: "",
+            email: me.kullanici.email,
+            rol: me.kullanici.roller[0] ?? "kullanici",
+            izinler: [],
+          };
           set({
             accessToken,
             refreshToken,
@@ -77,11 +94,11 @@ export const kullanAuthStore = create<AuthDurum>()(
         try {
           const { apiIstemci } = await import("./api-client");
           const cevap = await apiIstemci.post<{
-            veri: { accessToken: string; refreshToken: string };
+            accessToken: string; refreshToken: string;
           }>("/auth/yenile", { refreshToken });
           set({
-            accessToken: cevap.data.veri.accessToken,
-            refreshToken: cevap.data.veri.refreshToken,
+            accessToken: cevap.data.accessToken,
+            refreshToken: cevap.data.refreshToken,
           });
           return true;
         } catch {

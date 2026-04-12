@@ -12,7 +12,7 @@ import type {
   TokenCevap,
   YenilemeGirdi,
 } from '@kuvvem/contracts';
-import { TenantClient } from '@kuvvem/database/tenant-client';
+import { TenantClient } from '@kuvvem/database';
 import { sifreDogrula } from './argon2.helper.js';
 import type { Env } from '../../config/env.validation.js';
 import type { TenantBilgi } from '../../common/types/request.js';

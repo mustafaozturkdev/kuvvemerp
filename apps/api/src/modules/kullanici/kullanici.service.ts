@@ -4,7 +4,7 @@ import type {
   KullaniciGuncelleGirdi,
   KullaniciOlusturGirdi,
 } from '@kuvvem/contracts';
-import { TenantClient } from '@kuvvem/database/tenant-client';
+import { TenantClient } from '@kuvvem/database';
 import { sifreHashle } from '../auth/argon2.helper.js';
 import type { Env } from '../../config/env.validation.js';
 
@@ -84,7 +84,7 @@ export class KullaniciService {
       });
       if (roller.length > 0) {
         await prisma.kullaniciRol.createMany({
-          data: roller.map((r) => ({
+          data: roller.map((r: { id: bigint }) => ({
             kullaniciId: kullanici.id,
             rolId: r.id,
             olusturanKullaniciId: olusturanId,

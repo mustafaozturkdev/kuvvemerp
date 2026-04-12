@@ -1,11 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   Req,
-  UsePipes,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { FastifyRequest } from 'fastify';
@@ -36,11 +36,10 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('giris')
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ZodValidationPipe(GirisGirdiSemasi))
   async giris(
     @Tenant() tenant: TenantBilgi,
     @Req() req: FastifyRequest,
-    @Body() girdi: GirisGirdi,
+    @Body(new ZodValidationPipe(GirisGirdiSemasi)) girdi: GirisGirdi,
   ): Promise<TokenCevap> {
     if (!req.prisma) {
       throw new Error('req.prisma yok — TenantInterceptor calismadi');
@@ -55,11 +54,10 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('yenile')
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ZodValidationPipe(YenilemeGirdiSemasi))
   async yenile(
     @Tenant() tenant: TenantBilgi,
     @Req() req: FastifyRequest,
-    @Body() girdi: YenilemeGirdi,
+    @Body(new ZodValidationPipe(YenilemeGirdiSemasi)) girdi: YenilemeGirdi,
   ): Promise<TokenCevap> {
     if (!req.prisma) {
       throw new Error('req.prisma yok');
@@ -68,6 +66,26 @@ export class AuthController {
       ip: (req.ip as string | undefined) ?? null,
       cihazBilgisi: (req.headers['user-agent'] as string) ?? null,
     });
+  }
+
+  @Get('me')
+  async me(
+    @Tenant() tenant: TenantBilgi,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+  ) {
+    return {
+      kullanici: {
+        id: kullanici.publicId,
+        email: kullanici.email,
+        roller: kullanici.roller,
+      },
+      tenant: {
+        id: tenant.id,
+        slug: tenant.slug,
+        dil: tenant.varsayilanDil,
+        zamanDilimi: tenant.zamanDilimi,
+      },
+    };
   }
 
   @Post('cikis')

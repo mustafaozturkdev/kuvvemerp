@@ -29,12 +29,12 @@ export type TokenCevap = z.infer<typeof TokenCevapSemasi>;
 /** JWT payload — access token içinde taşınan minimum claim seti */
 export interface JwtPayload {
   sub: string; // kullanici public_id
-  kullanici_id: number; // bigint id (JSON serileştirme için number — 2^53 limiti OK)
+  kullanici_id: string; // bigint id — string olarak tasinir (precision korumasi)
   tenant_id: string; // tenant uuid
   tenant_slug: string;
   roller: string[];
   yetkiler: string[];
-  oturum_id: number;
+  oturum_id: string;
   iat?: number;
   exp?: number;
 }

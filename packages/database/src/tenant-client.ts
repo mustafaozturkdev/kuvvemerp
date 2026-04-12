@@ -5,7 +5,7 @@
 export {
   PrismaClient as TenantClient,
   Prisma as TenantPrisma,
-} from '../node_modules/.prisma/tenant/index.js';
+} from '../node_modules/.prisma/client-tenant/index.js';
 export type {
   SistemAyar,
   Kullanici,
@@ -23,4 +23,4 @@ export type {
   UrunVaryant,
   Kategori,
   Marka,
-} from '../node_modules/.prisma/tenant/index.js';
+} from '../node_modules/.prisma/client-tenant/index.js';

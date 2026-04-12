@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { LRUCache } from 'lru-cache';
-import { TenantClient } from '@kuvvem/database/tenant-client';
+import { TenantClient } from '@kuvvem/database';
 import { PrismaMasterService } from './prisma-master.service.js';
 import type { TenantBilgi } from '../common/types/request.js';
 import type { Env } from '../config/env.validation.js';

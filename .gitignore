@@ -12,3 +12,11 @@ coverage
 .vscode
 *.tsbuildinfo
 prisma/migrations/dev/
+
+# Test build outputs
+apps/api/test/**/*.js
+apps/api/test/**/*.d.ts
+apps/api/test/**/*.map
+
+# Contracts build output (rebuild edilir)
+packages/contracts/dist/

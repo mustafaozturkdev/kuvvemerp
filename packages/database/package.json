@@ -2,12 +2,13 @@
   "name": "@kuvvem/database",
   "version": "0.1.0",
   "private": true,
-  "main": "./src/index.ts",
+  "main": "./index.js",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./master-client": "./src/master-client.ts",
-    "./tenant-client": "./src/tenant-client.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./index.js"
+    }
   },
   "scripts": {
     "prisma:generate": "prisma generate --schema=./prisma/schema.master.prisma && prisma generate --schema=./prisma/schema.tenant.prisma",

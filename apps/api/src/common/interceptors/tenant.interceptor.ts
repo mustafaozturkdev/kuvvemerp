@@ -24,6 +24,10 @@ export class TenantInterceptor implements NestInterceptor {
     if (req.tenant && !req.prisma) {
       req.prisma = await this.tenantService.getClient(req.tenant.dbAdi);
     }
+    // Passport req.user'a yazar — biz req.kullanici'ya kopyaliyoruz
+    if ((req as any).user && !req.kullanici) {
+      req.kullanici = (req as any).user;
+    }
     return next.handle();
   }
 }

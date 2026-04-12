@@ -45,11 +45,36 @@ async function bootstrap(): Promise<void> {
     console.warn('[api] @fastify/helmet bulunamadi, HTTP guvenlik header\'lari devre disi');
   }
 
-  // ── Request ID middleware ──
-  // Fastify genReqId ile ID olusturulur, req.istekId'ye kopyalanir
+  // ── Request ID + Tenant Resolver (Fastify hook) ──
   const fastifyInstance = app.getHttpAdapter().getInstance();
+
+  // TenantService'i NestJS DI'den al
+  const { TenantService } = await import('./tenant/tenant.service.js');
+  const tenantService = app.get(TenantService);
+
   fastifyInstance.addHook('onRequest', async (req: any) => {
     req.istekId = req.id;
+
+    // Saglik + root bypass
+    const url = req.url ?? '';
+    if (url.startsWith('/saglik') || url === '/' || url.startsWith('/metrics') || url === '/favicon.ico') {
+      return;
+    }
+
+    // Tenant resolve
+    const host = req.hostname ?? '';
+    if (!host) return;
+
+    try {
+      const tenant = await tenantService.resolveTenant(host);
+      const client = await tenantService.getClient(tenant.dbAdi);
+      req.tenant = tenant;
+      req.prisma = client;
+    } catch (err: any) {
+      // Auth endpoint'leri @Public, tenant olmadan da geçmemeli
+      // Hata middleware'de next(err) yerine burada set ediyoruz
+      req.tenantHata = err;
+    }
   });
 
   // ── CORS — production'da bilinen origin listesi ──

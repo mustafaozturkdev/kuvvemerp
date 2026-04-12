@@ -1,10 +1,10 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AppConfigModule } from './config/app.config.js';
 import { TenantModule } from './tenant/tenant.module.js';
-import { TenantResolverMiddleware } from './tenant/tenant-resolver.middleware.js';
+// TenantResolver artik Fastify hook olarak main.ts'de calisir
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor.js';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
@@ -55,8 +55,4 @@ import { SaglikModule } from './modules/saglik/saglik.module.js';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(TenantResolverMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}

@@ -4,7 +4,7 @@ import type {
   CariListeSorgu,
   CariOlusturGirdi,
 } from '@kuvvem/contracts';
-import { TenantClient } from '@kuvvem/database/tenant-client';
+import { TenantClient } from '@kuvvem/database';
 
 /**
  * CariService — cari CRUD. req.prisma uzerinden tenant DB'sinde islem yapar.

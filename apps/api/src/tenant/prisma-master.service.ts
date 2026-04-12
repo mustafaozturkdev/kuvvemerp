@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { MasterClient } from '@kuvvem/database/master-client';
+import { MasterClient } from '@kuvvem/database';
 
 /**
  * PrismaMasterService — kuvvem_master DB ile tek Prisma client.
@@ -11,6 +11,7 @@ export class PrismaMasterService extends MasterClient implements OnModuleInit, O
 
   constructor() {
     super({
+      datasourceUrl: process.env.DATABASE_URL_MASTER,
       log: [
         { level: 'warn', emit: 'stdout' },
         { level: 'error', emit: 'stdout' },
