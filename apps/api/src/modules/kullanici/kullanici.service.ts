@@ -1,11 +1,12 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type {
   KullaniciGuncelleGirdi,
   KullaniciOlusturGirdi,
+  SifreDegistirGirdi,
 } from '@kuvvem/contracts';
 import { TenantClient } from '@kuvvem/database';
-import { sifreHashle } from '../auth/argon2.helper.js';
+import { sifreHashle, sifreDogrula } from '../auth/argon2.helper.js';
 import type { Env } from '../../config/env.validation.js';
 
 @Injectable()
@@ -114,5 +115,42 @@ export class KullaniciService {
         guncelleyenKullaniciId: guncelleyenId,
       },
     });
+  }
+
+  async aktiflikToggle(prisma: TenantClient, id: number, guncelleyenId: bigint) {
+    const k = await this.detay(prisma, id);
+    return prisma.kullanici.update({
+      where: { id: BigInt(id) },
+      data: {
+        aktifMi: !k.aktifMi,
+        guncelleyenKullaniciId: guncelleyenId,
+      },
+    });
+  }
+
+  async sifreDegistir(prisma: TenantClient, kullaniciId: bigint, girdi: SifreDegistirGirdi) {
+    const k = await prisma.kullanici.findUnique({ where: { id: kullaniciId } });
+    if (!k) throw new NotFoundException({ kod: 'KULLANICI_BULUNAMADI', mesaj: 'Kullanici bulunamadi' });
+
+    const eskiDogruMu = await sifreDogrula(k.sifreHash, girdi.eskiSifre);
+    if (!eskiDogruMu) {
+      throw new BadRequestException({ kod: 'ESKI_SIFRE_YANLIS', mesaj: 'Mevcut sifre hatali' });
+    }
+
+    const yeniHash = await sifreHashle(girdi.yeniSifre, {
+      memoryCost: this.config.get('ARGON2_MEMORY_COST', { infer: true }),
+      timeCost: this.config.get('ARGON2_TIME_COST', { infer: true }),
+      parallelism: this.config.get('ARGON2_PARALLELISM', { infer: true }),
+    });
+
+    await prisma.kullanici.update({
+      where: { id: kullaniciId },
+      data: {
+        sifreHash: yeniHash,
+        sifreSonDegisim: new Date(),
+      },
+    });
+
+    return { mesaj: 'Sifre basariyla degistirildi' };
   }
 }

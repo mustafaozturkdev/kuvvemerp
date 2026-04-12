@@ -12,10 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as GirisRouteImport } from './routes/giris'
 import { Route as YetkiliRouteImport } from './routes/_yetkili'
 import { Route as YetkiliIndexRouteImport } from './routes/_yetkili.index'
-import { Route as YetkiliUrunIndexRouteImport } from './routes/_yetkili.urun.index'
-import { Route as YetkiliCariIndexRouteImport } from './routes/_yetkili.cari.index'
-import { Route as YetkiliAyarlarIndexRouteImport } from './routes/_yetkili.ayarlar.index'
+import { Route as YetkiliUrunListeRouteImport } from './routes/_yetkili.urun.liste'
+import { Route as YetkiliCariListeRouteImport } from './routes/_yetkili.cari.liste'
 import { Route as YetkiliCariCariIdRouteImport } from './routes/_yetkili.cari.$cariId'
+import { Route as YetkiliAyarlarKullanicilarRouteImport } from './routes/_yetkili.ayarlar.kullanicilar'
+import { Route as YetkiliAyarlarGenelRouteImport } from './routes/_yetkili.ayarlar.genel'
 
 const GirisRoute = GirisRouteImport.update({
   id: '/giris',
@@ -31,19 +32,14 @@ const YetkiliIndexRoute = YetkiliIndexRouteImport.update({
   path: '/',
   getParentRoute: () => YetkiliRoute,
 } as any)
-const YetkiliUrunIndexRoute = YetkiliUrunIndexRouteImport.update({
-  id: '/urun/',
-  path: '/urun/',
+const YetkiliUrunListeRoute = YetkiliUrunListeRouteImport.update({
+  id: '/urun/liste',
+  path: '/urun/liste',
   getParentRoute: () => YetkiliRoute,
 } as any)
-const YetkiliCariIndexRoute = YetkiliCariIndexRouteImport.update({
-  id: '/cari/',
-  path: '/cari/',
-  getParentRoute: () => YetkiliRoute,
-} as any)
-const YetkiliAyarlarIndexRoute = YetkiliAyarlarIndexRouteImport.update({
-  id: '/ayarlar/',
-  path: '/ayarlar/',
+const YetkiliCariListeRoute = YetkiliCariListeRouteImport.update({
+  id: '/cari/liste',
+  path: '/cari/liste',
   getParentRoute: () => YetkiliRoute,
 } as any)
 const YetkiliCariCariIdRoute = YetkiliCariCariIdRouteImport.update({
@@ -51,53 +47,76 @@ const YetkiliCariCariIdRoute = YetkiliCariCariIdRouteImport.update({
   path: '/cari/$cariId',
   getParentRoute: () => YetkiliRoute,
 } as any)
+const YetkiliAyarlarKullanicilarRoute =
+  YetkiliAyarlarKullanicilarRouteImport.update({
+    id: '/ayarlar/kullanicilar',
+    path: '/ayarlar/kullanicilar',
+    getParentRoute: () => YetkiliRoute,
+  } as any)
+const YetkiliAyarlarGenelRoute = YetkiliAyarlarGenelRouteImport.update({
+  id: '/ayarlar/genel',
+  path: '/ayarlar/genel',
+  getParentRoute: () => YetkiliRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof YetkiliIndexRoute
   '/giris': typeof GirisRoute
+  '/ayarlar/genel': typeof YetkiliAyarlarGenelRoute
+  '/ayarlar/kullanicilar': typeof YetkiliAyarlarKullanicilarRoute
   '/cari/$cariId': typeof YetkiliCariCariIdRoute
-  '/ayarlar/': typeof YetkiliAyarlarIndexRoute
-  '/cari/': typeof YetkiliCariIndexRoute
-  '/urun/': typeof YetkiliUrunIndexRoute
+  '/cari/liste': typeof YetkiliCariListeRoute
+  '/urun/liste': typeof YetkiliUrunListeRoute
 }
 export interface FileRoutesByTo {
   '/giris': typeof GirisRoute
   '/': typeof YetkiliIndexRoute
+  '/ayarlar/genel': typeof YetkiliAyarlarGenelRoute
+  '/ayarlar/kullanicilar': typeof YetkiliAyarlarKullanicilarRoute
   '/cari/$cariId': typeof YetkiliCariCariIdRoute
-  '/ayarlar': typeof YetkiliAyarlarIndexRoute
-  '/cari': typeof YetkiliCariIndexRoute
-  '/urun': typeof YetkiliUrunIndexRoute
+  '/cari/liste': typeof YetkiliCariListeRoute
+  '/urun/liste': typeof YetkiliUrunListeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_yetkili': typeof YetkiliRouteWithChildren
   '/giris': typeof GirisRoute
   '/_yetkili/': typeof YetkiliIndexRoute
+  '/_yetkili/ayarlar/genel': typeof YetkiliAyarlarGenelRoute
+  '/_yetkili/ayarlar/kullanicilar': typeof YetkiliAyarlarKullanicilarRoute
   '/_yetkili/cari/$cariId': typeof YetkiliCariCariIdRoute
-  '/_yetkili/ayarlar/': typeof YetkiliAyarlarIndexRoute
-  '/_yetkili/cari/': typeof YetkiliCariIndexRoute
-  '/_yetkili/urun/': typeof YetkiliUrunIndexRoute
+  '/_yetkili/cari/liste': typeof YetkiliCariListeRoute
+  '/_yetkili/urun/liste': typeof YetkiliUrunListeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/giris'
+    | '/ayarlar/genel'
+    | '/ayarlar/kullanicilar'
     | '/cari/$cariId'
-    | '/ayarlar/'
-    | '/cari/'
-    | '/urun/'
+    | '/cari/liste'
+    | '/urun/liste'
   fileRoutesByTo: FileRoutesByTo
-  to: '/giris' | '/' | '/cari/$cariId' | '/ayarlar' | '/cari' | '/urun'
+  to:
+    | '/giris'
+    | '/'
+    | '/ayarlar/genel'
+    | '/ayarlar/kullanicilar'
+    | '/cari/$cariId'
+    | '/cari/liste'
+    | '/urun/liste'
   id:
     | '__root__'
     | '/_yetkili'
     | '/giris'
     | '/_yetkili/'
+    | '/_yetkili/ayarlar/genel'
+    | '/_yetkili/ayarlar/kullanicilar'
     | '/_yetkili/cari/$cariId'
-    | '/_yetkili/ayarlar/'
-    | '/_yetkili/cari/'
-    | '/_yetkili/urun/'
+    | '/_yetkili/cari/liste'
+    | '/_yetkili/urun/liste'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -128,25 +147,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof YetkiliIndexRouteImport
       parentRoute: typeof YetkiliRoute
     }
-    '/_yetkili/urun/': {
-      id: '/_yetkili/urun/'
-      path: '/urun'
-      fullPath: '/urun/'
-      preLoaderRoute: typeof YetkiliUrunIndexRouteImport
+    '/_yetkili/urun/liste': {
+      id: '/_yetkili/urun/liste'
+      path: '/urun/liste'
+      fullPath: '/urun/liste'
+      preLoaderRoute: typeof YetkiliUrunListeRouteImport
       parentRoute: typeof YetkiliRoute
     }
-    '/_yetkili/cari/': {
-      id: '/_yetkili/cari/'
-      path: '/cari'
-      fullPath: '/cari/'
-      preLoaderRoute: typeof YetkiliCariIndexRouteImport
-      parentRoute: typeof YetkiliRoute
-    }
-    '/_yetkili/ayarlar/': {
-      id: '/_yetkili/ayarlar/'
-      path: '/ayarlar'
-      fullPath: '/ayarlar/'
-      preLoaderRoute: typeof YetkiliAyarlarIndexRouteImport
+    '/_yetkili/cari/liste': {
+      id: '/_yetkili/cari/liste'
+      path: '/cari/liste'
+      fullPath: '/cari/liste'
+      preLoaderRoute: typeof YetkiliCariListeRouteImport
       parentRoute: typeof YetkiliRoute
     }
     '/_yetkili/cari/$cariId': {
@@ -156,23 +168,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof YetkiliCariCariIdRouteImport
       parentRoute: typeof YetkiliRoute
     }
+    '/_yetkili/ayarlar/kullanicilar': {
+      id: '/_yetkili/ayarlar/kullanicilar'
+      path: '/ayarlar/kullanicilar'
+      fullPath: '/ayarlar/kullanicilar'
+      preLoaderRoute: typeof YetkiliAyarlarKullanicilarRouteImport
+      parentRoute: typeof YetkiliRoute
+    }
+    '/_yetkili/ayarlar/genel': {
+      id: '/_yetkili/ayarlar/genel'
+      path: '/ayarlar/genel'
+      fullPath: '/ayarlar/genel'
+      preLoaderRoute: typeof YetkiliAyarlarGenelRouteImport
+      parentRoute: typeof YetkiliRoute
+    }
   }
 }
 
 interface YetkiliRouteChildren {
   YetkiliIndexRoute: typeof YetkiliIndexRoute
+  YetkiliAyarlarGenelRoute: typeof YetkiliAyarlarGenelRoute
+  YetkiliAyarlarKullanicilarRoute: typeof YetkiliAyarlarKullanicilarRoute
   YetkiliCariCariIdRoute: typeof YetkiliCariCariIdRoute
-  YetkiliAyarlarIndexRoute: typeof YetkiliAyarlarIndexRoute
-  YetkiliCariIndexRoute: typeof YetkiliCariIndexRoute
-  YetkiliUrunIndexRoute: typeof YetkiliUrunIndexRoute
+  YetkiliCariListeRoute: typeof YetkiliCariListeRoute
+  YetkiliUrunListeRoute: typeof YetkiliUrunListeRoute
 }
 
 const YetkiliRouteChildren: YetkiliRouteChildren = {
   YetkiliIndexRoute: YetkiliIndexRoute,
+  YetkiliAyarlarGenelRoute: YetkiliAyarlarGenelRoute,
+  YetkiliAyarlarKullanicilarRoute: YetkiliAyarlarKullanicilarRoute,
   YetkiliCariCariIdRoute: YetkiliCariCariIdRoute,
-  YetkiliAyarlarIndexRoute: YetkiliAyarlarIndexRoute,
-  YetkiliCariIndexRoute: YetkiliCariIndexRoute,
-  YetkiliUrunIndexRoute: YetkiliUrunIndexRoute,
+  YetkiliCariListeRoute: YetkiliCariListeRoute,
+  YetkiliUrunListeRoute: YetkiliUrunListeRoute,
 }
 
 const YetkiliRouteWithChildren =

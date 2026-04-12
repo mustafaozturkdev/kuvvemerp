@@ -13,7 +13,7 @@ import { kullanTema } from "@/hooks/use-tema";
 import { kullanKullanici } from "@/hooks/use-kullanici";
 import type { Tema } from "@/lib/tema-store";
 
-export const Route = createFileRoute("/_yetkili/ayarlar/")({
+export const Route = createFileRoute("/_yetkili/ayarlar/genel")({
   component: AyarlarSayfa,
 });
 

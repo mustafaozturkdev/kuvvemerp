@@ -16,7 +16,7 @@ import { ParaTutar } from "@/components/ortak/ParaTutar";
 import { DurumRozet } from "@/components/ortak/DurumRozet";
 import { Badge } from "@/components/ui/badge";
 
-export const Route = createFileRoute("/_yetkili/urun/")({
+export const Route = createFileRoute("/_yetkili/urun/liste")({
   component: UrunListe,
 });
 

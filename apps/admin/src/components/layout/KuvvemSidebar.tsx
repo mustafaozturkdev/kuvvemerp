@@ -65,7 +65,7 @@ const MENU: MenuOge[] = [
     hedef: "/cari",
     ikon: Users,
     cocuklar: [
-      { baslik: "Cari Listesi", hedef: "/cari", ikon: UserCircle },
+      { baslik: "Cari Listesi", hedef: "/cari/liste", ikon: UserCircle },
       { baslik: "Yeni Cari", hedef: "/cari/yeni", ikon: UserPlus },
       { baslik: "Cari Gruplar", hedef: "/cari/gruplar", ikon: UsersRound },
       { baslik: "Ekstre", hedef: "/cari/ekstre", ikon: FileText },
@@ -76,17 +76,17 @@ const MENU: MenuOge[] = [
     hedef: "/urun",
     ikon: Package,
     cocuklar: [
-      { baslik: "Urun Listesi", hedef: "/urun", ikon: PackageOpen },
+      { baslik: "Urun Listesi", hedef: "/urun/liste", ikon: PackageOpen },
       { baslik: "Yeni Urun", hedef: "/urun/yeni", ikon: PackagePlus },
       {
         baslik: "Tanimlar",
         hedef: "/urun/tanimlar",
         ikon: FolderTree,
         cocuklar: [
-          { baslik: "Kategoriler", hedef: "/urun/kategoriler", ikon: FolderTree },
-          { baslik: "Markalar", hedef: "/urun/markalar", ikon: Tag },
-          { baslik: "Fiyat Listeleri", hedef: "/urun/fiyat-listeleri", ikon: Layers },
-          { baslik: "Birimler", hedef: "/urun/birimler", ikon: Scale },
+          { baslik: "Kategoriler", hedef: "/urun/tanimlar/kategoriler", ikon: FolderTree },
+          { baslik: "Markalar", hedef: "/urun/tanimlar/markalar", ikon: Tag },
+          { baslik: "Fiyat Listeleri", hedef: "/urun/tanimlar/fiyat-listeleri", ikon: Layers },
+          { baslik: "Birimler", hedef: "/urun/tanimlar/birimler", ikon: Scale },
         ],
       },
     ],
@@ -96,7 +96,7 @@ const MENU: MenuOge[] = [
     hedef: "/stok",
     ikon: Warehouse,
     cocuklar: [
-      { baslik: "Stok Durumu", hedef: "/stok", ikon: Boxes },
+      { baslik: "Stok Durumu", hedef: "/stok/durum", ikon: Boxes },
       { baslik: "Transfer", hedef: "/stok/transfer", ikon: Send },
       { baslik: "Sayim", hedef: "/stok/sayim", ikon: ClipboardCheck },
       { baslik: "Hareketler", hedef: "/stok/hareketler", ikon: History },
@@ -120,7 +120,7 @@ const MENU: MenuOge[] = [
       { baslik: "Hesaplar", hedef: "/finans/hesaplar", ikon: Wallet },
       { baslik: "Tahsilat / Odeme", hedef: "/finans/tahsilat", ikon: Banknote },
       { baslik: "Banka", hedef: "/finans/banka", ikon: Building2 },
-      { baslik: "Gider / Gelir", hedef: "/finans/gider", ikon: TrendingDown },
+      { baslik: "Gider / Gelir", hedef: "/finans/gider-gelir", ikon: TrendingDown },
       { baslik: "Faturalar", hedef: "/finans/faturalar", ikon: Receipt },
     ],
   },
@@ -139,7 +139,7 @@ const MENU: MenuOge[] = [
     hedef: "/ayarlar",
     ikon: Settings,
     cocuklar: [
-      { baslik: "Genel", hedef: "/ayarlar", ikon: Settings },
+      { baslik: "Genel", hedef: "/ayarlar/genel", ikon: Settings },
       {
         baslik: "Firma",
         hedef: "/ayarlar/firma",

@@ -37,7 +37,9 @@ export class YetkiGuard implements CanActivate {
     }
 
     const req = context.switchToHttp().getRequest<FastifyRequest>();
-    const kullanici = req.kullanici;
+    // Passport req.user'a yazar, interceptor req.kullanici'ya kopyalar
+    // Guard interceptor'dan once calisir — her ikisini de kontrol et
+    const kullanici = req.kullanici ?? (req as any).user;
     if (!kullanici) {
       throw new ForbiddenException({
         kod: 'YASAK',
@@ -46,7 +48,10 @@ export class YetkiGuard implements CanActivate {
     }
 
     const sahipOlunan = new Set(kullanici.yetkiler);
+    // Admin (patron rolü) tüm yetki kontrollerinden muaf
     if (sahipOlunan.has('*')) return true;
+    const roller = kullanici.roller ?? [];
+    if (roller.includes('patron')) return true;
 
     const eksik = gerekliYetkiler.filter((y) => !sahipOlunan.has(y));
     if (eksik.length > 0) {

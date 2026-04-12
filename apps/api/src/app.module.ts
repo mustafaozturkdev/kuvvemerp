@@ -13,6 +13,7 @@ import { YetkiGuard } from './common/guards/yetki.guard.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { KullaniciModule } from './modules/kullanici/kullanici.module.js';
 import { CariModule } from './modules/cari/cari.module.js';
+import { RolModule } from './modules/rol/rol.module.js';
 import { SaglikModule } from './modules/saglik/saglik.module.js';
 
 @Module({
@@ -42,6 +43,7 @@ import { SaglikModule } from './modules/saglik/saglik.module.js';
     AuthModule,
     KullaniciModule,
     CariModule,
+    RolModule,
     SaglikModule,
   ],
   providers: [
