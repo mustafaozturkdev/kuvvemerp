@@ -1,0 +1,497 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { Building2, Save, Loader2, Phone, Mail, MapPin, FileText } from "lucide-react";
+import { apiIstemci } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { LocationSelect } from "@/components/ui/location-select";
+
+export const Route = createFileRoute("/_yetkili/ayarlar/firma/sirket")({
+  component: SirketBilgileriSayfa,
+});
+
+interface SistemAyar {
+  id: number;
+  firmaAdi: string;
+  firmaLogoUrl: string | null;
+  firmaFaviconUrl: string | null;
+  varsayilanDil: string;
+  varsayilanParaBirimi: string;
+  zamanDilimi: string;
+  ulkeKodu: string;
+  tarihFormati: string;
+  saatFormati: string;
+  tema: string;
+  markaRengi: string | null;
+}
+
+// Firma bilgileri icin genisletilmis form — PHP parity
+interface FirmaForm {
+  // Temel
+  firmaAdi: string;
+  kisaAd: string;
+  unvan: string;
+  sahipAdi: string;
+  // Iletisim
+  email: string;
+  bildirimEmail: string;
+  telefon: string;
+  cep: string;
+  faks: string;
+  // Konum
+  il: string;
+  ilce: string;
+  adres: string;
+  // Vergi
+  vergiDairesi: string;
+  vergiNo: string;
+  // Gorsel
+  firmaLogoUrl: string;
+  markaRengi: string;
+  // Bolgesel
+  varsayilanParaBirimi: string;
+  zamanDilimi: string;
+  ulkeKodu: string;
+  tarihFormati: string;
+  saatFormati: string;
+}
+
+const PARA_BIRIMLERI = [
+  { kod: "TRY", etiket: "Turk Lirasi (TRY)" },
+  { kod: "USD", etiket: "ABD Dolari (USD)" },
+  { kod: "EUR", etiket: "Euro (EUR)" },
+  { kod: "GBP", etiket: "Sterlin (GBP)" },
+];
+
+const ZAMAN_DILIMLERI = [
+  "Europe/Istanbul",
+  "Europe/London",
+  "Europe/Berlin",
+  "America/New_York",
+  "Asia/Dubai",
+];
+
+const TARIH_FORMATLARI = [
+  "DD.MM.YYYY",
+  "DD/MM/YYYY",
+  "YYYY-MM-DD",
+  "MM/DD/YYYY",
+];
+
+function SirketBilgileriSayfa() {
+  const [yukleniyor, setYukleniyor] = useState(true);
+  const [kaydediyor, setKaydediyor] = useState(false);
+  const [form, setForm] = useState<FirmaForm>({
+    firmaAdi: "",
+    kisaAd: "",
+    unvan: "",
+    sahipAdi: "",
+    email: "",
+    bildirimEmail: "",
+    telefon: "",
+    cep: "",
+    faks: "",
+    il: "",
+    ilce: "",
+    adres: "",
+    vergiDairesi: "",
+    vergiNo: "",
+    firmaLogoUrl: "",
+    markaRengi: "",
+    varsayilanParaBirimi: "TRY",
+    zamanDilimi: "Europe/Istanbul",
+    ulkeKodu: "TR",
+    tarihFormati: "DD.MM.YYYY",
+    saatFormati: "HH:mm",
+  });
+
+  useEffect(() => {
+    const yukle = async () => {
+      try {
+        const res = await apiIstemci.get<SistemAyar>("/ayar");
+        const d = res.data;
+        setForm((prev) => ({
+          ...prev,
+          firmaAdi: d.firmaAdi ?? "",
+          firmaLogoUrl: d.firmaLogoUrl ?? "",
+          markaRengi: d.markaRengi ?? "",
+          varsayilanParaBirimi: d.varsayilanParaBirimi ?? "TRY",
+          zamanDilimi: d.zamanDilimi ?? "Europe/Istanbul",
+          ulkeKodu: d.ulkeKodu ?? "TR",
+          tarihFormati: d.tarihFormati ?? "DD.MM.YYYY",
+          saatFormati: d.saatFormati ?? "HH:mm",
+        }));
+      } catch {
+        toast.hata("Sistem ayarlari yuklenemedi");
+      }
+      setYukleniyor(false);
+    };
+    void yukle();
+  }, []);
+
+  const kaydet = async () => {
+    setKaydediyor(true);
+    try {
+      await apiIstemci.put("/ayar", {
+        firmaAdi: form.firmaAdi,
+        firmaLogoUrl: form.firmaLogoUrl || null,
+        markaRengi: form.markaRengi || null,
+        varsayilanParaBirimi: form.varsayilanParaBirimi,
+        zamanDilimi: form.zamanDilimi,
+        ulkeKodu: form.ulkeKodu,
+        tarihFormati: form.tarihFormati,
+        saatFormati: form.saatFormati,
+      });
+      toast.basarili("Sirket bilgileri kaydedildi");
+    } catch {
+      toast.hata("Kayit basarisiz");
+    }
+    setKaydediyor(false);
+  };
+
+  if (yukleniyor) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-metin-pasif" />
+      </div>
+    );
+  }
+
+  const selectClass = cn(
+    "w-full h-10 rounded-lg border border-kenarlik bg-yuzey px-3 text-sm text-metin",
+    "focus:outline-none focus:ring-2 focus:ring-birincil/30 focus:border-birincil"
+  );
+
+  return (
+    <div className="flex flex-col gap-6 max-w-3xl">
+      <header className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-metin">
+            Sirket Bilgileri
+          </h1>
+          <p className="text-sm text-metin-ikinci">
+            Firma bilgileri, iletisim, vergi ve bolgesel ayarlar
+          </p>
+        </div>
+        <Button onClick={kaydet} disabled={kaydediyor}>
+          {kaydediyor ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          Kaydet
+        </Button>
+      </header>
+
+      {/* Temel Bilgiler */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-metin-pasif" />
+            Firma Bilgileri
+          </CardTitle>
+          <CardDescription>Unvan, kisa ad ve gorsel kimlik</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Firma Adi / Unvan
+              </label>
+              <Input
+                value={form.firmaAdi}
+                onChange={(e) => setForm({ ...form, firmaAdi: e.target.value })}
+                placeholder="Kuvvem Yazilim Ltd. Sti."
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Kisa Ad
+              </label>
+              <Input
+                value={form.kisaAd}
+                onChange={(e) => setForm({ ...form, kisaAd: e.target.value })}
+                placeholder="Kuvvem"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-metin mb-1 block">
+              Firma Sahibi Adi Soyadi
+            </label>
+            <Input
+              value={form.sahipAdi}
+              onChange={(e) => setForm({ ...form, sahipAdi: e.target.value })}
+              placeholder="Mustafa Ozturk"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Logo URL
+              </label>
+              <Input
+                value={form.firmaLogoUrl}
+                onChange={(e) => setForm({ ...form, firmaLogoUrl: e.target.value })}
+                placeholder="https://cdn.example.com/logo.png"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Marka Rengi
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={form.markaRengi || "#6366f1"}
+                  onChange={(e) => setForm({ ...form, markaRengi: e.target.value })}
+                  className="h-10 w-10 rounded-lg border border-kenarlik cursor-pointer"
+                />
+                <Input
+                  value={form.markaRengi}
+                  onChange={(e) => setForm({ ...form, markaRengi: e.target.value })}
+                  placeholder="#6366f1"
+                  className="max-w-[140px]"
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Iletisim */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="h-5 w-5 text-metin-pasif" />
+            Iletisim
+          </CardTitle>
+          <CardDescription>Telefon, e-posta ve faks</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                E-posta
+              </label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="info@firma.com"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Bildirim E-posta
+              </label>
+              <Input
+                type="email"
+                value={form.bildirimEmail}
+                onChange={(e) => setForm({ ...form, bildirimEmail: e.target.value })}
+                placeholder="bildirim@firma.com"
+              />
+              <p className="text-xs text-metin-pasif mt-0.5">Siparis, fatura vb. bildirimlerin gidecegi adres</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Telefon
+              </label>
+              <Input
+                value={form.telefon}
+                onChange={(e) => setForm({ ...form, telefon: e.target.value })}
+                placeholder="0212 XXX XX XX"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Cep Telefonu
+              </label>
+              <Input
+                value={form.cep}
+                onChange={(e) => setForm({ ...form, cep: e.target.value })}
+                placeholder="05XX XXX XX XX"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Faks
+              </label>
+              <Input
+                value={form.faks}
+                onChange={(e) => setForm({ ...form, faks: e.target.value })}
+                placeholder="0212 XXX XX XX"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Konum */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-metin-pasif" />
+            Adres
+          </CardTitle>
+          <CardDescription>Firma adresi ve konum bilgileri</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <LocationSelect
+            il={form.il}
+            ilce={form.ilce}
+            onIlChange={(il) => setForm({ ...form, il, ilce: "" })}
+            onIlceChange={(ilce) => setForm({ ...form, ilce })}
+          />
+          <div>
+            <label className="text-sm font-medium text-metin mb-1 block">
+              Acik Adres
+            </label>
+            <textarea
+              value={form.adres}
+              onChange={(e) => setForm({ ...form, adres: e.target.value })}
+              placeholder="Mahalle, cadde, sokak, no..."
+              rows={2}
+              className={cn(
+                "w-full rounded-lg border border-kenarlik bg-yuzey px-3 py-2 text-sm text-metin",
+                "placeholder:text-metin-pasif focus:outline-none focus:ring-2 focus:ring-birincil/30 focus:border-birincil",
+                "resize-none"
+              )}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Vergi */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-metin-pasif" />
+            Vergi Bilgileri
+          </CardTitle>
+          <CardDescription>Vergi dairesi ve numara bilgileri</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Vergi Dairesi
+              </label>
+              <Input
+                value={form.vergiDairesi}
+                onChange={(e) => setForm({ ...form, vergiDairesi: e.target.value })}
+                placeholder="Kadikoy V.D."
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Vergi Numarasi
+              </label>
+              <Input
+                value={form.vergiNo}
+                onChange={(e) => setForm({ ...form, vergiNo: e.target.value })}
+                placeholder="1234567890"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bolgesel Ayarlar */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bolgesel Ayarlar</CardTitle>
+          <CardDescription>Para birimi, saat dilimi ve tarih formati</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Para Birimi
+              </label>
+              <select
+                value={form.varsayilanParaBirimi}
+                onChange={(e) => setForm({ ...form, varsayilanParaBirimi: e.target.value })}
+                className={selectClass}
+              >
+                {PARA_BIRIMLERI.map((p) => (
+                  <option key={p.kod} value={p.kod}>{p.etiket}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Ulke Kodu
+              </label>
+              <Input
+                value={form.ulkeKodu}
+                onChange={(e) => setForm({ ...form, ulkeKodu: e.target.value.toUpperCase() })}
+                placeholder="TR"
+                maxLength={2}
+                className="max-w-[100px]"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Zaman Dilimi
+              </label>
+              <select
+                value={form.zamanDilimi}
+                onChange={(e) => setForm({ ...form, zamanDilimi: e.target.value })}
+                className={selectClass}
+              >
+                {ZAMAN_DILIMLERI.map((z) => (
+                  <option key={z} value={z}>{z}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-metin mb-1 block">
+                Tarih Formati
+              </label>
+              <select
+                value={form.tarihFormati}
+                onChange={(e) => setForm({ ...form, tarihFormati: e.target.value })}
+                className={selectClass}
+              >
+                {TARIH_FORMATLARI.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-metin mb-1 block">
+              Saat Formati
+            </label>
+            <div className="flex gap-3">
+              {["HH:mm", "hh:mm A"].map((sf) => (
+                <Button
+                  key={sf}
+                  variant={form.saatFormati === sf ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setForm({ ...form, saatFormati: sf })}
+                >
+                  {sf === "HH:mm" ? "24 Saat" : "12 Saat"}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

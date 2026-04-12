@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   Req,
 } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
@@ -16,6 +17,8 @@ import {
   KullaniciGuncelleSemasi,
   KullaniciOlusturGirdi,
   KullaniciOlusturSemasi,
+  KullaniciMagazaAtamaGirdi,
+  KullaniciMagazaAtamaSemasi,
   SifreDegistirGirdi,
   SifreDegistirSemasi,
 } from '@kuvvem/contracts';
@@ -71,6 +74,17 @@ export class KullaniciController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.kullaniciService.aktiflikToggle(req.prisma!, id, kullanici.id);
+  }
+
+  @Put(':id/magazalar')
+  @RequireYetki('kullanici.yonet')
+  async magazaAta(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(KullaniciMagazaAtamaSemasi)) girdi: KullaniciMagazaAtamaGirdi,
+  ) {
+    return this.kullaniciService.magazaAta(req.prisma!, id, girdi.magazaIdler, kullanici.id);
   }
 
   @Post('sifre-degistir')

@@ -15,6 +15,9 @@ import { KullaniciModule } from './modules/kullanici/kullanici.module.js';
 import { CariModule } from './modules/cari/cari.module.js';
 import { RolModule } from './modules/rol/rol.module.js';
 import { SaglikModule } from './modules/saglik/saglik.module.js';
+import { SistemAyarModule } from './modules/sistem-ayar/sistem-ayar.module.js';
+import { MagazaModule } from './modules/magaza/magaza.module.js';
+import { YetkiModule } from './modules/yetki/yetki.module.js';
 
 @Module({
   imports: [
@@ -45,6 +48,9 @@ import { SaglikModule } from './modules/saglik/saglik.module.js';
     CariModule,
     RolModule,
     SaglikModule,
+    SistemAyarModule,
+    MagazaModule,
+    YetkiModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

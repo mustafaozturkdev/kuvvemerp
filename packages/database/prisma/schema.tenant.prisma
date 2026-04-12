@@ -882,13 +882,21 @@ model Magaza {
   ulkeKodu                String    @map("ulke_kodu") @db.Char(2)
   ilId                    BigInt?   @map("il_id")
   ilceId                  BigInt?   @map("ilce_id")
+  ilAdi                   String?   @map("il_adi") @db.VarChar(50)
+  ilceAdi                 String?   @map("ilce_adi") @db.VarChar(50)
   adres                   String?   @db.Text
   postaKodu               String?   @map("posta_kodu") @db.VarChar(20)
   enlem                   Decimal?  @db.Decimal(10, 7)
   boylam                  Decimal?  @db.Decimal(10, 7)
   geoYaricapMetre         Int?      @map("geo_yaricap_metre")
   telefon                 String?   @db.VarChar(30)
+  cep                     String?   @db.VarChar(30)
   email                   String?   @db.Citext
+  ip                      String?   @db.VarChar(50)
+  instagram               String?   @db.VarChar(100)
+  eFaturaOnEk             String?   @map("e_fatura_on_ek") @db.VarChar(3)
+  eArsivOnEk              String?   @map("e_arsiv_on_ek") @db.VarChar(3)
+  harita                  String?   @db.Text
   paraBirimiKod           String    @map("para_birimi_kod") @db.Char(3)
   zamanDilimi             String?   @map("zaman_dilimi") @db.VarChar(50)
   fiyatListesiId          BigInt?   @map("fiyat_listesi_id")

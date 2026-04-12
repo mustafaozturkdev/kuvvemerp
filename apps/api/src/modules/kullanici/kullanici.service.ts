@@ -28,6 +28,7 @@ export class KullaniciService {
         sonGirisTarihi: true,
         olusturmaTarihi: true,
         roller: { select: { rol: { select: { kod: true, ad: true } } } },
+        magazalar: { select: { varsayilanMi: true, magaza: { select: { id: true, kod: true, ad: true } } } },
       },
     });
   }
@@ -148,6 +149,31 @@ export class KullaniciService {
         aktifMi: !k.aktifMi,
         guncelleyenKullaniciId: guncelleyenId,
       },
+    });
+  }
+
+  async magazaAta(prisma: TenantClient, id: number, magazaIdler: number[], atanId: bigint) {
+    await this.detay(prisma, id);
+    const kullaniciId = BigInt(id);
+
+    // Mevcut atamalari sil, yenilerini ekle
+    await prisma.kullaniciMagaza.deleteMany({ where: { kullaniciId } });
+
+    if (magazaIdler.length > 0) {
+      await prisma.kullaniciMagaza.createMany({
+        data: magazaIdler.map((mId, idx) => ({
+          kullaniciId,
+          magazaId: BigInt(mId),
+          varsayilanMi: idx === 0,
+          olusturanKullaniciId: atanId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    return prisma.kullaniciMagaza.findMany({
+      where: { kullaniciId },
+      include: { magaza: { select: { id: true, kod: true, ad: true, tip: true } } },
     });
   }
 
