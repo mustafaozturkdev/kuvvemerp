@@ -1,7 +1,8 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { kullanAuthStore } from "./auth-store";
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1";
+// Vite proxy uzerinden API'ye erisim (Host: pilot.kuvvem.local otomatik eklenir)
+const BASE_URL = import.meta.env.VITE_API_URL ?? "/api/v1";
 
 export const apiIstemci = axios.create({
   baseURL: BASE_URL,
