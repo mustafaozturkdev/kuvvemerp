@@ -81,9 +81,8 @@ export function ImageUpload({
     setUrlModu(false);
   };
 
-  const previewUrl = value?.startsWith("/uploads/")
-    ? `http://localhost:4000${value}`
-    : value;
+  // Vite proxy /uploads/ -> API'ye yonlendirir, relative URL yeterli
+  const previewUrl = value;
 
   return (
     <div className={cn("space-y-2", className)}>
