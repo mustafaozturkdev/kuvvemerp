@@ -343,6 +343,9 @@
     "b2b-aktif": "B2B Aktif",
     "b2b-pasif": "B2B Pasif",
     "pazaryeri-aktif": "Pazaryerinde Aktif",
+    "kanal-eticaret-kisa": "E-T",
+    "kanal-b2b-kisa": "B2B",
+    "kanal-pazaryeri-kisa": "PY",
 
     "vitrin": "Vitrin",
     "yeni": "Yeni",

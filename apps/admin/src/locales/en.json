@@ -232,6 +232,9 @@
     "b2b-aktif": "B2B Active",
     "b2b-pasif": "B2B Inactive",
     "pazaryeri-aktif": "Marketplace Active",
+    "kanal-eticaret-kisa": "E-C",
+    "kanal-b2b-kisa": "B2B",
+    "kanal-pazaryeri-kisa": "MP",
 
     "vitrin": "Featured",
     "yeni": "New",

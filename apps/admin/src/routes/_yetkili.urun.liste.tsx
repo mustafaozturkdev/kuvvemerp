@@ -147,8 +147,9 @@ function kritikMi(u: Urun): boolean {
 // ────────────────────────────────────────────────────────────
 
 function UrunListe() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const onay = useOnay();
+  const sayiFormat = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 2 });
 
   const [urunler, setUrunler] = useState<Urun[]>([]);
   const [toplam, setToplam] = useState(0);
@@ -573,7 +574,7 @@ function UrunListe() {
                             <ParaTutar tutar={satis} paraBirimi={paraBirimi} />
                             {alis !== null && (
                               <div className="text-[11px] text-metin-pasif">
-                                {t("urun.alis")}: {new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2 }).format(alis)}
+                                {t("urun.alis")}: {sayiFormat.format(alis)}
                               </div>
                             )}
                           </div>
@@ -585,17 +586,17 @@ function UrunListe() {
                         <div className="flex gap-1">
                           {u.eticaretAktif && (
                             <Badge variant="outline" className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800" title={t("urun.eticaret-aktif")}>
-                              <Store className="h-2.5 w-2.5" /> E-T
+                              <Store className="h-2.5 w-2.5" /> {t("urun.kanal-eticaret-kisa")}
                             </Badge>
                           )}
                           {u.b2bAktif && (
                             <Badge variant="outline" className="text-[10px] bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800" title={t("urun.b2b-aktif")}>
-                              <Users className="h-2.5 w-2.5" /> B2B
+                              <Users className="h-2.5 w-2.5" /> {t("urun.kanal-b2b-kisa")}
                             </Badge>
                           )}
                           {u.pazaryeriAktif && (
                             <Badge variant="outline" className="text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800" title={t("urun.pazaryeri-aktif")}>
-                              <Tag className="h-2.5 w-2.5" /> PY
+                              <Tag className="h-2.5 w-2.5" /> {t("urun.kanal-pazaryeri-kisa")}
                             </Badge>
                           )}
                         </div>
