@@ -67,7 +67,7 @@ interface MetinProp extends OrtakProp {
   deger: string;
   onChange: (v: string) => void;
   placeholder?: string;
-  type?: "text" | "email" | "tel" | "url";
+  type?: "text" | "email" | "tel" | "url" | "date";
   maxLength?: number;
   readOnly?: boolean;
 }

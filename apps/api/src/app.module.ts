@@ -28,6 +28,7 @@ import { MarkaModule } from './modules/marka/marka.module.js';
 import { MarkaModelModule } from './modules/marka-model/marka-model.module.js';
 import { KategoriModule } from './modules/kategori/kategori.module.js';
 import { UrunModule } from './modules/urun/urun.module.js';
+import { LookupModule } from './modules/lookup/lookup.module.js';
 
 @Module({
   imports: [
@@ -83,6 +84,7 @@ import { UrunModule } from './modules/urun/urun.module.js';
     MarkaModelModule,
     KategoriModule,
     UrunModule,
+    LookupModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

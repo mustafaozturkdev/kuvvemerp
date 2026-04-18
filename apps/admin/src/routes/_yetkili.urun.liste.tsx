@@ -37,6 +37,7 @@ import { ParaTutar } from "@/components/ortak/ParaTutar";
 import { useOnay } from "@/components/ortak/OnayDialog";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { UrunFormDrawer } from "@/components/urun/UrunFormDrawer";
 
 export const Route = createFileRoute("/_yetkili/urun/liste")({
   component: UrunListe,
@@ -170,6 +171,10 @@ function UrunListe() {
 
   // Secim (toplu islem)
   const [seciliIds, setSeciliIds] = useState<Set<string>>(new Set());
+
+  // Drawer state
+  const [drawerAcik, setDrawerAcik] = useState(false);
+  const [duzenlenecekUrunId, setDuzenlenecekUrunId] = useState<string | null>(null);
 
   // Dropdown kaynaklari
   const [kategoriler, setKategoriler] = useState<KategoriSecim[]>([]);
@@ -308,7 +313,12 @@ function UrunListe() {
             <Upload />
             {t("urun.ice-aktar")}
           </Button>
-          <Button disabled title={t("urun.drawer-yakinda")}>
+          <Button
+            onClick={() => {
+              setDuzenlenecekUrunId(null);
+              setDrawerAcik(true);
+            }}
+          >
             <Plus />
             {t("urun.yeni-ekle")}
           </Button>
@@ -609,8 +619,12 @@ function UrunListe() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            disabled
-                            title={t("urun.drawer-yakinda")}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setDuzenlenecekUrunId(u.id);
+                              setDrawerAcik(true);
+                            }}
+                            title={t("urun.duzenle")}
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
@@ -633,7 +647,7 @@ function UrunListe() {
             </Table>
           )}
 
-          {/* Pagination */}
+          {/* Pagination + Drawer */}
           {toplamSayfa > 1 && (
             <div className="flex items-center justify-between border-t border-kenarlik px-4 py-3">
               <p className="text-sm text-metin-ikinci">
@@ -651,6 +665,14 @@ function UrunListe() {
           )}
         </CardContent>
       </Card>
+
+      {/* Ürün Form Drawer */}
+      <UrunFormDrawer
+        acik={drawerAcik}
+        kapat={() => setDrawerAcik(false)}
+        urunId={duzenlenecekUrunId}
+        onKaydet={() => void yukle()}
+      />
     </div>
   );
 }
