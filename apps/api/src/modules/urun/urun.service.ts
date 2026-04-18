@@ -236,6 +236,18 @@ export class UrunService {
         ? await urunOlustur(girdi.kod)
         : await kodIleOlustur(tx, 'urun', 'URN', urunOlustur, 6);
 
+      // Ek kategoriler (N-N)
+      if (girdi.ekKategoriIds && girdi.ekKategoriIds.length > 0) {
+        await tx.urunKategori.createMany({
+          data: girdi.ekKategoriIds.map((kid, idx) => ({
+            urunId: urun.id,
+            kategoriId: BigInt(kid),
+            sira: idx,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
       // Trigger default varyantı oluşturdu — şimdi kullanıcının verdiği detaylarla zenginleştir
       const varyantVeri: Record<string, unknown> = {
         vergiOraniId: BigInt(girdi.vergiOraniId),
@@ -345,6 +357,21 @@ export class UrunService {
     return prisma.$transaction(async (tx: any) => {
       if (Object.keys(urunData).length > 1) {
         await tx.urun.update({ where: { id: BigInt(id) }, data: urunData });
+      }
+
+      // Ek kategoriler guncellemesi (gonderildiyse) — replace mantigi
+      if (girdi.ekKategoriIds !== undefined) {
+        await tx.urunKategori.deleteMany({ where: { urunId: BigInt(id) } });
+        if (girdi.ekKategoriIds.length > 0) {
+          await tx.urunKategori.createMany({
+            data: girdi.ekKategoriIds.map((kid, idx) => ({
+              urunId: BigInt(id),
+              kategoriId: BigInt(kid),
+              sira: idx,
+            })),
+            skipDuplicates: true,
+          });
+        }
       }
 
       // Varyant-seviyeli alanlar varsa default varyantta da güncelle

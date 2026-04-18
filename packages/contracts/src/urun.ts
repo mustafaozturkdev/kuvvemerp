@@ -112,6 +112,11 @@ export const UrunOlusturSemasi = z.object({
   abonelikAktif: z.boolean().default(false),
   abonelikData: z.record(z.string(), z.unknown()).optional().nullable(),
 
+  // ─── Ek kategoriler (N-N) — PHP urun.Kategoriler JSON esdegeri ───
+  // Ana kategori `kategoriId`; burada ek kategoriler. Bir urunu birden cok
+  // kategoride gostermek icin (ozellikle e-ticaret).
+  ekKategoriIds: z.array(z.coerce.number().int().positive()).default([]),
+
   // ─── Default Varyant bilgileri (trigger sonrasi zenginlestirme) ───
   barkod: z.string().max(100).optional().nullable(),
   alisFiyati: z.coerce.number().nonnegative().optional().nullable(),

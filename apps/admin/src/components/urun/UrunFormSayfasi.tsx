@@ -12,6 +12,9 @@ import { useOnay } from "@/components/ortak/OnayDialog";
 import { FormAlani } from "@/components/ortak/FormAlani";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { cn } from "@/lib/utils";
+import { slugOlustur } from "@/lib/slug";
+import { KategoriSelect } from "@/components/urun/KategoriSelect";
+import { SerpOnizleme } from "@/components/urun/SerpOnizleme";
 
 // ────────────────────────────────────────────────────────────
 // Tipler
@@ -22,6 +25,13 @@ interface Secim {
   ad: string;
   kod?: string;
   oran?: number | string;
+}
+
+interface KategoriSecimVeri {
+  id: string;
+  ad: string;
+  ustKategoriId?: string | null;
+  seviye?: number;
 }
 
 interface UrunFormVeri {
@@ -93,6 +103,7 @@ interface UrunFormVeri {
   ozelAlan5: string;
   abonelikAktif: boolean;
   aktifMi: boolean;
+  ekKategoriIds: string[];
 }
 
 const BOS_FORM: UrunFormVeri = {
@@ -115,6 +126,7 @@ const BOS_FORM: UrunFormVeri = {
   mensheiUlkeKodu: "", uretici: "", uretimTarihi: "", dataSheetUrl: "",
   ozelAlan1: "", ozelAlan2: "", ozelAlan3: "", ozelAlan4: "", ozelAlan5: "",
   abonelikAktif: false, aktifMi: true,
+  ekKategoriIds: [],
 };
 
 type Tab = "temel" | "fiyat" | "fiziksel" | "kanallar" | "icerik" | "ek";
@@ -138,11 +150,14 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
   const [kaydediyor, setKaydediyor] = useState(false);
   const [aktifTab, setAktifTab] = useState<Tab>("temel");
 
-  const [kategoriler, setKategoriler] = useState<Secim[]>([]);
+  const [kategoriler, setKategoriler] = useState<KategoriSecimVeri[]>([]);
   const [markalar, setMarkalar] = useState<Secim[]>([]);
   const [markaModelleri, setMarkaModelleri] = useState<Secim[]>([]);
   const [birimler, setBirimler] = useState<Secim[]>([]);
   const [vergiOranlari, setVergiOranlari] = useState<Secim[]>([]);
+
+  // Slug manuel olarak düzenlendi mi? True ise ad değişince otomatik override yapılmaz.
+  const [slugManuelMi, setSlugManuelMi] = useState(false);
 
   const { dirty, baslangicAyarla, sifirla } = useDirtyForm(form);
   const { hatalar, hataAyarla, hataTemizle, temizle: hataTemizleHepsi } = useFormHatalari();
@@ -180,6 +195,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
     if (!urunId) {
       setForm({ ...BOS_FORM });
       baslangicAyarla({ ...BOS_FORM });
+      setSlugManuelMi(false);
       return;
     }
     setYukleniyor(true);
@@ -226,17 +242,35 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
           ozelAlan1: asStr(u.ozelAlan1), ozelAlan2: asStr(u.ozelAlan2), ozelAlan3: asStr(u.ozelAlan3),
           ozelAlan4: asStr(u.ozelAlan4), ozelAlan5: asStr(u.ozelAlan5),
           abonelikAktif: Boolean(u.abonelikAktif), aktifMi: Boolean(u.aktifMi),
+          ekKategoriIds: Array.isArray(u.ekKategoriler)
+            ? u.ekKategoriler.map((ek: any) => String(ek.kategoriId))
+            : [],
         };
         setForm(yeni);
         baslangicAyarla(yeni);
+        // Düzenleme modunda: slug varsa "manuel girilmiş" kabul et (otomatik override yapma)
+        setSlugManuelMi(Boolean(u.seoUrl));
       })
       .catch(() => toast.hata(t("urun.bilgi-yuklenemedi")))
       .finally(() => setYukleniyor(false));
   }, [urunId]);
 
-  const alan = (anahtar: keyof UrunFormVeri, deger: string | boolean) => {
-    setForm((f) => ({ ...f, [anahtar]: deger }));
+  const alan = (anahtar: keyof UrunFormVeri, deger: string | boolean | string[]) => {
+    setForm((f) => {
+      const yeni = { ...f, [anahtar]: deger };
+      // Ad değiştikçe slug otomatik üret (kullanıcı manuel değiştirmedi ise)
+      if (anahtar === "ad" && !slugManuelMi && typeof deger === "string") {
+        yeni.seoUrl = slugOlustur(deger);
+      }
+      return yeni;
+    });
     if (hatalar[anahtar as string]) hataTemizle(anahtar as string);
+  };
+
+  // Slug alanı için özel handler — değişince "manuel girildi" işaretle
+  const slugDegistir = (deger: string) => {
+    setSlugManuelMi(Boolean(deger.trim()));
+    setForm((f) => ({ ...f, seoUrl: deger }));
   };
 
   // ─── Kaydet ───
@@ -298,6 +332,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
         ozelAlan1: nStr(form.ozelAlan1), ozelAlan2: nStr(form.ozelAlan2), ozelAlan3: nStr(form.ozelAlan3),
         ozelAlan4: nStr(form.ozelAlan4), ozelAlan5: nStr(form.ozelAlan5),
         abonelikAktif: form.abonelikAktif,
+        ekKategoriIds: form.ekKategoriIds.map((id) => Number(id)),
       };
 
       if (duzenlemeModu) {
@@ -332,7 +367,6 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
   };
 
   // ─── Seçenek listeleri ───
-  const kategoriSec = [{ deger: "", etiket: t("urun.kategori-sec") }, ...kategoriler.map((k) => ({ deger: k.id, etiket: k.ad }))];
   const markaSec = [{ deger: "", etiket: t("urun.marka-sec") }, ...markalar.map((m) => ({ deger: m.id, etiket: m.ad }))];
   const markaModelSec = [{ deger: "", etiket: t("urun.model-sec") }, ...markaModelleri.map((m) => ({ deger: m.id, etiket: m.ad }))];
   const birimSec = birimler.map((b) => ({ deger: b.id, etiket: `${b.ad}${b.kod ? ` (${b.kod})` : ""}` }));
@@ -448,9 +482,27 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <FormAlani.Secim etiket={t("urun.kategori")} deger={form.kategoriId} secenekler={kategoriSec} onChange={(v) => alan("kategoriId", v)} />
+                    <KategoriSelect
+                      mod="tekli"
+                      etiket={t("urun.kategori")}
+                      yardim={t("urun.kategori-ana-yardim")}
+                      kategoriler={kategoriler}
+                      deger={form.kategoriId}
+                      onChange={(v) => alan("kategoriId", v)}
+                    />
                     <FormAlani.Secim etiket={t("urun.marka")} deger={form.markaId} secenekler={markaSec} onChange={(v) => { alan("markaId", v); alan("markaModelId", ""); }} />
                   </div>
+                  <KategoriSelect
+                    mod="coklu"
+                    etiket={t("urun.ek-kategoriler")}
+                    yardim={t("urun.ek-kategoriler-yardim")}
+                    kategoriler={kategoriler}
+                    degerler={form.ekKategoriIds}
+                    onChange={(v) => alan("ekKategoriIds", v)}
+                    exclude={form.kategoriId ? [form.kategoriId] : []}
+                    maxSecim={10}
+                  />
+                  {/* kategoriSec artik kullanilmiyor; hiyerarsik KategoriSelect geldi */}
                   {markaModelleri.length > 0 && (
                     <FormAlani.Secim etiket={t("urun.model")} deger={form.markaModelId} secenekler={markaModelSec} onChange={(v) => alan("markaModelId", v)} />
                   )}
@@ -599,10 +651,23 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                 </FormAlani.Bolum>
 
                 <FormAlani.Bolum baslik={t("urun.bolum-seo")} altyazi={t("urun.bolum-seo-altyazi")}>
-                  <FormAlani.Metin etiket={t("urun.seo-url")} deger={form.seoUrl} onChange={(v) => alan("seoUrl", v)} placeholder="urun-adi-slug" yardim={t("urun.seo-url-yardim")} />
-                  <FormAlani.Metin etiket={t("urun.seo-baslik")} deger={form.seoBaslik} onChange={(v) => alan("seoBaslik", v)} maxLength={255} />
-                  <FormAlani.UzunMetin etiket={t("urun.seo-aciklama")} deger={form.seoAciklama} onChange={(v) => alan("seoAciklama", v)} maxLength={500} />
+                  <FormAlani.Metin
+                    etiket={t("urun.seo-url")}
+                    deger={form.seoUrl}
+                    onChange={slugDegistir}
+                    placeholder={slugOlustur(form.ad) || "urun-adi-slug"}
+                    yardim={slugManuelMi ? t("urun.seo-url-manuel-yardim") : t("urun.seo-url-yardim")}
+                  />
+                  <FormAlani.Metin etiket={t("urun.seo-baslik")} deger={form.seoBaslik} onChange={(v) => alan("seoBaslik", v)} maxLength={60} placeholder={form.ad} />
+                  <FormAlani.UzunMetin etiket={t("urun.seo-aciklama")} deger={form.seoAciklama} onChange={(v) => alan("seoAciklama", v)} maxLength={160} placeholder={form.kisaAciklama} />
                   <FormAlani.Metin etiket={t("urun.seo-anahtar-kelimeler")} deger={form.seoAnahtarKelimeler} onChange={(v) => alan("seoAnahtarKelimeler", v)} placeholder={t("urun.seo-anahtar-placeholder")} yardim={t("urun.seo-anahtar-yardim")} />
+
+                  {/* Google arama onizlemesi — canli */}
+                  <SerpOnizleme
+                    baslik={form.seoBaslik || form.ad}
+                    aciklama={form.seoAciklama || form.kisaAciklama}
+                    slug={form.seoUrl || slugOlustur(form.ad)}
+                  />
                 </FormAlani.Bolum>
               </>
             )}

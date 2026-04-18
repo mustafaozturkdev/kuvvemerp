@@ -39,6 +39,7 @@
     "kaydedilmemis-degisiklik": "unsaved changes",
     "dirty-baslik": "Unsaved Changes",
     "dirty-mesaj": "You have unsaved changes. Leave this page and discard them?",
+    "tamam": "OK",
     "kod": "Code",
     "ad": "Name",
     "aciklama": "Description",
@@ -399,6 +400,15 @@
     "aktif": "Product Active",
     "aktif-aciklama": "Inactive products are hidden from sales screens",
 
+    "kategori-ana-yardim": "Primary category of the product. Used in search and list pages.",
+    "ek-kategoriler": "Additional Categories",
+    "ek-kategoriler-yardim": "Extra categories for e-commerce visibility (up to 10).",
+    "ek-kategori-sec": "Select additional category (optional)",
+    "n-kategori-secili": "{{n}} categories selected",
+    "kategori-arama-placeholder": "Search categories...",
+
+    "seo-url-manuel-yardim": "Manually edited. Clear to regenerate from product name.",
+
     "tab-temel": "Basic Info",
     "tab-fiyat-stok": "Price & Stock",
     "tab-fiziksel": "Physical & Shipping",
@@ -407,5 +417,13 @@
     "tab-ek": "Additional",
 
     "bolum-kargo": "Shipping Policies"
+  },
+  "serp": {
+    "onizleme-baslik": "Google Search Preview",
+    "baslik-bos": "[Title empty — SEO title or product name goes here]",
+    "aciklama-bos": "[Description empty — SEO description or short description goes here]",
+    "slug-bos": "[slug-empty]",
+    "baslik-karakter": "Title: {{mevcut}}/{{max}} characters",
+    "aciklama-karakter": "Description: {{mevcut}}/{{max}} characters"
   }
 }

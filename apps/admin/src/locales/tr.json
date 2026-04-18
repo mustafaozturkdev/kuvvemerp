@@ -39,6 +39,7 @@
     "kaydedilmemis-degisiklik": "kaydedilmemiş değişiklikler var",
     "dirty-baslik": "Kaydedilmemiş değişiklikler",
     "dirty-mesaj": "Bu sayfadan ayrılırsan yaptığın değişiklikler kaybolacak. Emin misin?",
+    "tamam": "Tamam",
     "kod": "Kod",
     "ad": "Ad",
     "aciklama": "Açıklama",
@@ -510,6 +511,15 @@
     "aktif": "Ürün Aktif",
     "aktif-aciklama": "Pasif edilen ürünler satış ekranlarında görünmez",
 
+    "kategori-ana-yardim": "Ürünün ana kategorisi. Arama ve liste sayfalarında bu kullanılır.",
+    "ek-kategoriler": "Ek Kategoriler",
+    "ek-kategoriler-yardim": "E-ticarette ürünün görüneceği ek kategoriler (en fazla 10).",
+    "ek-kategori-sec": "Ek kategori seç (isteğe bağlı)",
+    "n-kategori-secili": "{{n}} kategori seçili",
+    "kategori-arama-placeholder": "Kategori ara...",
+
+    "seo-url-manuel-yardim": "Manuel düzenlendi. Boş bırakırsan ürün adından tekrar üretilir.",
+
     "tab-temel": "Temel Bilgiler",
     "tab-fiyat-stok": "Fiyat & Stok",
     "tab-fiziksel": "Fiziksel & Kargo",
@@ -518,6 +528,14 @@
     "tab-ek": "Ek Bilgiler",
 
     "bolum-kargo": "Kargo Politikaları"
+  },
+  "serp": {
+    "onizleme-baslik": "Google Arama Önizlemesi",
+    "baslik-bos": "[Başlık boş — SEO başlık veya ürün adı buraya gelir]",
+    "aciklama-bos": "[Açıklama boş — SEO açıklama veya kısa açıklama buraya gelir]",
+    "slug-bos": "[slug-boş]",
+    "baslik-karakter": "Başlık: {{mevcut}}/{{max}} karakter",
+    "aciklama-karakter": "Açıklama: {{mevcut}}/{{max}} karakter"
   },
   "konum": {
     "bolge": "Bölge",
