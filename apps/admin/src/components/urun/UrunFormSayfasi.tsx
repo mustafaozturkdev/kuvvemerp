@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, ArrowLeft, Info, Banknote, Package, Store, FileText, MoreHorizontal, AlertCircle, ImageIcon } from "lucide-react";
+import { Loader2, ArrowLeft, Info, Banknote, Package, Store, FileText, MoreHorizontal, AlertCircle, ImageIcon, Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { slugOlustur } from "@/lib/slug";
 import { KategoriSelect } from "@/components/urun/KategoriSelect";
 import { SerpOnizleme } from "@/components/urun/SerpOnizleme";
 import { ResimGalerisi } from "@/components/urun/ResimGalerisi";
+import { VaryantlarEditor } from "@/components/urun/VaryantlarEditor";
 
 // ────────────────────────────────────────────────────────────
 // Tipler
@@ -131,7 +132,7 @@ const BOS_FORM: UrunFormVeri = {
   ekKategoriIds: [],
 };
 
-type Tab = "temel" | "fiyat" | "fiziksel" | "kanallar" | "icerik" | "resim" | "ek";
+type Tab = "temel" | "fiyat" | "fiziksel" | "kanallar" | "icerik" | "resim" | "varyant" | "ek";
 
 interface UrunFormSayfasiOzellik {
   urunId?: string;
@@ -383,7 +384,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
 
   const tabZorunluEksik: Record<Tab, boolean> = {
     temel: Boolean(hatalar.ad || hatalar.anaBirimId || hatalar.vergiOraniId),
-    fiyat: false, fiziksel: false, kanallar: false, icerik: false, resim: false, ek: false,
+    fiyat: false, fiziksel: false, kanallar: false, icerik: false, resim: false, varyant: false, ek: false,
   };
 
   const tablar: { id: Tab; label: string; ikon: React.ReactNode }[] = [
@@ -393,6 +394,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
     { id: "kanallar", label: t("urun.tab-kanallar"), ikon: <Store className="h-5 w-5 md:h-4 md:w-4" /> },
     { id: "icerik", label: t("urun.tab-icerik-seo"), ikon: <FileText className="h-5 w-5 md:h-4 md:w-4" /> },
     { id: "resim", label: t("urun.tab-resim"), ikon: <ImageIcon className="h-5 w-5 md:h-4 md:w-4" /> },
+    { id: "varyant", label: t("urun.tab-varyant"), ikon: <Layers className="h-5 w-5 md:h-4 md:w-4" /> },
     { id: "ek", label: t("urun.tab-ek"), ikon: <MoreHorizontal className="h-5 w-5 md:h-4 md:w-4" /> },
   ];
 
@@ -715,7 +717,12 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
               </FormAlani.Bolum>
             )}
 
-            {/* ══════ TAB 7: EK BİLGİLER & ÖZEL ══════ */}
+            {/* ══════ TAB 7: VARYANTLAR ══════ */}
+            {aktifTab === "varyant" && (
+              <VaryantlarEditor urunId={urunId ?? null} />
+            )}
+
+            {/* ══════ TAB 8: EK BİLGİLER & ÖZEL ══════ */}
             {aktifTab === "ek" && (
               <>
                 <FormAlani.Bolum baslik={t("urun.bolum-ek-bilgi")}>
