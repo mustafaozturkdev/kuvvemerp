@@ -32,7 +32,7 @@ export function KuvvemKullaniciMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger
         className="flex items-center gap-2 rounded-md p-1 hover:bg-yuzey"
-        aria-label="Kullanici menusu"
+        aria-label={`${t("menu.kullanici")} ${t("genel.detay")}`}
       >
         <Avatar adSoyad={kullanici?.adSoyad} src={kullanici?.avatarUrl} boyut="sm" />
       </DropdownMenuTrigger>
@@ -40,7 +40,7 @@ export function KuvvemKullaniciMenu() {
         <DropdownMenuLabel>
           <div className="flex flex-col">
             <span className="text-[13px] font-semibold text-metin">
-              {kullanici?.adSoyad ?? "Misafir"}
+              {kullanici?.adSoyad ?? t("menu.misafir")}
             </span>
             <span className="text-[11px] font-normal normal-case tracking-normal text-metin-ikinci">
               {kullanici?.email ?? ""}
@@ -50,7 +50,7 @@ export function KuvvemKullaniciMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => yonlendir({ to: "/ayarlar" })}>
           <UserIcon />
-          <span>Profil</span>
+          <span>{t("menu.profil")}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => yonlendir({ to: "/ayarlar" })}>
           <Settings />
@@ -59,11 +59,11 @@ export function KuvvemKullaniciMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={temaToggle}>
           {tema === "koyu" ? <Sun /> : <Moon />}
-          <span>Tema: {tema}</span>
+          <span>{tema === "koyu" ? t("menu.koyu-tema") : t("menu.acik-tema")}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={dilDegistir}>
           <Languages />
-          <span>Dil: {i18n.language.toUpperCase()}</span>
+          <span>{t("menu.dil")}: {i18n.language.toUpperCase()}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -71,7 +71,7 @@ export function KuvvemKullaniciMenu() {
           className="text-tehlike focus:text-tehlike"
         >
           <LogOut />
-          <span>Cikis Yap</span>
+          <span>{t("menu.cikis-yap")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

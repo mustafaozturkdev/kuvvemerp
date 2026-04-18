@@ -20,12 +20,12 @@ export function KuvvemTopbar() {
       <MobilMenuButon />
 
       {/* Breadcrumb */}
-      <nav aria-label="Konum" className="flex items-center gap-1.5 text-[13px]">
+      <nav aria-label={t("menu.ana-sayfa")} className="flex items-center gap-1.5 text-[13px]">
         <span className="text-metin-ikinci">Kuvvem</span>
         {parcalar.length === 0 ? (
           <>
             <span className="text-metin-pasif">/</span>
-            <span className="font-medium text-metin">{t("menu.anasayfa")}</span>
+            <span className="font-medium text-metin">{t("menu.ana-sayfa")}</span>
           </>
         ) : (
           parcalar.map((p, i) => (
@@ -63,7 +63,7 @@ export function KuvvemTopbar() {
       <button
         onClick={temaToggle}
         className="p-2 rounded-lg hover:bg-yuzey-yukseltilmis transition-colors"
-        title={tema === "koyu" ? "Acik tema" : "Koyu tema"}
+        title={tema === "koyu" ? t("menu.acik-tema") : t("menu.koyu-tema")}
       >
         {tema === "koyu" ? <Sun className="h-4 w-4 text-metin-ikinci" /> : <Moon className="h-4 w-4 text-metin-ikinci" />}
       </button>

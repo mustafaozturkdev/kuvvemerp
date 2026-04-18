@@ -12,6 +12,7 @@ import {
   Store,
   Filter,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { useOnay } from "@/components/ortak/OnayDialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_yetkili/ayarlar/kullanicilar")({
@@ -63,6 +65,8 @@ interface Magaza {
 }
 
 function KullanicilarSayfa() {
+  const { t } = useTranslation();
+  const onay = useOnay();
   const [kullanicilar, setKullanicilar] = useState<Kullanici[]>([]);
   const [roller, setRoller] = useState<Rol[]>([]);
   const [magazalar, setMagazalar] = useState<Magaza[]>([]);
@@ -84,7 +88,7 @@ function KullanicilarSayfa() {
       setRoller(rRes.data);
       setMagazalar(mRes.data.filter((m: Magaza) => m.aktifMi));
     } catch {
-      toast.hata("Veriler yuklenemedi");
+      toast.hata("Veriler yüklenemedi");
     }
     setYukleniyor(false);
   };
@@ -108,13 +112,22 @@ function KullanicilarSayfa() {
     );
   });
 
-  const aktiflikToggle = async (id: string) => {
+  const aktiflikToggle = async (k: Kullanici) => {
+    if (k.aktifMi) {
+      const tamam = await onay.goster({
+        baslik: t("genel.pasife-al-baslik"),
+        mesaj: t("genel.pasife-al-mesaj", { ad: `${k.ad} ${k.soyad}` }),
+        varyant: "uyari",
+        onayMetni: t("genel.pasife-al"),
+      });
+      if (!tamam) return;
+    }
     try {
-      await apiIstemci.patch(`/kullanici/${id}/aktiflik`);
-      toast.basarili("Kullanici durumu guncellendi");
+      await apiIstemci.patch(`/kullanici/${k.id}/aktiflik`);
+      toast.basarili("Kullanıcı durumu güncellendi");
       void yukle();
     } catch {
-      toast.hata("Islem basarisiz");
+      toast.hata("İşlem başarısız");
     }
   };
 
@@ -126,10 +139,10 @@ function KullanicilarSayfa() {
       <header className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-metin">
-            Kullanicilar
+            Kullanıcılar
           </h1>
           <p className="text-sm text-metin-ikinci">
-            Sistem kullanicilarini, rollerini ve sube yetkilerini yonetin
+            Sistem kullanıcılarını, rollerini ve şube yetkilerini yönetin
           </p>
         </div>
         <Button
@@ -138,7 +151,7 @@ function KullanicilarSayfa() {
             setDrawerAcik(true);
           }}
         >
-          <Plus className="h-4 w-4" /> Yeni Kullanici
+          <Plus className="h-4 w-4" /> Yeni Kullanıcı
         </Button>
       </header>
 
@@ -183,7 +196,7 @@ function KullanicilarSayfa() {
           ) : filtrelenmis.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-12 text-metin-ikinci">
               <UserCircle className="h-10 w-10 text-metin-pasif" />
-              <p>{arama || durumFiltre !== "hepsi" ? "Sonuc bulunamadi" : "Henuz kullanici yok"}</p>
+              <p>{arama || durumFiltre !== "hepsi" ? "Sonuç bulunamadı" : "Henüz kullanıcı yok"}</p>
             </div>
           ) : (
             <Table>
@@ -193,10 +206,10 @@ function KullanicilarSayfa() {
                   <TableHead>E-posta</TableHead>
                   <TableHead>Telefon</TableHead>
                   <TableHead>Rol</TableHead>
-                  <TableHead>Subeler</TableHead>
+                  <TableHead>Şubeler</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead>Son Giris</TableHead>
-                  <TableHead className="w-[80px]">Islem</TableHead>
+                  <TableHead>Son Giriş</TableHead>
+                  <TableHead className="w-[80px]">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -238,7 +251,7 @@ function KullanicilarSayfa() {
                                 {m.magaza.ad}
                               </Badge>
                             ))
-                          : <span className="text-metin-pasif text-xs">Atanmamis</span>}
+                          : <span className="text-metin-pasif text-xs">Atanmamış</span>}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -259,12 +272,12 @@ function KullanicilarSayfa() {
                             setDrawerAcik(true);
                           }}
                           className="p-1.5 rounded-lg hover:bg-yuzey-yukseltilmis transition-colors"
-                          title="Duzenle"
+                          title={t("genel.duzenle")}
                         >
                           <Pencil className="h-4 w-4 text-metin-ikinci" />
                         </button>
                         <button
-                          onClick={() => aktiflikToggle(k.id)}
+                          onClick={() => aktiflikToggle(k)}
                           className="p-1.5 rounded-lg hover:bg-yuzey-yukseltilmis transition-colors"
                           title={k.aktifMi ? "Pasif yap" : "Aktif yap"}
                         >
@@ -347,11 +360,11 @@ function KullaniciDrawer({
       return;
     }
     if (!duzenlemeMi && !form.sifre) {
-      toast.hata("Yeni kullanici icin sifre zorunludur");
+      toast.hata("Yeni kullanıcı için şifre zorunludur");
       return;
     }
     if (form.sifre && form.sifre.length < 6) {
-      toast.hata("Sifre en az 6 karakter olmali");
+      toast.hata("Şifre en az 6 karakter olmalı");
       return;
     }
 
@@ -370,7 +383,7 @@ function KullaniciDrawer({
         await apiIstemci.put(`/kullanici/${kullanici!.id}/magazalar`, {
           magazaIdler: form.magazaIdler.map(Number),
         });
-        toast.basarili("Kullanici guncellendi");
+        toast.basarili("Kullanıcı güncellendi");
       } else {
         // Yeni kullanici olustur
         const res = await apiIstemci.post("/kullanici", {
@@ -387,14 +400,14 @@ function KullaniciDrawer({
             magazaIdler: form.magazaIdler.map(Number),
           });
         }
-        toast.basarili("Kullanici olusturuldu");
+        toast.basarili("Kullanıcı oluşturuldu");
       }
       onKaydet();
     } catch (err: any) {
       const mesaj =
         err?.response?.data?.hata?.mesaj ??
         err?.response?.data?.mesaj ??
-        "Kayit basarisiz";
+        "Kayıt başarısız";
       toast.hata(mesaj);
     }
     setKaydediyor(false);
@@ -422,7 +435,7 @@ function KullaniciDrawer({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-kenarlik px-6 py-4">
           <h2 className="text-lg font-semibold text-metin">
-            {duzenlemeMi ? "Kullanici Duzenle" : "Yeni Kullanici"}
+            {duzenlemeMi ? "Kullanıcı Düzenle" : "Yeni Kullanıcı"}
           </h2>
           <button
             onClick={onKapat}
@@ -437,7 +450,7 @@ function KullaniciDrawer({
           {(
             [
               { key: "bilgi", etiket: "Bilgiler & Roller", ikon: UserCircle },
-              { key: "subeler", etiket: "Sube Yetkileri", ikon: Store },
+              { key: "subeler", etiket: "Şube Yetkileri", ikon: Store },
             ] as const
           ).map((tab) => {
             const Ikon = tab.ikon;
@@ -472,7 +485,7 @@ function KullaniciDrawer({
               {/* Kisisel */}
               <fieldset className="space-y-3">
                 <legend className="text-sm font-semibold text-metin border-b border-kenarlik pb-2 mb-3 w-full">
-                  Kisisel Bilgiler
+                  Kişisel Bilgiler
                 </legend>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -526,13 +539,13 @@ function KullaniciDrawer({
                     placeholder="905XXXXXXXXX"
                   />
                   <p className="text-xs text-metin-pasif mt-0.5">
-                    Ulke kodu dahil, sadece rakam (orn: 905321234567)
+                    Ülke kodu dahil, sadece rakam (örn: 905321234567)
                   </p>
                 </div>
                 {!duzenlemeMi && (
                   <div>
                     <label className="text-sm font-medium text-metin mb-1 block">
-                      Sifre <span className="text-tehlike">*</span>
+                      Şifre <span className="text-tehlike">*</span>
                     </label>
                     <Input
                       type="password"
@@ -540,7 +553,7 @@ function KullaniciDrawer({
                       onChange={(e) =>
                         setForm({ ...form, sifre: e.target.value })
                       }
-                      placeholder="En az 6 karakter, buyuk/kucuk harf, rakam"
+                      placeholder="En az 6 karakter, büyük/küçük harf, rakam"
                     />
                   </div>
                 )}
@@ -585,14 +598,14 @@ function KullaniciDrawer({
             /* Sube Yetkileri Tab */
             <div className="space-y-3">
               <p className="text-sm text-metin-ikinci">
-                Kullanicinin erisebilecegi subeleri secin. Ilk secilen sube
-                varsayilan olarak atanir.
+                Kullanıcının erişebileceği şubeleri seçin. İlk seçilen şube
+                varsayılan olarak atanır.
               </p>
 
               {magazalar.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-8 text-metin-ikinci">
                   <Store className="h-8 w-8 text-metin-pasif" />
-                  <p className="text-sm">Henuz aktif sube yok</p>
+                  <p className="text-sm">Henüz aktif şube yok</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -608,7 +621,7 @@ function KullaniciDrawer({
                         })
                       }
                     >
-                      Hepsini Sec
+                      Hepsini Seç
                     </Button>
                     <Button
                       variant="outline"
@@ -617,7 +630,7 @@ function KullaniciDrawer({
                         setForm({ ...form, magazaIdler: [] })
                       }
                     >
-                      Hepsini Kaldir
+                      Hepsini Kaldır
                     </Button>
                   </div>
 
@@ -659,7 +672,7 @@ function KullaniciDrawer({
                         </div>
                         {varsayilan && (
                           <Badge variant="default" className="text-xs">
-                            Varsayilan
+                            Varsayılan
                           </Badge>
                         )}
                       </label>
@@ -674,11 +687,11 @@ function KullaniciDrawer({
         {/* Footer */}
         <div className="border-t border-kenarlik px-6 py-4 flex gap-3">
           <Button variant="outline" onClick={onKapat} className="flex-1">
-            Vazgec
+            Vazgeç
           </Button>
           <Button onClick={gonder} disabled={kaydediyor} className="flex-1">
             {kaydediyor && <Loader2 className="h-4 w-4 animate-spin" />}
-            {duzenlemeMi ? "Kaydet" : "Olustur"}
+            {duzenlemeMi ? "Kaydet" : "Oluştur"}
           </Button>
         </div>
       </div>

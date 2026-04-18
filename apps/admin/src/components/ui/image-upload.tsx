@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -21,12 +22,13 @@ export function ImageUpload({
   onChange,
   endpoint,
   label,
-  placeholder = "Resim yukleyin veya URL girin",
+  placeholder,
   maxWidth,
   maxHeight,
   className,
   disabled = false,
 }: ImageUploadProps) {
+  const { t } = useTranslation();
   const [yukleniyor, setYukleniyor] = useState(false);
   const [urlModu, setUrlModu] = useState(false);
   const [urlGirdi, setUrlGirdi] = useState(value ?? "");
@@ -43,11 +45,11 @@ export function ImageUpload({
 
     // Client-side kontrol
     if (!dosya.type.startsWith("image/")) {
-      toast.hata("Sadece resim dosyalari yuklenebilir");
+      toast.hata(t("resim.sadece-resim"));
       return;
     }
     if (dosya.size > 5 * 1024 * 1024) {
-      toast.hata("Maksimum dosya boyutu: 5MB");
+      toast.hata(t("resim.max-boyut"));
       return;
     }
 
@@ -61,9 +63,9 @@ export function ImageUpload({
         { headers: { "Content-Type": "multipart/form-data" } }
       );
       onChange(res.data.url);
-      toast.basarili("Resim yuklendi");
+      toast.basarili(t("resim.yuklendi"));
     } catch (err: any) {
-      const mesaj = err?.response?.data?.hata?.mesaj ?? "Yukleme basarisiz";
+      const mesaj = err?.response?.data?.hata?.mesaj ?? t("resim.yukleme-basarisiz");
       toast.hata(mesaj);
     }
     setYukleniyor(false);
@@ -95,7 +97,7 @@ export function ImageUpload({
         <div className="relative group inline-block">
           <img
             src={previewUrl!}
-            alt={label ?? "Yuklenen resim"}
+            alt={label ?? t("resim.yuklenen-resim")}
             className="rounded-lg border border-kenarlik object-contain bg-yuzey-yukseltilmis"
             style={{
               maxWidth: maxWidth ?? 200,
@@ -107,8 +109,8 @@ export function ImageUpload({
               type="button"
               onClick={dosyaSec}
               disabled={disabled}
-              className="p-2 bg-white/90 rounded-lg hover:bg-white transition-colors"
-              title="Degistir"
+              className="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors"
+              title={t("resim.degistir")}
             >
               <Upload className="h-4 w-4 text-metin" />
             </button>
@@ -116,8 +118,8 @@ export function ImageUpload({
               type="button"
               onClick={sil}
               disabled={disabled}
-              className="p-2 bg-white/90 rounded-lg hover:bg-white transition-colors"
-              title="Kaldir"
+              className="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-800 transition-colors"
+              title={t("resim.kaldir")}
             >
               <X className="h-4 w-4 text-tehlike" />
             </button>
@@ -136,12 +138,12 @@ export function ImageUpload({
           {yukleniyor ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-birincil" />
-              <p className="text-sm text-metin-ikinci">Yukleniyor...</p>
+              <p className="text-sm text-metin-ikinci">{t("genel.yukleniyor")}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
               <ImageIcon className="h-8 w-8 text-metin-pasif" />
-              <p className="text-sm text-metin-ikinci">{placeholder}</p>
+              <p className="text-sm text-metin-ikinci">{placeholder ?? t("resim.placeholder")}</p>
               <p className="text-xs text-metin-pasif">JPG, PNG, GIF, WebP — Max 5MB</p>
             </div>
           )}
@@ -165,7 +167,7 @@ export function ImageUpload({
           onClick={() => setUrlModu(!urlModu)}
           className="text-xs text-metin-pasif hover:text-birincil transition-colors"
         >
-          {urlModu ? "Kapat" : "URL ile ekle"}
+          {urlModu ? t("genel.kapat") : t("resim.url-ile-ekle")}
         </button>
         {urlModu && (
           <div className="flex flex-1 gap-2">
@@ -181,7 +183,7 @@ export function ImageUpload({
               onClick={urlKaydet}
               className="h-8 px-3 rounded bg-birincil text-white text-xs hover:bg-birincil/90 transition-colors"
             >
-              Kaydet
+              {t("genel.kaydet")}
             </button>
           </div>
         )}

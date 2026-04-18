@@ -13,6 +13,7 @@ import {
   Banknote,
   Users,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { useOnay } from "@/components/ortak/OnayDialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_yetkili/ayarlar/personel")({
@@ -79,6 +81,8 @@ interface Magaza {
 // ─── Ana Sayfa ───
 
 function PersonelSayfa() {
+  const { t } = useTranslation();
+  const onay = useOnay();
   const [personeller, setPersoneller] = useState<Personel[]>([]);
   const [magazalar, setMagazalar] = useState<Magaza[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -99,7 +103,7 @@ function PersonelSayfa() {
       setPersoneller(pRes.data);
       setMagazalar(mRes.data.filter((m: Magaza) => m.aktifMi));
     } catch {
-      toast.hata("Veriler yuklenemedi");
+      toast.hata("Veriler yüklenemedi");
     }
     setYukleniyor(false);
   };
@@ -121,13 +125,22 @@ function PersonelSayfa() {
     );
   });
 
-  const aktiflikToggle = async (id: string) => {
+  const aktiflikToggle = async (p: Personel) => {
+    if (p.aktifMi) {
+      const tamam = await onay.goster({
+        baslik: t("genel.pasife-al-baslik"),
+        mesaj: t("genel.pasife-al-mesaj", { ad: p.adiSoyadi }),
+        varyant: "uyari",
+        onayMetni: t("genel.pasife-al"),
+      });
+      if (!tamam) return;
+    }
     try {
-      await apiIstemci.patch(`/personel/${id}/aktiflik`);
-      toast.basarili("Personel durumu guncellendi");
+      await apiIstemci.patch(`/personel/${p.id}/aktiflik`);
+      toast.basarili("Personel durumu güncellendi");
       void yukle();
     } catch {
-      toast.hata("Islem basarisiz");
+      toast.hata("İşlem başarısız");
     }
   };
 
@@ -137,7 +150,7 @@ function PersonelSayfa() {
       setSeciliPersonel(res.data);
       setDrawerAcik(true);
     } catch {
-      toast.hata("Detay yuklenemedi");
+      toast.hata("Detay yüklenemedi");
     }
   };
 
@@ -152,8 +165,8 @@ function PersonelSayfa() {
             Personel
           </h1>
           <p className="text-sm text-metin-ikinci">
-            Personel kayitlarini, magaza atamalarini ve odeme hareketlerini
-            yonetin
+            Personel kayıtlarını, mağaza atamalarını ve ödeme hareketlerini
+            yönetin
           </p>
         </div>
         <Button
@@ -209,8 +222,8 @@ function PersonelSayfa() {
               <Users className="h-10 w-10 text-metin-pasif" />
               <p>
                 {arama || durumFiltre !== "hepsi"
-                  ? "Sonuc bulunamadi"
-                  : "Henuz personel yok"}
+                  ? "Sonuç bulunamadı"
+                  : "Henüz personel yok"}
               </p>
             </div>
           ) : (
@@ -218,12 +231,12 @@ function PersonelSayfa() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Ad Soyad</TableHead>
-                  <TableHead>Unvan</TableHead>
+                  <TableHead>Ünvan</TableHead>
                   <TableHead>Magazalar</TableHead>
                   <TableHead>Telefon</TableHead>
-                  <TableHead>Maas</TableHead>
+                  <TableHead>Maaş</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="w-[80px]">Islem</TableHead>
+                  <TableHead className="w-[80px]">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -251,7 +264,7 @@ function PersonelSayfa() {
                           ))
                         ) : (
                           <span className="text-metin-pasif text-xs">
-                            Atanmamis
+                            Atanmamış
                           </span>
                         )}
                       </div>
@@ -275,12 +288,12 @@ function PersonelSayfa() {
                         <button
                           onClick={() => detayAc(p)}
                           className="p-1.5 rounded-lg hover:bg-yuzey-yukseltilmis transition-colors"
-                          title="Duzenle"
+                          title="Düzenle"
                         >
                           <Pencil className="h-4 w-4 text-metin-ikinci" />
                         </button>
                         <button
-                          onClick={() => aktiflikToggle(p.id)}
+                          onClick={() => aktiflikToggle(p)}
                           className="p-1.5 rounded-lg hover:bg-yuzey-yukseltilmis transition-colors"
                           title={p.aktifMi ? "Pasif yap" : "Aktif yap"}
                         >
@@ -402,17 +415,17 @@ function PersonelDrawer({
 
       if (duzenlemeMi) {
         await apiIstemci.patch(`/personel/${personel!.id}`, payload);
-        toast.basarili("Personel guncellendi");
+        toast.basarili("Personel güncellendi");
       } else {
         await apiIstemci.post("/personel", payload);
-        toast.basarili("Personel olusturuldu");
+        toast.basarili("Personel oluşturuldu");
       }
       onKaydet();
     } catch (err: any) {
       const mesaj =
         err?.response?.data?.hata?.mesaj ??
         err?.response?.data?.mesaj ??
-        "Kayit basarisiz";
+        "Kayıt başarısız";
       toast.hata(mesaj);
     }
     setKaydediyor(false);
@@ -420,7 +433,7 @@ function PersonelDrawer({
 
   const hareketEkle = async () => {
     if (!yeniHareket.tutar || Number(yeniHareket.tutar) <= 0) {
-      toast.hata("Tutar 0 dan buyuk olmalidir");
+      toast.hata("Tutar 0 dan büyük olmalıdır");
       return;
     }
     if (!yeniHareket.tarih) {
@@ -480,8 +493,8 @@ function PersonelDrawer({
   };
 
   const tipEtiket: Record<string, string> = {
-    hakedis: "Hakedis",
-    odeme: "Odeme",
+    hakedis: "Hakediş",
+    odeme: "Ödeme",
     mahsup: "Mahsup",
   };
 
@@ -504,7 +517,7 @@ function PersonelDrawer({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-kenarlik px-6 py-4">
           <h2 className="text-lg font-semibold text-metin">
-            {duzenlemeMi ? "Personel Duzenle" : "Yeni Personel"}
+            {duzenlemeMi ? "Personel Düzenle" : "Yeni Personel"}
           </h2>
           <button
             onClick={onKapat}
@@ -519,7 +532,7 @@ function PersonelDrawer({
           {(
             [
               { key: "bilgi", etiket: "Bilgiler", ikon: UserCircle },
-              { key: "magazalar", etiket: "Magazalar", ikon: Store },
+              { key: "magazalar", etiket: "Mağazalar", ikon: Store },
               ...(duzenlemeMi
                 ? [{ key: "hareketler" as const, etiket: "Hareketler", ikon: Wallet }]
                 : []),
@@ -560,7 +573,7 @@ function PersonelDrawer({
               {/* Kisisel */}
               <fieldset className="space-y-3">
                 <legend className="text-sm font-semibold text-metin border-b border-kenarlik pb-2 mb-3 w-full">
-                  Kisisel Bilgiler
+                  Kişisel Bilgiler
                 </legend>
                 <div>
                   <label className="text-sm font-medium text-metin mb-1 block">
@@ -590,14 +603,14 @@ function PersonelDrawer({
                   </div>
                   <div>
                     <label className="text-sm font-medium text-metin mb-1 block">
-                      Unvan
+                      Ünvan
                     </label>
                     <Input
                       value={form.unvan}
                       onChange={(e) =>
                         setForm({ ...form, unvan: e.target.value })
                       }
-                      placeholder="Satis Danismani"
+                      placeholder="Satış Danışmanı"
                     />
                   </div>
                 </div>
@@ -639,12 +652,12 @@ function PersonelDrawer({
               {/* Is Bilgileri */}
               <fieldset className="space-y-3">
                 <legend className="text-sm font-semibold text-metin border-b border-kenarlik pb-2 mb-3 w-full">
-                  Is Bilgileri
+                  İş Bilgileri
                 </legend>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-sm font-medium text-metin mb-1 block">
-                      Ise Giris Tarihi
+                      İşe Giriş Tarihi
                     </label>
                     <Input
                       type="date"
@@ -656,7 +669,7 @@ function PersonelDrawer({
                   </div>
                   <div>
                     <label className="text-sm font-medium text-metin mb-1 block">
-                      Isten Cikis Tarihi
+                      İşten Çıkış Tarihi
                     </label>
                     <Input
                       type="date"
@@ -672,12 +685,12 @@ function PersonelDrawer({
               {/* Odeme Bilgileri */}
               <fieldset className="space-y-3">
                 <legend className="text-sm font-semibold text-metin border-b border-kenarlik pb-2 mb-3 w-full">
-                  Odeme Bilgileri
+                  Ödeme Bilgileri
                 </legend>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-sm font-medium text-metin mb-1 block">
-                      Maas (TL)
+                      Maaş (TL)
                     </label>
                     <Input
                       type="number"
@@ -692,7 +705,7 @@ function PersonelDrawer({
                   </div>
                   <div>
                     <label className="text-sm font-medium text-metin mb-1 block">
-                      Maas Gunu
+                      Maaş Günü
                     </label>
                     <Input
                       type="number"
@@ -727,13 +740,13 @@ function PersonelDrawer({
             /* Magaza Atamalari */
             <div className="space-y-3">
               <p className="text-sm text-metin-ikinci">
-                Personelin calisacagi magazalari secin.
+                Personelin çalışacağı mağazaları seçin.
               </p>
 
               {magazalar.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-8 text-metin-ikinci">
                   <Store className="h-8 w-8 text-metin-pasif" />
-                  <p className="text-sm">Henuz aktif magaza yok</p>
+                  <p className="text-sm">Henüz aktif mağaza yok</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -748,14 +761,14 @@ function PersonelDrawer({
                         })
                       }
                     >
-                      Hepsini Sec
+                      Hepsini Seç
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setForm({ ...form, magazaIdler: [] })}
                     >
-                      Hepsini Kaldir
+                      Hepsini Kaldır
                     </Button>
                   </div>
 
@@ -835,8 +848,8 @@ function PersonelDrawer({
                       }
                       className="flex h-9 w-full rounded-md border border-kenarlik bg-yuzey px-3 py-1 text-sm text-metin"
                     >
-                      <option value="hakedis">Hakedis</option>
-                      <option value="odeme">Odeme</option>
+                      <option value="hakedis">Hakediş</option>
+                      <option value="odeme">Ödeme</option>
                       <option value="mahsup">Mahsup</option>
                     </select>
                   </div>
@@ -876,7 +889,7 @@ function PersonelDrawer({
                 </div>
                 <div>
                   <label className="text-sm font-medium text-metin mb-1 block">
-                    Aciklama
+                    Açıklama
                   </label>
                   <Input
                     value={yeniHareket.aciklama}
@@ -886,7 +899,7 @@ function PersonelDrawer({
                         aciklama: e.target.value,
                       })
                     }
-                    placeholder="Aciklama (opsiyonel)"
+                    placeholder="Açıklama (opsiyonel)"
                   />
                 </div>
                 <Button
@@ -906,12 +919,12 @@ function PersonelDrawer({
               {/* Hareket Listesi */}
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-metin">
-                  Gecmis Hareketler
+                  Geçmiş Hareketler
                 </h3>
                 {hareketler.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 py-6 text-metin-ikinci">
                     <Wallet className="h-8 w-8 text-metin-pasif" />
-                    <p className="text-sm">Henuz hareket yok</p>
+                    <p className="text-sm">Henüz hareket yok</p>
                   </div>
                 ) : (
                   <div className="space-y-1.5">
@@ -960,11 +973,11 @@ function PersonelDrawer({
         {aktifTab !== "hareketler" && (
           <div className="border-t border-kenarlik px-6 py-4 flex gap-3">
             <Button variant="outline" onClick={onKapat} className="flex-1">
-              Vazgec
+              Vazgeç
             </Button>
             <Button onClick={gonder} disabled={kaydediyor} className="flex-1">
               {kaydediyor && <Loader2 className="h-4 w-4 animate-spin" />}
-              {duzenlemeMi ? "Kaydet" : "Olustur"}
+              {duzenlemeMi ? "Kaydet" : "Oluştur"}
             </Button>
           </div>
         )}

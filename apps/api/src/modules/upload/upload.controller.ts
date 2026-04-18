@@ -65,6 +65,36 @@ export class UploadController {
     });
   }
 
+  /**
+   * POST /api/v1/upload/marka — Marka logo/banner/OG (max 1600px, WebP)
+   */
+  @Post('marka')
+  @RequireYetki('marka.olustur')
+  async marka(@Req() req: FastifyRequest) {
+    const dosya = await this.dosyaAl(req);
+    return this.uploadService.resimYukle(dosya.buffer, dosya.filename, dosya.mimetype, {
+      maxGenislik: 1600,
+      maxYukseklik: 1600,
+      klasor: 'marka',
+      webpDonustur: true,
+    });
+  }
+
+  /**
+   * POST /api/v1/upload/kategori — Kategori resim/banner/OG (max 1600px, WebP)
+   */
+  @Post('kategori')
+  @RequireYetki('kategori.olustur')
+  async kategori(@Req() req: FastifyRequest) {
+    const dosya = await this.dosyaAl(req);
+    return this.uploadService.resimYukle(dosya.buffer, dosya.filename, dosya.mimetype, {
+      maxGenislik: 1600,
+      maxYukseklik: 1600,
+      klasor: 'kategori',
+      webpDonustur: true,
+    });
+  }
+
   private async dosyaAl(req: FastifyRequest) {
     const data = await (req as any).file();
     if (!data) {

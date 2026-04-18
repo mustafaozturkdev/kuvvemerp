@@ -92,7 +92,7 @@ function UrunListe() {
                   </TableCell>
                   <TableCell className="text-right">
                     {u.stok === 0 ? (
-                      <Badge variant="danger">Tukendi</Badge>
+                      <Badge variant="danger">Tükendi</Badge>
                     ) : u.stok < 5 ? (
                       <Badge variant="warning">{u.stok} adet</Badge>
                     ) : (

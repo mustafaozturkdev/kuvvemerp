@@ -21,3 +21,6 @@ apps/api/test/**/*.map
 # Contracts build output (rebuild edilir)
 packages/contracts/dist/
 uploads/
+
+# TanStack Router dev cache
+apps/admin/.tanstack/

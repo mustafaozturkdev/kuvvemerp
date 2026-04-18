@@ -1,4 +1,5 @@
 import { Bell } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,28 +19,29 @@ interface Bildirim {
 const ORNEK_BILDIRIMLER: Bildirim[] = [
   {
     id: "b1",
-    baslik: "Yeni siparis",
-    metin: "Acme Tekstil'den 12 kalem siparis alindi.",
+    baslik: "Yeni sipariş",
+    metin: "Acme Tekstil'den 12 kalem sipariş alındı.",
     okundu: false,
-    tarih: "Biraz once",
+    tarih: "Biraz önce",
   },
   {
     id: "b2",
-    baslik: "Stok uyarisi",
-    metin: "3 urun kritik stok altinda.",
+    baslik: "Stok uyarısı",
+    metin: "3 ürün kritik stok altında.",
     okundu: false,
-    tarih: "15 dk once",
+    tarih: "15 dk önce",
   },
 ];
 
 export function KuvvemBildirimMenu() {
+  const { t } = useTranslation();
   const okunmamisSayi = ORNEK_BILDIRIMLER.filter((b) => !b.okundu).length;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className="relative flex h-9 w-9 items-center justify-center rounded-md text-metin-ikinci hover:bg-yuzey hover:text-metin"
-        aria-label="Bildirimler"
+        aria-label={t("bildirim.baslik")}
       >
         <Bell className="h-4 w-4" />
         {okunmamisSayi > 0 && (
@@ -49,12 +51,12 @@ export function KuvvemBildirimMenu() {
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel>Bildirimler</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("bildirim.baslik")}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="max-h-80 overflow-y-auto">
           {ORNEK_BILDIRIMLER.length === 0 ? (
             <div className="px-3 py-6 text-center text-sm text-metin-ikinci">
-              Bildirim yok
+              {t("bildirim.bildirim-yok")}
             </div>
           ) : (
             ORNEK_BILDIRIMLER.map((b) => (

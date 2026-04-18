@@ -43,123 +43,126 @@ import {
   Menu,
   Wrench,
   Globe,
+  Upload,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { kullanSidebarStore } from "@/lib/sidebar-store";
 import { kullanAuthStore } from "@/lib/auth-store";
 
 // ─── 3-Level Menu Yapisi ───
 
 interface MenuOge {
-  baslik: string;
+  baslikKey: string; // i18n anahtarı
   hedef: string;
   ikon: LucideIcon;
   cocuklar?: MenuOge[];
 }
 
 const MENU: MenuOge[] = [
-  { baslik: "Ana Sayfa", hedef: "/", ikon: LayoutDashboard },
+  { baslikKey: "menu.ana-sayfa", hedef: "/", ikon: LayoutDashboard },
   {
-    baslik: "Cari",
+    baslikKey: "menu.cari",
     hedef: "/cari",
     ikon: Users,
     cocuklar: [
-      { baslik: "Cari Listesi", hedef: "/cari/liste", ikon: UserCircle },
-      { baslik: "Yeni Cari", hedef: "/cari/yeni", ikon: UserPlus },
-      { baslik: "Cari Gruplar", hedef: "/cari/gruplar", ikon: UsersRound },
-      { baslik: "Ekstre", hedef: "/cari/ekstre", ikon: FileText },
+      { baslikKey: "menu.cari-listesi", hedef: "/cari/liste", ikon: UserCircle },
+      { baslikKey: "menu.yeni-cari", hedef: "/cari/yeni", ikon: UserPlus },
+      { baslikKey: "menu.cari-gruplar", hedef: "/cari/gruplar", ikon: UsersRound },
+      { baslikKey: "menu.cari-ice-aktar", hedef: "/cari/ice-aktar", ikon: Upload },
+      { baslikKey: "menu.ekstre", hedef: "/cari/ekstre", ikon: FileText },
     ],
   },
   {
-    baslik: "Urun",
+    baslikKey: "menu.urun",
     hedef: "/urun",
     ikon: Package,
     cocuklar: [
-      { baslik: "Urun Listesi", hedef: "/urun/liste", ikon: PackageOpen },
-      { baslik: "Yeni Urun", hedef: "/urun/yeni", ikon: PackagePlus },
+      { baslikKey: "menu.urun-listesi", hedef: "/urun/liste", ikon: PackageOpen },
+      { baslikKey: "menu.yeni-urun", hedef: "/urun/yeni", ikon: PackagePlus },
       {
-        baslik: "Tanimlar",
+        baslikKey: "menu.tanimlar",
         hedef: "/urun/tanimlar",
         ikon: FolderTree,
         cocuklar: [
-          { baslik: "Kategoriler", hedef: "/urun/tanimlar/kategoriler", ikon: FolderTree },
-          { baslik: "Markalar", hedef: "/urun/tanimlar/markalar", ikon: Tag },
-          { baslik: "Fiyat Listeleri", hedef: "/urun/tanimlar/fiyat-listeleri", ikon: Layers },
-          { baslik: "Birimler", hedef: "/urun/tanimlar/birimler", ikon: Scale },
+          { baslikKey: "menu.kategoriler", hedef: "/urun/tanimlar/kategoriler", ikon: FolderTree },
+          { baslikKey: "menu.markalar", hedef: "/urun/tanimlar/markalar", ikon: Tag },
+          { baslikKey: "menu.fiyat-listeleri", hedef: "/urun/tanimlar/fiyat-listeleri", ikon: Layers },
+          { baslikKey: "menu.birimler", hedef: "/urun/tanimlar/birimler", ikon: Scale },
         ],
       },
     ],
   },
   {
-    baslik: "Stok",
+    baslikKey: "menu.stok",
     hedef: "/stok",
     ikon: Warehouse,
     cocuklar: [
-      { baslik: "Stok Durumu", hedef: "/stok/durum", ikon: Boxes },
-      { baslik: "Transfer", hedef: "/stok/transfer", ikon: Send },
-      { baslik: "Sayim", hedef: "/stok/sayim", ikon: ClipboardCheck },
-      { baslik: "Hareketler", hedef: "/stok/hareketler", ikon: History },
+      { baslikKey: "menu.stok-durumu", hedef: "/stok/durum", ikon: Boxes },
+      { baslikKey: "menu.transfer", hedef: "/stok/transfer", ikon: Send },
+      { baslikKey: "menu.sayim", hedef: "/stok/sayim", ikon: ClipboardCheck },
+      { baslikKey: "menu.hareketler", hedef: "/stok/hareketler", ikon: History },
     ],
   },
   {
-    baslik: "Siparis",
+    baslikKey: "menu.siparis",
     hedef: "/siparis",
     ikon: ShoppingCart,
     cocuklar: [
-      { baslik: "Satis", hedef: "/siparis/satis", ikon: ShoppingCart },
-      { baslik: "Alis", hedef: "/siparis/alis", ikon: PackagePlus },
-      { baslik: "Iade", hedef: "/siparis/iade", ikon: ArrowLeftRight },
+      { baslikKey: "menu.satis", hedef: "/siparis/satis", ikon: ShoppingCart },
+      { baslikKey: "menu.alis", hedef: "/siparis/alis", ikon: PackagePlus },
+      { baslikKey: "menu.iade", hedef: "/siparis/iade", ikon: ArrowLeftRight },
     ],
   },
   {
-    baslik: "Finans",
+    baslikKey: "menu.finans",
     hedef: "/finans",
     ikon: CreditCard,
     cocuklar: [
-      { baslik: "Hesaplar", hedef: "/finans/hesaplar", ikon: Wallet },
-      { baslik: "Tahsilat / Odeme", hedef: "/finans/tahsilat", ikon: Banknote },
-      { baslik: "Banka", hedef: "/finans/banka", ikon: Building2 },
-      { baslik: "Gider / Gelir", hedef: "/finans/gider-gelir", ikon: TrendingDown },
-      { baslik: "Faturalar", hedef: "/finans/faturalar", ikon: Receipt },
+      { baslikKey: "menu.odeme-araclari", hedef: "/finans/odeme-araclari", ikon: Wallet },
+      { baslikKey: "menu.tahsilat-odeme", hedef: "/finans/tahsilat", ikon: Banknote },
+      { baslikKey: "menu.banka", hedef: "/finans/banka", ikon: Building2 },
+      { baslikKey: "menu.gider-gelir", hedef: "/finans/gider-gelir", ikon: TrendingDown },
+      { baslikKey: "menu.faturalar", hedef: "/finans/faturalar", ikon: Receipt },
     ],
   },
   {
-    baslik: "Muhasebe",
+    baslikKey: "menu.muhasebe",
     hedef: "/muhasebe",
     ikon: Scale,
     cocuklar: [
-      { baslik: "Yevmiye Fisleri", hedef: "/muhasebe/yevmiye", ikon: FileText },
-      { baslik: "Mizan", hedef: "/muhasebe/mizan", ikon: BarChart3 },
+      { baslikKey: "menu.yevmiye-fisleri", hedef: "/muhasebe/yevmiye", ikon: FileText },
+      { baslikKey: "menu.mizan", hedef: "/muhasebe/mizan", ikon: BarChart3 },
     ],
   },
   {
-    baslik: "Personel",
+    baslikKey: "menu.personel",
     hedef: "/ayarlar/personel",
     ikon: Users,
   },
-  { baslik: "Raporlar", hedef: "/rapor", ikon: BarChart3 },
+  { baslikKey: "menu.rapor", hedef: "/rapor", ikon: BarChart3 },
   {
-    baslik: "Ayarlar",
+    baslikKey: "menu.ayarlar",
     hedef: "/ayarlar",
     ikon: Settings,
     cocuklar: [
-      { baslik: "Genel", hedef: "/ayarlar/genel", ikon: Settings },
+      { baslikKey: "menu.genel", hedef: "/ayarlar/genel", ikon: Settings },
       {
-        baslik: "Firma",
+        baslikKey: "menu.firma",
         hedef: "/ayarlar/firma",
         ikon: Building2,
         cocuklar: [
-          { baslik: "Sirket Bilgileri", hedef: "/ayarlar/firma/sirket", ikon: Building2 },
-          { baslik: "Subeler", hedef: "/ayarlar/firma/subeler", ikon: Store },
-          { baslik: "Terminaller", hedef: "/ayarlar/firma/terminaller", ikon: Monitor },
+          { baslikKey: "menu.sirket-bilgileri", hedef: "/ayarlar/firma/sirket", ikon: Building2 },
+          { baslikKey: "menu.subeler", hedef: "/ayarlar/firma/subeler", ikon: Store },
+          { baslikKey: "menu.terminaller", hedef: "/ayarlar/firma/terminaller", ikon: Monitor },
         ],
       },
-      { baslik: "Kullanicilar", hedef: "/ayarlar/kullanicilar", ikon: Users },
-      { baslik: "Roller", hedef: "/ayarlar/roller", ikon: Shield },
-      { baslik: "Entegrasyonlar", hedef: "/ayarlar/entegrasyonlar", ikon: Globe },
-      { baslik: "Bildirimler", hedef: "/ayarlar/bildirimler", ikon: Bell },
-      { baslik: "Sistem", hedef: "/ayarlar/sistem", ikon: Database },
+      { baslikKey: "menu.kullanicilar", hedef: "/ayarlar/kullanicilar", ikon: Users },
+      { baslikKey: "menu.roller", hedef: "/ayarlar/roller", ikon: Shield },
+      { baslikKey: "menu.entegrasyonlar", hedef: "/ayarlar/entegrasyonlar", ikon: Globe },
+      { baslikKey: "menu.bildirimler", hedef: "/ayarlar/bildirimler", ikon: Bell },
+      { baslikKey: "menu.sistem", hedef: "/ayarlar/sistem", ikon: Database },
     ],
   },
 ];
@@ -187,10 +190,12 @@ function NavItem({
   onNavigate?: () => void;
   onIkonTik?: () => void;
 }) {
+  const { t } = useTranslation();
+  const baslik = t(oge.baslikKey);
   const aktif = oge.cocuklar
     ? yol === oge.hedef
     : yol === oge.hedef || yol.startsWith(oge.hedef + "/");
-  const genislemis = aciklar.includes(oge.baslik);
+  const genislemis = aciklar.includes(oge.baslikKey);
   const Ikon = oge.ikon;
 
   // Seviyeye gore boyut
@@ -207,19 +212,19 @@ function NavItem({
           <button
             onClick={() => {
               if (ikonModu && !acik && onIkonTik) onIkonTik();
-              if (acik) acikToggle(oge.baslik);
+              if (acik) acikToggle(oge.baslikKey);
             }}
             className={cn(
               "sidebar-item w-full",
               !acik && "justify-center px-0",
               aktif && "active",
             )}
-            title={!acik ? oge.baslik : undefined}
+            title={!acik ? baslik : undefined}
           >
             <Ikon className={cn(ikonBoyut, "shrink-0", !acik && "mx-auto")} />
             {acik && (
               <>
-                <span className="flex-1 text-left">{oge.baslik}</span>
+                <span className="flex-1 text-left">{baslik}</span>
                 <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", genislemis && "rotate-180")} />
               </>
             )}
@@ -250,7 +255,7 @@ function NavItem({
     return (
       <li>
         <button
-          onClick={() => acikToggle(oge.baslik)}
+          onClick={() => acikToggle(oge.baslikKey)}
           className={cn(
             "flex items-center gap-2 rounded-lg w-full transition-all duration-200",
             satirPadding,
@@ -261,7 +266,7 @@ function NavItem({
           )}
         >
           <Ikon className={ikonBoyut} />
-          <span className="flex-1 text-left">{oge.baslik}</span>
+          <span className="flex-1 text-left">{baslik}</span>
           <ChevronDown className={cn("h-3 w-3 transition-transform duration-200", genislemis && "rotate-180")} />
         </button>
         {genislemis && (
@@ -294,10 +299,10 @@ function NavItem({
           to={oge.hedef}
           onClick={onNavigate}
           className={cn("sidebar-item", !acik && "justify-center px-0", aktif && "active")}
-          title={!acik ? oge.baslik : undefined}
+          title={!acik ? baslik : undefined}
         >
           <Ikon className={cn(ikonBoyut, "shrink-0", !acik && "mx-auto")} />
-          {acik && <span>{oge.baslik}</span>}
+          {acik && <span>{baslik}</span>}
         </Link>
       </li>
     );
@@ -318,7 +323,7 @@ function NavItem({
         )}
       >
         <Ikon className={ikonBoyut} />
-        {oge.baslik}
+        {baslik}
       </Link>
     </li>
   );
@@ -327,6 +332,7 @@ function NavItem({
 // ─── Desktop Sidebar ───
 
 function DesktopSidebar() {
+  const { t } = useTranslation();
   const yol = useRouterState({ select: (s) => s.location.pathname });
   const yonlendir = useNavigate();
   const { daraltilmis, geciciAcik, daraltToggle, geciciGenislet, navigasyonSonrasi } =
@@ -374,7 +380,7 @@ function DesktopSidebar() {
             "absolute right-0 translate-x-1/2 p-1.5 rounded-full border border-kenarlik bg-yuzey shadow-sm hover:bg-yuzey-yukseltilmis transition-colors z-10",
             geciciAcik && "bg-birincil-zemin border-birincil/30",
           )}
-          title={daraltilmis ? "Menuyu genislet" : "Icon moduna gec"}
+          title={daraltilmis ? t("menu.menuyu-genislet") : t("menu.icon-moduna-gec")}
         >
           {daraltilmis ? <PanelLeft className="w-4 h-4 text-metin-ikinci" /> : <PanelLeftClose className="w-4 h-4 text-metin-ikinci" />}
         </button>
@@ -385,7 +391,7 @@ function DesktopSidebar() {
         <ul className="space-y-1">
           {MENU.map((oge) => (
             <NavItem
-              key={oge.baslik}
+              key={oge.baslikKey}
               oge={oge}
               seviye={0}
               acik={gercektenAcik}
@@ -415,7 +421,7 @@ function DesktopSidebar() {
             </div>
             {gercektenAcik && (
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium truncate text-metin">{kullanici?.adSoyad || kullanici?.email || "Kullanici"}</p>
+                <p className="text-sm font-medium truncate text-metin">{kullanici?.adSoyad || kullanici?.email || t("menu.kullanici")}</p>
                 <p className="text-xs text-metin-ikinci truncate">{kullanici?.rol ?? ""}</p>
               </div>
             )}
@@ -438,7 +444,7 @@ function DesktopSidebar() {
                   className="flex items-center gap-3 w-full p-2 rounded-lg text-sm text-metin-ikinci hover:text-tehlike hover:bg-tehlike-zemin transition-all duration-200"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span>Cikis Yap</span>
+                  <span>{t("menu.cikis-yap")}</span>
                 </button>
               </div>
             </>
@@ -452,6 +458,7 @@ function DesktopSidebar() {
 // ─── Mobile Sidebar ───
 
 function MobileSidebar() {
+  const { t } = useTranslation();
   const yol = useRouterState({ select: (s) => s.location.pathname });
   const yonlendir = useNavigate();
   const { mobilAcik, mobilKapat } = kullanSidebarStore();
@@ -492,7 +499,7 @@ function MobileSidebar() {
         <nav className="flex-1 overflow-y-auto p-3 custom-scrollbar">
           <ul className="space-y-1">
             {MENU.map((oge) => (
-              <NavItem key={oge.baslik} oge={oge} seviye={0} acik={true} ikonModu={false} yol={yol} aciklar={aciklar} acikToggle={acikToggle} onNavigate={mobilKapat} />
+              <NavItem key={oge.baslikKey} oge={oge} seviye={0} acik={true} ikonModu={false} yol={yol} aciklar={aciklar} acikToggle={acikToggle} onNavigate={mobilKapat} />
             ))}
           </ul>
         </nav>
@@ -502,7 +509,7 @@ function MobileSidebar() {
             <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate text-metin">{kullanici?.adSoyad || kullanici?.email}</p><p className="text-xs text-metin-ikinci truncate">{kullanici?.email}</p></div>
           </div>
           <button onClick={() => { cikis(); mobilKapat(); void yonlendir({ to: "/giris" }); }} className="flex items-center gap-3 w-full p-2 rounded-xl text-sm text-metin-ikinci hover:text-tehlike hover:bg-tehlike-zemin transition-all duration-200">
-            <LogOut className="w-5 h-5" /><span>Cikis Yap</span>
+            <LogOut className="w-5 h-5" /><span>{t("menu.cikis-yap")}</span>
           </button>
         </div>
       </aside>
@@ -511,9 +518,10 @@ function MobileSidebar() {
 }
 
 export function MobilMenuButon() {
+  const { t } = useTranslation();
   const toggle = kullanSidebarStore((s) => s.mobilToggle);
   return (
-    <button onClick={toggle} className="lg:hidden p-2 rounded-lg hover:bg-yuzey-yukseltilmis transition-colors" aria-label="Menu">
+    <button onClick={toggle} className="lg:hidden p-2 rounded-lg hover:bg-yuzey-yukseltilmis transition-colors" aria-label={t("menu.menuyu-genislet")}>
       <Menu className="w-5 h-5 text-metin" />
     </button>
   );

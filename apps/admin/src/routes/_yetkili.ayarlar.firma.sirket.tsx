@@ -68,8 +68,8 @@ interface FirmaForm {
 }
 
 const PARA_BIRIMLERI = [
-  { kod: "TRY", etiket: "Turk Lirasi (TRY)" },
-  { kod: "USD", etiket: "ABD Dolari (USD)" },
+  { kod: "TRY", etiket: "Türk Lirası (TRY)" },
+  { kod: "USD", etiket: "ABD Doları (USD)" },
   { kod: "EUR", etiket: "Euro (EUR)" },
   { kod: "GBP", etiket: "Sterlin (GBP)" },
 ];
@@ -148,7 +148,7 @@ function SirketBilgileriSayfa() {
           saatFormati: d.saatFormati ?? "HH:mm",
         });
       } catch {
-        toast.hata("Sistem ayarlari yuklenemedi");
+        toast.hata("Sistem ayarları yüklenemedi");
       }
       setYukleniyor(false);
     };
@@ -185,9 +185,9 @@ function SirketBilgileriSayfa() {
         tarihFormati: form.tarihFormati,
         saatFormati: form.saatFormati,
       });
-      toast.basarili("Sirket bilgileri kaydedildi");
+      toast.basarili("Şirket bilgileri kaydedildi");
     } catch {
-      toast.hata("Kayit basarisiz");
+      toast.hata("Kayıt başarısız");
     }
     setKaydediyor(false);
   };
@@ -210,10 +210,10 @@ function SirketBilgileriSayfa() {
       <header className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-metin">
-            Sirket Bilgileri
+            Şirket Bilgileri
           </h1>
           <p className="text-sm text-metin-ikinci">
-            Firma bilgileri, iletisim, vergi, gorsel ve belge ayarlari
+            Firma bilgileri, iletişim, vergi, görsel ve belge ayarları
           </p>
         </div>
         <Button onClick={kaydet} disabled={kaydediyor}>
@@ -237,17 +237,17 @@ function SirketBilgileriSayfa() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-metin mb-1 block">Firma Adi / Unvan</label>
-              <Input value={form.firmaAdi} onChange={(e) => setForm({ ...form, firmaAdi: e.target.value })} placeholder="Kuvvem Yazilim Ltd. Sti." />
+              <label className="text-sm font-medium text-metin mb-1 block">Firma Adı / Ünvan</label>
+              <Input value={form.firmaAdi} onChange={(e) => setForm({ ...form, firmaAdi: e.target.value })} placeholder="Kuvvem Yazılım Ltd. Şti." />
             </div>
             <div>
-              <label className="text-sm font-medium text-metin mb-1 block">Kisa Ad</label>
+              <label className="text-sm font-medium text-metin mb-1 block">Kısa Ad</label>
               <Input value={form.kisaAd} onChange={(e) => setForm({ ...form, kisaAd: e.target.value })} placeholder="Kuvvem" />
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium text-metin mb-1 block">Firma Sahibi Adi Soyadi</label>
-            <Input value={form.sahipAdi} onChange={(e) => setForm({ ...form, sahipAdi: e.target.value })} placeholder="Mustafa Ozturk" />
+            <label className="text-sm font-medium text-metin mb-1 block">Firma Sahibi Adı Soyadı</label>
+            <Input value={form.sahipAdi} onChange={(e) => setForm({ ...form, sahipAdi: e.target.value })} placeholder="Mustafa Öztürk" />
           </div>
         </CardContent>
       </Card>
@@ -257,7 +257,7 @@ function SirketBilgileriSayfa() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="h-5 w-5 text-metin-pasif" />
-            Iletisim
+            İletişim
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -269,7 +269,7 @@ function SirketBilgileriSayfa() {
             <div>
               <label className="text-sm font-medium text-metin mb-1 block">Bildirim E-posta</label>
               <Input type="email" value={form.bildirimEmail} onChange={(e) => setForm({ ...form, bildirimEmail: e.target.value })} placeholder="bildirim@firma.com" />
-              <p className="text-xs text-metin-pasif mt-0.5">Siparis, fatura vb. bildirimlerin gidecegi adres</p>
+              <p className="text-xs text-metin-pasif mt-0.5">Sipariş, fatura vb. bildirimlerin gideceği adres</p>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -305,7 +305,7 @@ function SirketBilgileriSayfa() {
             onIlceChange={(ilce) => setForm({ ...form, ilce })}
           />
           <div>
-            <label className="text-sm font-medium text-metin mb-1 block">Acik Adres</label>
+            <label className="text-sm font-medium text-metin mb-1 block">Açık Adres</label>
             <textarea
               value={form.adres}
               onChange={(e) => setForm({ ...form, adres: e.target.value })}
@@ -332,10 +332,10 @@ function SirketBilgileriSayfa() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-metin mb-1 block">Vergi Dairesi</label>
-              <Input value={form.vergiDairesi} onChange={(e) => setForm({ ...form, vergiDairesi: e.target.value })} placeholder="Kadikoy V.D." />
+              <Input value={form.vergiDairesi} onChange={(e) => setForm({ ...form, vergiDairesi: e.target.value })} placeholder="Kadıköy V.D." />
             </div>
             <div>
-              <label className="text-sm font-medium text-metin mb-1 block">Vergi Numarasi</label>
+              <label className="text-sm font-medium text-metin mb-1 block">Vergi Numarası</label>
               <Input value={form.vergiNo} onChange={(e) => setForm({ ...form, vergiNo: e.target.value })} placeholder="1234567890" />
             </div>
           </div>
@@ -347,7 +347,7 @@ function SirketBilgileriSayfa() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Image className="h-5 w-5 text-metin-pasif" />
-            Gorsel Kimlik
+            Görsel Kimlik
           </CardTitle>
           <CardDescription>Logo, imza ve marka rengi</CardDescription>
         </CardHeader>
@@ -358,7 +358,7 @@ function SirketBilgileriSayfa() {
               onChange={(url) => setForm({ ...form, firmaLogoUrl: url ?? "" })}
               endpoint="/upload/logo"
               label="Firma Logo"
-              placeholder="Logo yukle (max 800px)"
+              placeholder="Logo yükle (max 800px)"
               maxWidth={160}
               maxHeight={100}
             />
@@ -366,8 +366,8 @@ function SirketBilgileriSayfa() {
               value={form.imzaUrl}
               onChange={(url) => setForm({ ...form, imzaUrl: url ?? "" })}
               endpoint="/upload/imza"
-              label="Imza"
-              placeholder="Imza yukle (max 400x200)"
+              label="İmza"
+              placeholder="İmza yükle (max 400x200)"
               maxWidth={160}
               maxHeight={80}
             />
@@ -376,7 +376,7 @@ function SirketBilgileriSayfa() {
               onChange={(url) => setForm({ ...form, teklifLogoUrl: url ?? "" })}
               endpoint="/upload/logo"
               label="Teklif Logo"
-              placeholder="Teklif logosu yukle"
+              placeholder="Teklif logosu yükle"
               maxWidth={160}
               maxHeight={100}
             />
@@ -401,14 +401,14 @@ function SirketBilgileriSayfa() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Printer className="h-5 w-5 text-metin-pasif" />
-            Fis Ayarlari
+            Fiş Ayarları
           </CardTitle>
-          <CardDescription>Termal yazici fis genisligi ve alt mesaj</CardDescription>
+          <CardDescription>Termal yazıcı fiş genişliği ve alt mesaj</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <label className="text-sm font-medium text-metin mb-1 block">
-              Fis Genisligi (mm)
+              Fiş Genişliği (mm)
             </label>
             <Input
               type="number"
@@ -418,16 +418,16 @@ function SirketBilgileriSayfa() {
               onChange={(e) => setForm({ ...form, fisGenisligi: parseInt(e.target.value) || 80 })}
               className="max-w-[120px]"
             />
-            <p className="text-xs text-metin-pasif mt-0.5">Termal yazici kagit genisligi (40-120 mm)</p>
+            <p className="text-xs text-metin-pasif mt-0.5">Termal yazıcı kağıt genişliği (40-120 mm)</p>
           </div>
           <div>
             <label className="text-sm font-medium text-metin mb-2 block">
-              Fis Alt Mesaji
+              Fiş Alt Mesajı
             </label>
             <RichTextEditor
               value={form.fisMesaji}
               onChange={(html) => setForm({ ...form, fisMesaji: html })}
-              placeholder="Fis alt kismine yazilacak mesaj (iade kosullari, tesekkur notu vb.)..."
+              placeholder="Fiş alt kısmına yazılacak mesaj (iade koşulları, teşekkür notu vb.)..."
               minHeight="120px"
             />
           </div>
@@ -439,19 +439,19 @@ function SirketBilgileriSayfa() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Receipt className="h-5 w-5 text-metin-pasif" />
-            Teklif Ayarlari
+            Teklif Ayarları
           </CardTitle>
-          <CardDescription>Teklif belgesi alt aciklama metni</CardDescription>
+          <CardDescription>Teklif belgesi alt açıklama metni</CardDescription>
         </CardHeader>
         <CardContent>
           <div>
             <label className="text-sm font-medium text-metin mb-2 block">
-              Teklif Aciklama / Kosullar
+              Teklif Açıklama / Koşullar
             </label>
             <RichTextEditor
               value={form.teklifAciklama}
               onChange={(html) => setForm({ ...form, teklifAciklama: html })}
-              placeholder="Teklif belgesinin alt kismina yazilacak aciklama, odeme kosullari, teslimat sartlari vb..."
+              placeholder="Teklif belgesinin alt kısmına yazılacak açıklama, ödeme koşulları, teslimat şartları vb..."
               minHeight="180px"
             />
           </div>
@@ -461,8 +461,8 @@ function SirketBilgileriSayfa() {
       {/* 8. Bolgesel Ayarlar */}
       <Card>
         <CardHeader>
-          <CardTitle>Bolgesel Ayarlar</CardTitle>
-          <CardDescription>Para birimi, saat dilimi ve tarih formati</CardDescription>
+          <CardTitle>Bölgesel Ayarlar</CardTitle>
+          <CardDescription>Para birimi, saat dilimi ve tarih formatı</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -473,7 +473,7 @@ function SirketBilgileriSayfa() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-metin mb-1 block">Ulke Kodu</label>
+              <label className="text-sm font-medium text-metin mb-1 block">Ülke Kodu</label>
               <Input value={form.ulkeKodu} onChange={(e) => setForm({ ...form, ulkeKodu: e.target.value.toUpperCase() })} placeholder="TR" maxLength={2} className="max-w-[100px]" />
             </div>
           </div>
@@ -485,14 +485,14 @@ function SirketBilgileriSayfa() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-metin mb-1 block">Tarih Formati</label>
+              <label className="text-sm font-medium text-metin mb-1 block">Tarih Formatı</label>
               <select value={form.tarihFormati} onChange={(e) => setForm({ ...form, tarihFormati: e.target.value })} className={selectClass}>
                 {TARIH_FORMATLARI.map((t) => (<option key={t} value={t}>{t}</option>))}
               </select>
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium text-metin mb-1 block">Saat Formati</label>
+            <label className="text-sm font-medium text-metin mb-1 block">Saat Formatı</label>
             <div className="flex gap-3">
               {["HH:mm", "hh:mm A"].map((sf) => (
                 <Button key={sf} variant={form.saatFormati === sf ? "default" : "outline"} size="sm" onClick={() => setForm({ ...form, saatFormati: sf })}>

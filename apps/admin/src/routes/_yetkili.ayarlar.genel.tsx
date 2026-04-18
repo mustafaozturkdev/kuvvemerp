@@ -27,7 +27,7 @@ function AyarlarSayfa() {
   const { kullanici } = kullanKullanici();
 
   const temalar: { deger: Tema; etiket: string; ikon: typeof Sun }[] = [
-    { deger: "acik", etiket: "Acik", ikon: Sun },
+    { deger: "acik", etiket: "Açık", ikon: Sun },
     { deger: "koyu", etiket: "Koyu", ikon: Moon },
     { deger: "sistem", etiket: "Sistem", ikon: Monitor },
   ];
@@ -39,7 +39,7 @@ function AyarlarSayfa() {
           {t("menu.ayarlar")}
         </h1>
         <p className="text-sm text-metin-ikinci">
-          Kullanici ve gorunum tercihleri
+          Kullanıcı ve görünüm tercihleri
         </p>
       </header>
 
@@ -66,7 +66,7 @@ function AyarlarSayfa() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Gorunum</CardTitle>
+          <CardTitle>Görünüm</CardTitle>
           <CardDescription>Tema tercihi</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
@@ -119,11 +119,11 @@ function SifreDegistirKarti() {
 
   const gonder = async () => {
     if (form.yeniSifre !== form.yeniSifreTekrar) {
-      toast.hata("Yeni sifreler eslesmedi");
+      toast.hata("Yeni şifreler eşleşmedi");
       return;
     }
     if (form.yeniSifre.length < 6) {
-      toast.hata("Sifre en az 6 karakter olmali");
+      toast.hata("Şifre en az 6 karakter olmalı");
       return;
     }
     setKaydediyor(true);
@@ -132,10 +132,10 @@ function SifreDegistirKarti() {
         eskiSifre: form.eskiSifre,
         yeniSifre: form.yeniSifre,
       });
-      toast.basarili("Sifre basariyla degistirildi");
+      toast.basarili("Şifre başarıyla değiştirildi");
       setForm({ eskiSifre: "", yeniSifre: "", yeniSifreTekrar: "" });
     } catch (err: any) {
-      const mesaj = err?.response?.data?.hata?.mesaj ?? err?.response?.data?.mesaj ?? "Sifre degistirme basarisiz";
+      const mesaj = err?.response?.data?.hata?.mesaj ?? err?.response?.data?.mesaj ?? "Şifre değiştirme başarısız";
       toast.hata(mesaj);
     }
     setKaydediyor(false);
@@ -146,49 +146,49 @@ function SifreDegistirKarti() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Key className="h-5 w-5 text-metin-pasif" />
-          Sifre Degistir
+          Şifre Değiştir
         </CardTitle>
         <CardDescription>
-          Hesap guvenligi icin sifrenizi duzenli olarak degistirin
+          Hesap güvenliği için şifrenizi düzenli olarak değiştirin
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 max-w-sm">
         <div>
           <label className="text-sm font-medium text-metin mb-1 block">
-            Mevcut Sifre
+            Mevcut Şifre
           </label>
           <Input
             type="password"
             value={form.eskiSifre}
             onChange={(e) => setForm({ ...form, eskiSifre: e.target.value })}
-            placeholder="Mevcut sifreniz"
+            placeholder="Mevcut şifreniz"
           />
         </div>
         <div>
           <label className="text-sm font-medium text-metin mb-1 block">
-            Yeni Sifre
+            Yeni Şifre
           </label>
           <Input
             type="password"
             value={form.yeniSifre}
             onChange={(e) => setForm({ ...form, yeniSifre: e.target.value })}
-            placeholder="En az 6 karakter, buyuk/kucuk harf, rakam"
+            placeholder="En az 6 karakter, büyük/küçük harf, rakam"
           />
         </div>
         <div>
           <label className="text-sm font-medium text-metin mb-1 block">
-            Yeni Sifre (Tekrar)
+            Yeni Şifre (Tekrar)
           </label>
           <Input
             type="password"
             value={form.yeniSifreTekrar}
             onChange={(e) => setForm({ ...form, yeniSifreTekrar: e.target.value })}
-            placeholder="Yeni sifrenizi tekrar girin"
+            placeholder="Yeni şifrenizi tekrar girin"
           />
         </div>
         <Button onClick={gonder} disabled={kaydediyor || !form.eskiSifre || !form.yeniSifre}>
           {kaydediyor && <Loader2 className="h-4 w-4 animate-spin" />}
-          Sifre Degistir
+          Şifre Değiştir
         </Button>
       </CardContent>
     </Card>

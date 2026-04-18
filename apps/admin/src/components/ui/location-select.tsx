@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronsUpDown, MapPin, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import turkeyLocations from "@/data/turkey-locations.json";
 
@@ -61,6 +62,7 @@ export function LocationSelect({
   required = false,
   className,
 }: LocationSelectProps) {
+  const { t } = useTranslation();
   const [ilOpen, setIlOpen] = useState(false);
   const [ilceOpen, setIlceOpen] = useState(false);
   const [bolgeOpen, setBolgeOpen] = useState(false);
@@ -158,7 +160,7 @@ export function LocationSelect({
       {showBolge && (
         <div className="flex-1 relative">
           <label className="text-sm font-medium text-metin mb-1.5 block">
-            Bolge
+            {t("konum.bolge")}
           </label>
           <button
             ref={bolgeBtnRef}
@@ -168,7 +170,7 @@ export function LocationSelect({
             className={cn(btnClass, bolgeOpen && "ring-2 ring-birincil/30 border-birincil")}
           >
             <span className={bolge ? "text-metin" : "text-metin-pasif"}>
-              {bolge || "Bolge secin"}
+              {bolge || t("konum.bolge-sec")}
             </span>
             <ChevronsUpDown className="h-4 w-4 text-metin-pasif" />
           </button>
@@ -186,7 +188,7 @@ export function LocationSelect({
                     setBolgeOpen(false);
                   }}
                 >
-                  <span className="text-sm">Tum Bolgeler</span>
+                  <span className="text-sm">{t("konum.tum-bolgeler")}</span>
                 </div>
                 {bolgeler.map((b) => (
                   <div
@@ -212,7 +214,7 @@ export function LocationSelect({
       {/* Il */}
       <div className="flex-1 relative">
         <label className="text-sm font-medium text-metin mb-1.5 block">
-          Il {required && <span className="text-tehlike">*</span>}
+          {t("konum.il")} {required && <span className="text-tehlike">*</span>}
         </label>
         <button
           ref={ilBtnRef}
@@ -224,7 +226,7 @@ export function LocationSelect({
           <div className="flex items-center gap-2 min-w-0">
             <MapPin className="h-4 w-4 text-metin-pasif shrink-0" />
             <span className={cn("truncate", il ? "text-metin" : "text-metin-pasif")}>
-              {il || "Il secin"}
+              {il || t("konum.il-sec")}
             </span>
             {il && (
               <span className="text-xs text-metin-pasif shrink-0">
@@ -243,7 +245,7 @@ export function LocationSelect({
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-metin-pasif" />
                   <input
                     type="text"
-                    placeholder="Il ara..."
+                    placeholder={t("konum.il-ara")}
                     value={ilSearch}
                     onChange={(e) => setIlSearch(e.target.value)}
                     className="w-full h-9 pl-9 pr-3 rounded-md border border-kenarlik bg-yuzey text-sm text-metin placeholder:text-metin-pasif focus:outline-none focus:ring-1 focus:ring-birincil"
@@ -254,7 +256,7 @@ export function LocationSelect({
               <div className="max-h-60 overflow-auto">
                 {searchedIller.length === 0 ? (
                   <div className="px-3 py-6 text-center text-sm text-metin-pasif">
-                    Sonuc bulunamadi
+                    {t("konum.sonuc-bulunamadi")}
                   </div>
                 ) : (
                   searchedIller.map((ilName) => (
@@ -288,7 +290,7 @@ export function LocationSelect({
       {/* Ilce */}
       <div className="flex-1 relative">
         <label className="text-sm font-medium text-metin mb-1.5 block">
-          Ilce {required && <span className="text-tehlike">*</span>}
+          {t("konum.ilce")} {required && <span className="text-tehlike">*</span>}
         </label>
         <button
           ref={ilceBtnRef}
@@ -303,7 +305,7 @@ export function LocationSelect({
               ilce ? "text-metin" : "text-metin-pasif"
             )}
           >
-            {ilce || (il ? "Ilce secin" : "Once il secin")}
+            {ilce || (il ? t("konum.ilce-sec") : t("konum.once-il-secin"))}
           </span>
           <ChevronsUpDown className="h-4 w-4 text-metin-pasif shrink-0" />
         </button>
@@ -319,7 +321,7 @@ export function LocationSelect({
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-metin-pasif" />
                   <input
                     type="text"
-                    placeholder="Ilce ara..."
+                    placeholder={t("konum.ilce-ara")}
                     value={ilceSearch}
                     onChange={(e) => setIlceSearch(e.target.value)}
                     className="w-full h-9 pl-9 pr-3 rounded-md border border-kenarlik bg-yuzey text-sm text-metin placeholder:text-metin-pasif focus:outline-none focus:ring-1 focus:ring-birincil"
@@ -330,7 +332,7 @@ export function LocationSelect({
               <div className="max-h-60 overflow-auto">
                 {searchedIlceler.length === 0 ? (
                   <div className="px-3 py-6 text-center text-sm text-metin-pasif">
-                    Sonuc bulunamadi
+                    {t("konum.sonuc-bulunamadi")}
                   </div>
                 ) : (
                   searchedIlceler.map((item) => (

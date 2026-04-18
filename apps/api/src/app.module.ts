@@ -20,6 +20,13 @@ import { MagazaModule } from './modules/magaza/magaza.module.js';
 import { YetkiModule } from './modules/yetki/yetki.module.js';
 import { PersonelModule } from './modules/personel/personel.module.js';
 import { UploadModule } from './modules/upload/upload.module.js';
+import { DashboardModule } from './modules/dashboard/dashboard.module.js';
+import { CariGrupModule } from './modules/cari-grup/cari-grup.module.js';
+import { HesapGrupModule } from './modules/hesap-grup/hesap-grup.module.js';
+import { HesapModule } from './modules/hesap/hesap.module.js';
+import { MarkaModule } from './modules/marka/marka.module.js';
+import { MarkaModelModule } from './modules/marka-model/marka-model.module.js';
+import { KategoriModule } from './modules/kategori/kategori.module.js';
 
 @Module({
   imports: [
@@ -27,9 +34,21 @@ import { UploadModule } from './modules/upload/upload.module.js';
     LoggerModule.forRoot({
       pinoHttp: {
         level: process.env.LOG_LEVEL ?? 'info',
+        genReqId: (req: any) => req.id,
+        redact: ['req.headers.authorization', 'req.headers.cookie'],
+        serializers: {
+          req(req: any) {
+            return {
+              id: req.id,
+              method: req.method,
+              url: req.url,
+              host: req.headers?.host,
+            };
+          },
+        },
         transport:
           process.env.NODE_ENV !== 'production'
-            ? { target: 'pino-pretty', options: { singleLine: true } }
+            ? { target: 'pino-pretty', options: { singleLine: true, colorize: true } }
             : undefined,
       },
     }),
@@ -55,6 +74,13 @@ import { UploadModule } from './modules/upload/upload.module.js';
     YetkiModule,
     PersonelModule,
     UploadModule,
+    DashboardModule,
+    CariGrupModule,
+    HesapGrupModule,
+    HesapModule,
+    MarkaModule,
+    MarkaModelModule,
+    KategoriModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },

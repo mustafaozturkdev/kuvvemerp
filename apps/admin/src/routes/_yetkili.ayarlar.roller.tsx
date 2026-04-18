@@ -10,6 +10,7 @@ import {
   Loader2,
   Lock,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ interface Rol {
 }
 
 function RollerSayfa() {
+  const { t } = useTranslation();
   const [roller, setRoller] = useState<Rol[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [arama, setArama] = useState("");
@@ -53,7 +55,7 @@ function RollerSayfa() {
       const res = await apiIstemci.get<Rol[]>("/rol");
       setRoller(res.data);
     } catch {
-      toast.hata("Roller yuklenemedi");
+      toast.hata("Roller yüklenemedi");
     }
     setYukleniyor(false);
   };
@@ -79,7 +81,7 @@ function RollerSayfa() {
             Roller
           </h1>
           <p className="text-sm text-metin-ikinci">
-            Sistem rollerini ve yetkilerini yonetin
+            Sistem rollerini ve yetkilerini yönetin
           </p>
         </div>
         <Button
@@ -96,7 +98,7 @@ function RollerSayfa() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-metin-pasif" />
         <Input
-          placeholder="Rol adi veya kodu ara..."
+          placeholder="Rol adı veya kodu ara..."
           value={arama}
           onChange={(e) => setArama(e.target.value)}
           className="pl-9"
@@ -113,18 +115,18 @@ function RollerSayfa() {
           ) : filtrelenmis.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-12 text-metin-ikinci">
               <Shield className="h-10 w-10 text-metin-pasif" />
-              <p>{arama ? "Sonuc bulunamadi" : "Henuz rol yok"}</p>
+              <p>{arama ? "Sonuç bulunamadı" : "Henüz rol yok"}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Rol Adi</TableHead>
+                  <TableHead>Rol Adı</TableHead>
                   <TableHead>Kod</TableHead>
-                  <TableHead>Aciklama</TableHead>
-                  <TableHead>Kullanici</TableHead>
+                  <TableHead>Açıklama</TableHead>
+                  <TableHead>Kullanıcı</TableHead>
                   <TableHead>Tip</TableHead>
-                  <TableHead className="w-[80px]">Islem</TableHead>
+                  <TableHead className="w-[80px]">İşlem</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -160,7 +162,7 @@ function RollerSayfa() {
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="text-xs">
-                          Ozel
+                          Özel
                         </Badge>
                       )}
                     </TableCell>
@@ -171,7 +173,7 @@ function RollerSayfa() {
                           setDrawerAcik(true);
                         }}
                         className="p-1.5 rounded-lg hover:bg-yuzey-yukseltilmis transition-colors"
-                        title="Duzenle"
+                        title={t("genel.duzenle")}
                       >
                         <Pencil className="h-4 w-4 text-metin-ikinci" />
                       </button>
@@ -251,7 +253,7 @@ function RolDrawer({
         setYetkiGruplari(grRes.data);
         setSeciliYetkiIdler(new Set(ryRes.data.map((r) => String(r.yetkiId))));
       } catch {
-        toast.hata("Yetkiler yuklenemedi");
+        toast.hata("Yetkiler yüklenemedi");
       }
       setYetkiYukleniyor(false);
     };
@@ -295,18 +297,18 @@ function RolDrawer({
         await apiIstemci.put(`/yetki/rol/${rol!.id}`, {
           yetkiIdler: Array.from(seciliYetkiIdler).map(Number),
         });
-        toast.basarili("Rol guncellendi");
+        toast.basarili("Rol güncellendi");
       } else {
         await apiIstemci.post("/rol", {
           kod: form.kod,
           ad: form.ad,
           aciklama: form.aciklama || null,
         });
-        toast.basarili("Rol olusturuldu");
+        toast.basarili("Rol oluşturuldu");
       }
       onKaydet();
     } catch (err: any) {
-      const mesaj = err?.response?.data?.hata?.mesaj ?? "Kayit basarisiz";
+      const mesaj = err?.response?.data?.hata?.mesaj ?? "Kayıt başarısız";
       toast.hata(mesaj);
     }
     setKaydediyor(false);
@@ -314,13 +316,13 @@ function RolDrawer({
 
   const MODUL_ETIKETLERI: Record<string, string> = {
     sistem: "Sistem",
-    kullanici: "Kullanici",
+    kullanici: "Kullanıcı",
     rol: "Rol & Yetki",
-    magaza: "Sube / Magaza",
+    magaza: "Şube / Mağaza",
     cari: "Cari Hesap",
-    urun: "Urun",
+    urun: "Ürün",
     stok: "Stok",
-    siparis: "Siparis",
+    siparis: "Sipariş",
     fatura: "Fatura",
     teklif: "Teklif",
     finans: "Finans",
@@ -329,7 +331,7 @@ function RolDrawer({
     eticaret: "E-Ticaret",
     pazaryeri: "Pazaryeri",
     crm: "CRM",
-    demirbas: "Demirbas",
+    demirbas: "Demirbaş",
     personel: "Personel",
   };
 
@@ -346,7 +348,7 @@ function RolDrawer({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-kenarlik px-6 py-4">
           <h2 className="text-lg font-semibold text-metin">
-            {duzenlemeMi ? "Rol Duzenle" : "Yeni Rol"}
+            {duzenlemeMi ? "Rol Düzenle" : "Yeni Rol"}
           </h2>
           <button
             onClick={onKapat}
@@ -393,7 +395,7 @@ function RolDrawer({
               {sistemRolu && (
                 <div className="rounded-lg bg-uyari-zemin border border-uyari/30 p-3 text-sm text-uyari">
                   <Lock className="inline h-3.5 w-3.5 mr-1.5" />
-                  Sistem rollerinin sadece aciklamasi duzenlenebilir.
+                  Sistem rollerinin sadece açıklaması düzenlenebilir.
                 </div>
               )}
               <div>
@@ -401,26 +403,26 @@ function RolDrawer({
                 <Input
                   value={form.kod}
                   onChange={(e) => setForm({ ...form, kod: e.target.value })}
-                  placeholder="ornek: satis_sorumlusu"
+                  placeholder="örnek: satis_sorumlusu"
                   disabled={sistemRolu || duzenlemeMi}
                 />
                 <p className="text-xs text-metin-pasif mt-1">Benzersiz, snake_case</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-metin mb-1 block">Rol Adi</label>
+                <label className="text-sm font-medium text-metin mb-1 block">Rol Adı</label>
                 <Input
                   value={form.ad}
                   onChange={(e) => setForm({ ...form, ad: e.target.value })}
-                  placeholder="ornek: Satis Sorumlusu"
+                  placeholder="örnek: Satış Sorumlusu"
                   disabled={sistemRolu}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-metin mb-1 block">Aciklama</label>
+                <label className="text-sm font-medium text-metin mb-1 block">Açıklama</label>
                 <textarea
                   value={form.aciklama}
                   onChange={(e) => setForm({ ...form, aciklama: e.target.value })}
-                  placeholder="Bu rolun amaci ve sorumluluk alani..."
+                  placeholder="Bu rolün amacı ve sorumluluk alanı..."
                   rows={3}
                   className={cn(
                     "w-full rounded-lg border border-kenarlik bg-yuzey px-3 py-2 text-sm text-metin",
@@ -439,8 +441,8 @@ function RolDrawer({
                 </div>
               ) : Object.keys(yetkiGruplari).length === 0 ? (
                 <div className="text-center py-8 text-metin-ikinci text-sm">
-                  <p>Henuz yetki tanimlanmamis.</p>
-                  <p className="text-xs mt-1">yetki-seed.sql dosyasini calistirin.</p>
+                  <p>Henüz yetki tanımlanmamış.</p>
+                  <p className="text-xs mt-1">yetki-seed.sql dosyasını çalıştırın.</p>
                 </div>
               ) : (
                 Object.entries(yetkiGruplari).map(([modul, yetkiler]) => {
@@ -521,11 +523,11 @@ function RolDrawer({
         {/* Footer */}
         <div className="border-t border-kenarlik px-6 py-4 flex gap-3">
           <Button variant="outline" onClick={onKapat} className="flex-1">
-            Vazgec
+            Vazgeç
           </Button>
           <Button onClick={gonder} disabled={kaydediyor} className="flex-1">
             {kaydediyor && <Loader2 className="h-4 w-4 animate-spin" />}
-            {duzenlemeMi ? "Kaydet" : "Olustur"}
+            {duzenlemeMi ? "Kaydet" : "Oluştur"}
           </Button>
         </div>
       </div>

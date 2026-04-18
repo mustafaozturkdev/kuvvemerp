@@ -53,9 +53,9 @@ interface Magaza {
 
 const SUBE_TIPLERI = [
   { kod: "merkez", etiket: "Merkez" },
-  { kod: "sube", etiket: "Sube" },
+  { kod: "sube", etiket: "Şube" },
   { kod: "depo", etiket: "Depo" },
-  { kod: "sanal", etiket: "Sanal Magaza" },
+  { kod: "sanal", etiket: "Sanal Mağaza" },
 ];
 
 function SubelerSayfa() {
@@ -71,7 +71,7 @@ function SubelerSayfa() {
       const res = await apiIstemci.get<Magaza[]>("/magaza");
       setSubeler(res.data);
     } catch {
-      toast.hata("Subeler yuklenemedi");
+      toast.hata("Şubeler yüklenemedi");
     }
     setYukleniyor(false);
   };
@@ -99,10 +99,10 @@ function SubelerSayfa() {
       <header className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-metin">
-            Subeler
+            Şubeler
           </h1>
           <p className="text-sm text-metin-ikinci">
-            Sube, depo ve sanal magazalarinizi yonetin
+            Şube, depo ve sanal mağazalarınızı yönetin
           </p>
         </div>
         <Button
@@ -111,7 +111,7 @@ function SubelerSayfa() {
             setDrawerAcik(true);
           }}
         >
-          <Plus className="h-4 w-4" /> Yeni Sube
+          <Plus className="h-4 w-4" /> Yeni Şube
         </Button>
       </header>
 
@@ -119,7 +119,7 @@ function SubelerSayfa() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-metin-pasif" />
         <Input
-          placeholder="Sube adi, kodu, il veya ilce ara..."
+          placeholder="Şube adı, kodu, il veya ilçe ara..."
           value={arama}
           onChange={(e) => setArama(e.target.value)}
           className="pl-9"
@@ -135,7 +135,7 @@ function SubelerSayfa() {
         <Card>
           <CardContent className="flex flex-col items-center gap-2 py-12 text-metin-ikinci">
             <Store className="h-10 w-10 text-metin-pasif" />
-            <p>{arama ? "Sonuc bulunamadi" : "Henuz sube yok"}</p>
+            <p>{arama ? "Sonuç bulunamadı" : "Henüz şube yok"}</p>
           </CardContent>
         </Card>
       ) : (
@@ -277,7 +277,7 @@ function SubeDrawer({
 
   const gonder = async () => {
     if (!form.kod || !form.ad) {
-      toast.hata("Sube kodu ve adi zorunludur");
+      toast.hata("Şube kodu ve adı zorunludur");
       return;
     }
     setKaydediyor(true);
@@ -300,14 +300,14 @@ function SubeDrawer({
       };
       if (duzenlemeMi) {
         await apiIstemci.patch(`/magaza/${sube!.id}`, veri);
-        toast.basarili("Sube guncellendi");
+        toast.basarili("Şube güncellendi");
       } else {
         await apiIstemci.post("/magaza", veri);
-        toast.basarili("Sube olusturuldu");
+        toast.basarili("Şube oluşturuldu");
       }
       onKaydet();
     } catch (err: any) {
-      const mesaj = err?.response?.data?.hata?.mesaj ?? "Kayit basarisiz";
+      const mesaj = err?.response?.data?.hata?.mesaj ?? "Kayıt başarısız";
       toast.hata(mesaj);
     }
     setKaydediyor(false);
@@ -326,7 +326,7 @@ function SubeDrawer({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-kenarlik px-6 py-4">
           <h2 className="text-lg font-semibold text-metin">
-            {duzenlemeMi ? "Sube Duzenle" : "Yeni Sube"}
+            {duzenlemeMi ? "Şube Düzenle" : "Yeni Şube"}
           </h2>
           <button
             onClick={onKapat}
@@ -346,7 +346,7 @@ function SubeDrawer({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-metin mb-1 block">
-                  Sube Kodu <span className="text-tehlike">*</span>
+                  Şube Kodu <span className="text-tehlike">*</span>
                 </label>
                 <Input
                   value={form.kod}
@@ -376,12 +376,12 @@ function SubeDrawer({
             </div>
             <div>
               <label className="text-sm font-medium text-metin mb-1 block">
-                Sube Adi <span className="text-tehlike">*</span>
+                Şube Adı <span className="text-tehlike">*</span>
               </label>
               <Input
                 value={form.ad}
                 onChange={(e) => setForm({ ...form, ad: e.target.value })}
-                placeholder="Istanbul Merkez"
+                placeholder="İstanbul Merkez"
               />
             </div>
           </fieldset>
@@ -404,7 +404,7 @@ function SubeDrawer({
               <textarea
                 value={form.adres}
                 onChange={(e) => setForm({ ...form, adres: e.target.value })}
-                placeholder="Acik adres..."
+                placeholder="Açık adres..."
                 rows={2}
                 className={cn(
                   "w-full rounded-lg border border-kenarlik bg-yuzey px-3 py-2 text-sm text-metin",
@@ -418,7 +418,7 @@ function SubeDrawer({
           {/* Iletisim */}
           <fieldset className="space-y-3">
             <legend className="text-sm font-semibold text-metin border-b border-kenarlik pb-2 mb-3 w-full">
-              Iletisim
+              İletişim
             </legend>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -508,7 +508,7 @@ function SubeDrawer({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-metin mb-1 block">
-                  E-Fatura On Ek
+                  E-Fatura Ön Ek
                 </label>
                 <Input
                   value={form.eFaturaOnEk}
@@ -522,7 +522,7 @@ function SubeDrawer({
               </div>
               <div>
                 <label className="text-sm font-medium text-metin mb-1 block">
-                  E-Arsiv On Ek
+                  E-Arşiv Ön Ek
                 </label>
                 <Input
                   value={form.eArsivOnEk}
@@ -541,11 +541,11 @@ function SubeDrawer({
         {/* Footer */}
         <div className="border-t border-kenarlik px-6 py-4 flex gap-3">
           <Button variant="outline" onClick={onKapat} className="flex-1">
-            Vazgec
+            Vazgeç
           </Button>
           <Button onClick={gonder} disabled={kaydediyor} className="flex-1">
             {kaydediyor && <Loader2 className="h-4 w-4 animate-spin" />}
-            {duzenlemeMi ? "Kaydet" : "Olustur"}
+            {duzenlemeMi ? "Kaydet" : "Oluştur"}
           </Button>
         </div>
       </div>

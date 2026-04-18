@@ -1408,15 +1408,23 @@ model Kategori {
   yol                     String?   @db.Text
   yolText                 String?   @map("yol_text") @db.Text
   resimUrl                String?   @map("resim_url") @db.Text
+  bannerUrl               String?   @map("banner_url") @db.Text
   ikon                    String?   @db.VarChar(50)
   renk                    String?   @db.VarChar(20)
+  // Zengin içerik (TipTap HTML)
+  icerik                  String?   @db.Text
+  // SEO
   seoUrl                  String?   @map("seo_url") @db.VarChar(500)
   seoBaslik               String?   @map("seo_baslik") @db.VarChar(255)
   seoAciklama             String?   @map("seo_aciklama") @db.Text
-  seoAnahtarKelimeler     String[]  @map("seo_anahtar_kelimeler")
+  seoAnahtarKelimeler     String[]  @default([]) @map("seo_anahtar_kelimeler")
+  ogImageUrl              String?   @map("og_image_url") @db.Text
+  canonicalUrl            String?   @map("canonical_url") @db.Text
+  // Yayın kanalları
   sira                    Int       @default(0)
   aktifMi                 Boolean   @default(true) @map("aktif_mi")
-  eticaretAktif           Boolean   @default(true) @map("eticaret_aktif")
+  eticaretAktif           Boolean   @default(false) @map("eticaret_aktif")
+  b2bAktif                Boolean   @default(false) @map("b2b_aktif")
   silindiMi               Boolean   @default(false) @map("silindi_mi")
   silinmeTarihi           DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
   silenKullaniciId        BigInt?   @map("silen_kullanici_id")
@@ -1429,6 +1437,7 @@ model Kategori {
   altKategoriler Kategori[] @relation("KategoriHiyerarsi")
   ceviriler      KategoriCeviri[]
   urunler        Urun[]
+  urunlerEk      UrunKategori[]
 
   @@map("kategori")
 }
@@ -1453,19 +1462,65 @@ model Marka {
   kod             String    @unique @db.VarChar(50)
   ad              String    @db.VarChar(200)
   aciklama        String?   @db.Text
+  // Görsel
   logoUrl         String?   @map("logo_url") @db.Text
+  bannerUrl       String?   @map("banner_url") @db.Text
+  // Kurum
   webSitesi       String?   @map("web_sitesi") @db.VarChar(255)
   ulkeKodu        String?   @map("ulke_kodu") @db.Char(2)
+  // SEO
   seoUrl          String?   @map("seo_url") @db.VarChar(500)
+  seoBaslik       String?   @map("seo_baslik") @db.VarChar(255)
+  seoAciklama     String?   @map("seo_aciklama") @db.Text
+  seoAnahtarKelimeler String[] @default([]) @map("seo_anahtar_kelimeler")
+  ogImageUrl      String?   @map("og_image_url") @db.Text
+  canonicalUrl    String?   @map("canonical_url") @db.Text
+  // Yayın kanalları
+  eticaretAktif   Boolean   @default(false) @map("eticaret_aktif")
+  b2bAktif        Boolean   @default(false) @map("b2b_aktif")
+  // Diğer
   aktifMi         Boolean   @default(true) @map("aktif_mi")
   sira            Int       @default(0)
   silindiMi       Boolean   @default(false) @map("silindi_mi")
+  silinmeTarihi   DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
+  silenKullaniciId BigInt?  @map("silen_kullanici_id")
+  olusturanKullaniciId BigInt? @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId BigInt? @map("guncelleyen_kullanici_id")
   olusturmaTarihi DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
   guncellemeTarihi DateTime @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
 
   urunler Urun[]
+  modeller MarkaModel[]
 
   @@map("marka")
+}
+
+/// MarkaModel — Markanın altındaki modeller (servis araç, beyaz eşya vb. için)
+/// PHP'deki "marka_model.Modeller" JSON yerine proper relational tablo
+model MarkaModel {
+  id                      BigInt    @id @default(autoincrement())
+  publicId                String    @unique @default(uuid()) @map("public_id") @db.Uuid
+  markaId                 BigInt    @map("marka_id")
+  kod                     String?   @db.VarChar(50)
+  ad                      String    @db.VarChar(200)
+  aciklama                String?   @db.Text
+  gorselUrl               String?   @map("gorsel_url") @db.Text
+  uretimYili              Int?      @map("uretim_yili")
+  sira                    Int       @default(0)
+  aktifMi                 Boolean   @default(true) @map("aktif_mi")
+  silindiMi               Boolean   @default(false) @map("silindi_mi")
+  silinmeTarihi           DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
+  silenKullaniciId        BigInt?   @map("silen_kullanici_id")
+  olusturanKullaniciId    BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId  BigInt?   @map("guncelleyen_kullanici_id")
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  marka   Marka  @relation(fields: [markaId], references: [id], onDelete: Cascade)
+  urunler Urun[]
+
+  @@unique([markaId, ad])
+  @@map("marka_model")
 }
 
 model Birim {
@@ -1494,6 +1549,7 @@ model Urun {
   kisaAciklama            String?   @map("kisa_aciklama") @db.VarChar(500)
   kategoriId              BigInt?   @map("kategori_id")
   markaId                 BigInt?   @map("marka_id")
+  markaModelId            BigInt?   @map("marka_model_id")
   tip                     String    @default("fiziksel") @db.VarChar(20)
   anaBirimId              BigInt    @map("ana_birim_id")
   vergiOraniId            BigInt?   @map("vergi_orani_id")
@@ -1526,8 +1582,12 @@ model Urun {
   olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
   guncellemeTarihi        DateTime  @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
 
-  kategori  Kategori? @relation(fields: [kategoriId], references: [id])
-  marka     Marka?    @relation(fields: [markaId], references: [id])
+  kategori   Kategori?   @relation(fields: [kategoriId], references: [id])
+  marka      Marka?      @relation(fields: [markaId], references: [id])
+  markaModel MarkaModel? @relation(fields: [markaModelId], references: [id])
+
+  // Ek kategoriler (N-N) — e-ticaret için 1 ürünü birden fazla kategoride göstermek
+  ekKategoriler   UrunKategori[]
 
   ceviriler       UrunCeviri[]
   varyantEksenler UrunVaryantEksen[]
@@ -1536,6 +1596,23 @@ model Urun {
   ozellikDegerler UrunOzellikDeger[]
 
   @@map("urun")
+}
+
+/// UrunKategori — Ürün ile ek kategoriler arası N-N ara tablo.
+/// Ana kategori `urun.kategori_id` alanında; ek kategoriler buradan.
+/// Bir ürün e-ticarette birden fazla kategoride listelenebilir.
+model UrunKategori {
+  id              BigInt   @id @default(autoincrement())
+  urunId          BigInt   @map("urun_id")
+  kategoriId      BigInt   @map("kategori_id")
+  sira            Int      @default(0)
+  olusturmaTarihi DateTime @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+
+  urun     Urun     @relation(fields: [urunId], references: [id], onDelete: Cascade)
+  kategori Kategori @relation(fields: [kategoriId], references: [id], onDelete: Cascade)
+
+  @@unique([urunId, kategoriId])
+  @@map("urun_kategori")
 }
 
 model UrunCeviri {
@@ -2475,22 +2552,36 @@ model Hesap {
   ad                      String    @db.VarChar(200)
   tip                     String    @db.VarChar(20)
   firmaId                 BigInt?   @map("firma_id")
-  magazaId                BigInt?   @map("magaza_id")
+  // Şube ilişkisi JSON: { magazaIdler: number[], varsayilanMagazaId: number|null }
+  magazalar               Json      @default("{\"magazaIdler\":[],\"varsayilanMagazaId\":null}") @db.JsonB
+  // Grup FK (HesapGrup master data)
+  grupId                  BigInt?   @map("grup_id")
+  // Tip bazlı ekstra ayarlar (cihaz, taksit, sağlayıcı vb.)
+  ayarlar                 Json?     @db.JsonB
+  // Banka bilgileri
   bankaAdi                String?   @map("banka_adi") @db.VarChar(100)
   sube                    String?   @db.VarChar(100)
   hesapNo                 String?   @map("hesap_no") @db.VarChar(50)
   iban                    String?   @db.VarChar(34)
   swiftKod                String?   @map("swift_kod") @db.VarChar(20)
+  // POS için özel alanlar
   posSaglayici            String?   @map("pos_saglayici") @db.VarChar(50)
   posTerminalId           String?   @map("pos_terminal_id") @db.VarChar(100)
   posKomisyonOrani        Decimal   @default(0) @map("pos_komisyon_orani") @db.Decimal(7, 4)
   posBlokeliGun           Int       @default(0) @map("pos_blokeli_gun")
   posNetHesapId           BigInt?   @map("pos_net_hesap_id")
+  // Para birimi
   paraBirimiKod           String    @map("para_birimi_kod") @db.Char(3)
+  // Muhasebe
   muhasebeHesapId         BigInt?   @map("muhasebe_hesap_id")
+  // Bakiye
   baslangicBakiye         Decimal   @default(0) @map("baslangic_bakiye") @db.Decimal(18, 4)
+  // Limitler
   negatifBakiyeIzin       Boolean   @default(false) @map("negatif_bakiye_izin")
   limitTutar              Decimal?  @map("limit_tutar") @db.Decimal(18, 4)
+  // Varsayılan (tip başına bir tane)
+  varsayilanMi            Boolean   @default(false) @map("varsayilan_mi")
+  // Diğer
   sira                    Int       @default(0)
   aktifMi                 Boolean   @default(true) @map("aktif_mi")
   silindiMi               Boolean   @default(false) @map("silindi_mi")
@@ -2501,12 +2592,36 @@ model Hesap {
   olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
   guncellemeTarihi        DateTime  @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
 
-  posNetHesap Hesap?  @relation("HesapPosNet", fields: [posNetHesapId], references: [id])
+  grup        HesapGrup? @relation(fields: [grupId], references: [id], onDelete: SetNull)
+  posNetHesap Hesap?     @relation("HesapPosNet", fields: [posNetHesapId], references: [id])
   posNetIcinHesaplar Hesap[] @relation("HesapPosNet")
 
   hareketler HesapHareket[]
 
   @@map("hesap")
+}
+
+model HesapGrup {
+  id                      BigInt    @id @default(autoincrement())
+  publicId                String    @unique @default(uuid()) @map("public_id") @db.Uuid
+  kod                     String    @unique @db.VarChar(50)
+  ad                      String    @db.VarChar(100)
+  aciklama                String?   @db.Text
+  ikon                    String?   @db.VarChar(50)
+  renk                    String?   @db.VarChar(20)
+  sira                    Int       @default(0)
+  aktifMi                 Boolean   @default(true) @map("aktif_mi")
+  silindiMi               Boolean   @default(false) @map("silindi_mi")
+  silinmeTarihi           DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
+  silenKullaniciId        BigInt?   @map("silen_kullanici_id")
+  olusturanKullaniciId    BigInt?   @map("olusturan_kullanici_id")
+  guncelleyenKullaniciId  BigInt?   @map("guncelleyen_kullanici_id")
+  olusturmaTarihi         DateTime  @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
+  guncellemeTarihi        DateTime  @updatedAt @map("guncelleme_tarihi") @db.Timestamptz(6)
+
+  hesaplar Hesap[]
+
+  @@map("hesap_grup")
 }
 
 model HesapHareket {

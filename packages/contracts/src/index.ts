@@ -6,3 +6,6 @@ export * from './ortak.js';
 export * from './sistem.js';
 export * from './magaza.js';
 export * from './personel.js';
+export * from './hesap.js';
+export * from './marka.js';
+export * from './kategori.js';

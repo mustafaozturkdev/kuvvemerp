@@ -29,10 +29,10 @@ export type KomutGrup =
 
 export interface Komut {
   id: string;
-  etiket: string;
+  etiketKey: string;
   ikon: LucideIcon;
   grup: KomutGrup;
-  grupBaslik: string;
+  grupBaslikKey: string;
   kisayol?: string[];
   izin?: string;
   anahtarKelime?: string[];
@@ -41,248 +41,251 @@ export interface Komut {
 }
 
 /**
- * Statik komut tanimlari — cmd-k-spec.md'ye birebir uyumlu.
- * Dinamik komutlar (cari arama, urun arama) ayri bir hook ile gelecek.
+ * Statik komut tanımları — i18n anahtarlarıyla.
+ * Dinamik komutlar (cari arama, urun arama) ayrı bir hook ile gelir.
  */
 export const KOMUT_LISTESI: Komut[] = [
-  // Hizli eylemler
+  // ── Hızlı eylemler ───────────────────────────
   {
     id: "yeni-satis",
-    etiket: "Yeni Satis Siparisi",
+    etiketKey: "komut-paleti.yeni-satis",
     ikon: Plus,
     grup: "hizli-eylem",
-    grupBaslik: "Hizli Eylemler",
+    grupBaslikKey: "komut-paleti.grup-hizli-eylem",
     kisayol: ["N", "S"],
     izin: "siparis.olustur",
     hedef: "/siparis/yeni?tip=satis",
-    anahtarKelime: ["satis", "sale", "yeni", "siparis"],
+    anahtarKelime: ["satis", "satış", "sale", "yeni", "siparis"],
   },
   {
     id: "yeni-alis",
-    etiket: "Yeni Alis Siparisi",
+    etiketKey: "komut-paleti.yeni-alis",
     ikon: Plus,
     grup: "hizli-eylem",
-    grupBaslik: "Hizli Eylemler",
+    grupBaslikKey: "komut-paleti.grup-hizli-eylem",
     kisayol: ["N", "A"],
     izin: "siparis.olustur",
     hedef: "/siparis/yeni?tip=alis",
-    anahtarKelime: ["alis", "purchase"],
+    anahtarKelime: ["alis", "alış", "purchase"],
   },
   {
     id: "yeni-cari",
-    etiket: "Yeni Cari / Musteri",
+    etiketKey: "komut-paleti.yeni-cari",
     ikon: Plus,
     grup: "hizli-eylem",
-    grupBaslik: "Hizli Eylemler",
+    grupBaslikKey: "komut-paleti.grup-hizli-eylem",
     kisayol: ["N", "C"],
     izin: "cari.olustur",
     hedef: "/cari/yeni",
-    anahtarKelime: ["cari", "musteri", "customer"],
+    anahtarKelime: ["cari", "musteri", "müşteri", "customer"],
   },
   {
     id: "yeni-urun",
-    etiket: "Yeni Urun",
+    etiketKey: "komut-paleti.yeni-urun",
     ikon: Plus,
     grup: "hizli-eylem",
-    grupBaslik: "Hizli Eylemler",
+    grupBaslikKey: "komut-paleti.grup-hizli-eylem",
     kisayol: ["N", "U"],
     izin: "urun.olustur",
     hedef: "/urun/yeni",
-    anahtarKelime: ["urun", "product"],
-  },
-
-  // Sayfalar
-  {
-    id: "goto-dashboard",
-    etiket: "Dashboard",
-    ikon: LayoutDashboard,
-    grup: "sayfa",
-    grupBaslik: "Sayfalar",
-    kisayol: ["G", "D"],
-    hedef: "/",
-    anahtarKelime: ["anasayfa", "home", "dashboard"],
-  },
-  {
-    id: "goto-cari",
-    etiket: "Cariler",
-    ikon: Users,
-    grup: "sayfa",
-    grupBaslik: "Sayfalar",
-    kisayol: ["G", "C"],
-    hedef: "/cari",
-    anahtarKelime: ["cari", "musteri"],
-  },
-  {
-    id: "goto-urun",
-    etiket: "Urunler",
-    ikon: Package,
-    grup: "sayfa",
-    grupBaslik: "Sayfalar",
-    kisayol: ["G", "U"],
-    hedef: "/urun",
-  },
-  {
-    id: "goto-siparis",
-    etiket: "Siparisler",
-    ikon: ShoppingCart,
-    grup: "sayfa",
-    grupBaslik: "Sayfalar",
-    kisayol: ["G", "S"],
-    hedef: "/siparis",
-  },
-  {
-    id: "goto-stok",
-    etiket: "Stok",
-    ikon: Warehouse,
-    grup: "sayfa",
-    grupBaslik: "Sayfalar",
-    hedef: "/stok",
-  },
-  {
-    id: "goto-fatura",
-    etiket: "Faturalar",
-    ikon: FileText,
-    grup: "sayfa",
-    grupBaslik: "Sayfalar",
-    kisayol: ["G", "F"],
-    hedef: "/fatura",
-  },
-
-  // Personel
-  {
-    id: "goto-personel",
-    etiket: "Personel",
-    ikon: Users,
-    grup: "sayfa",
-    grupBaslik: "Sayfalar",
-    kisayol: ["G", "P"],
-    hedef: "/ayarlar/personel",
-    izin: "personel.goruntule",
-    anahtarKelime: ["personel", "calisan", "staff"],
+    anahtarKelime: ["urun", "ürün", "product"],
   },
   {
     id: "yeni-personel",
-    etiket: "Yeni Personel",
+    etiketKey: "komut-paleti.yeni-personel",
     ikon: UserPlus,
     grup: "hizli-eylem",
-    grupBaslik: "Hizli Eylemler",
+    grupBaslikKey: "komut-paleti.grup-hizli-eylem",
     hedef: "/ayarlar/personel",
     izin: "personel.yonet",
-    anahtarKelime: ["personel", "calisan", "ekle"],
+    anahtarKelime: ["personel", "calisan", "çalışan", "ekle"],
+  },
+  {
+    id: "yeni-kullanici",
+    etiketKey: "komut-paleti.yeni-kullanici",
+    ikon: UserPlus,
+    grup: "hizli-eylem",
+    grupBaslikKey: "komut-paleti.grup-hizli-eylem",
+    hedef: "/ayarlar/kullanicilar",
+    izin: "kullanici.yonet",
+    anahtarKelime: ["kullanici", "kullanıcı", "user", "ekle"],
   },
 
-  // Sistem
+  // ── Sayfalar ───────────────────────────
+  {
+    id: "goto-dashboard",
+    etiketKey: "komut-paleti.dashboard",
+    ikon: LayoutDashboard,
+    grup: "sayfa",
+    grupBaslikKey: "komut-paleti.grup-sayfa",
+    kisayol: ["G", "D"],
+    hedef: "/",
+    anahtarKelime: ["anasayfa", "ana sayfa", "home", "dashboard"],
+  },
+  {
+    id: "goto-cari",
+    etiketKey: "komut-paleti.cari-sayfa",
+    ikon: Users,
+    grup: "sayfa",
+    grupBaslikKey: "komut-paleti.grup-sayfa",
+    kisayol: ["G", "C"],
+    hedef: "/cari/liste",
+    anahtarKelime: ["cari", "musteri", "müşteri"],
+  },
+  {
+    id: "goto-urun",
+    etiketKey: "komut-paleti.urun",
+    ikon: Package,
+    grup: "sayfa",
+    grupBaslikKey: "komut-paleti.grup-sayfa",
+    kisayol: ["G", "U"],
+    hedef: "/urun",
+    anahtarKelime: ["urun", "ürün", "product"],
+  },
+  {
+    id: "goto-siparis",
+    etiketKey: "komut-paleti.siparis",
+    ikon: ShoppingCart,
+    grup: "sayfa",
+    grupBaslikKey: "komut-paleti.grup-sayfa",
+    kisayol: ["G", "S"],
+    hedef: "/siparis",
+    anahtarKelime: ["siparis", "sipariş", "order"],
+  },
+  {
+    id: "goto-stok",
+    etiketKey: "komut-paleti.stok",
+    ikon: Warehouse,
+    grup: "sayfa",
+    grupBaslikKey: "komut-paleti.grup-sayfa",
+    hedef: "/stok",
+    anahtarKelime: ["stok", "stock", "inventory"],
+  },
+  {
+    id: "goto-fatura",
+    etiketKey: "komut-paleti.fatura",
+    ikon: FileText,
+    grup: "sayfa",
+    grupBaslikKey: "komut-paleti.grup-sayfa",
+    kisayol: ["G", "F"],
+    hedef: "/fatura",
+    anahtarKelime: ["fatura", "invoice"],
+  },
+  {
+    id: "goto-personel",
+    etiketKey: "komut-paleti.personel",
+    ikon: Users,
+    grup: "sayfa",
+    grupBaslikKey: "komut-paleti.grup-sayfa",
+    kisayol: ["G", "P"],
+    hedef: "/ayarlar/personel",
+    izin: "personel.goruntule",
+    anahtarKelime: ["personel", "çalışan", "staff"],
+  },
+
+  // ── Sistem ───────────────────────────
   {
     id: "tema-degistir",
-    etiket: "Tema Degistir (Acik/Koyu/Sistem)",
+    etiketKey: "komut-paleti.tema-degistir",
     ikon: Moon,
     grup: "sistem",
-    grupBaslik: "Sistem",
+    grupBaslikKey: "komut-paleti.grup-sistem",
     eylem: "tema-degistir",
-    anahtarKelime: ["tema", "theme", "dark", "koyu"],
+    anahtarKelime: ["tema", "theme", "dark", "koyu", "açık"],
   },
   {
     id: "dil-degistir",
-    etiket: "Dil Degistir (TR/EN)",
+    etiketKey: "komut-paleti.dil-degistir",
     ikon: Languages,
     grup: "sistem",
-    grupBaslik: "Sistem",
+    grupBaslikKey: "komut-paleti.grup-sistem",
     eylem: "dil-degistir",
     anahtarKelime: ["dil", "language", "locale"],
   },
   {
     id: "goto-ayarlar",
-    etiket: "Ayarlar",
+    etiketKey: "komut-paleti.ayarlar",
     ikon: Settings,
     grup: "sistem",
-    grupBaslik: "Sistem",
+    grupBaslikKey: "komut-paleti.grup-sistem",
     hedef: "/ayarlar/genel",
     anahtarKelime: ["ayarlar", "settings"],
   },
   {
     id: "goto-kullanicilar",
-    etiket: "Kullanicilar",
+    etiketKey: "komut-paleti.kullanicilar",
     ikon: Users,
     grup: "sistem",
-    grupBaslik: "Sistem",
+    grupBaslikKey: "komut-paleti.grup-sistem",
     hedef: "/ayarlar/kullanicilar",
     izin: "kullanici.yonet",
-    anahtarKelime: ["kullanici", "user"],
-  },
-  {
-    id: "yeni-kullanici",
-    etiket: "Yeni Kullanici",
-    ikon: UserPlus,
-    grup: "hizli-eylem",
-    grupBaslik: "Hizli Eylemler",
-    hedef: "/ayarlar/kullanicilar",
-    izin: "kullanici.yonet",
-    anahtarKelime: ["kullanici", "user", "ekle"],
+    anahtarKelime: ["kullanici", "kullanıcı", "user"],
   },
   {
     id: "goto-roller",
-    etiket: "Roller",
+    etiketKey: "komut-paleti.roller",
     ikon: Shield,
     grup: "sistem",
-    grupBaslik: "Sistem",
+    grupBaslikKey: "komut-paleti.grup-sistem",
     hedef: "/ayarlar/roller",
     izin: "rol.yonet",
     anahtarKelime: ["rol", "yetki", "izin", "role"],
   },
   {
     id: "goto-sirket",
-    etiket: "Sirket Bilgileri",
+    etiketKey: "komut-paleti.sirket-bilgileri",
     ikon: Building2,
     grup: "sistem",
-    grupBaslik: "Sistem",
+    grupBaslikKey: "komut-paleti.grup-sistem",
     hedef: "/ayarlar/firma/sirket",
     izin: "sistem.ayar.goruntule",
-    anahtarKelime: ["firma", "sirket", "company"],
+    anahtarKelime: ["firma", "şirket", "company"],
   },
   {
     id: "goto-subeler",
-    etiket: "Subeler",
+    etiketKey: "komut-paleti.subeler",
     ikon: Store,
     grup: "sistem",
-    grupBaslik: "Sistem",
+    grupBaslikKey: "komut-paleti.grup-sistem",
     hedef: "/ayarlar/firma/subeler",
     izin: "magaza.goruntule",
-    anahtarKelime: ["sube", "magaza", "depo", "branch"],
+    anahtarKelime: ["şube", "sube", "magaza", "mağaza", "depo", "branch"],
   },
   {
     id: "sifre-degistir",
-    etiket: "Sifre Degistir",
+    etiketKey: "komut-paleti.sifre-degistir",
     ikon: Key,
     grup: "sistem",
-    grupBaslik: "Sistem",
+    grupBaslikKey: "komut-paleti.grup-sistem",
     hedef: "/ayarlar/genel",
-    anahtarKelime: ["sifre", "parola", "password"],
+    anahtarKelime: ["şifre", "sifre", "parola", "password"],
   },
   {
     id: "cikis",
-    etiket: "Cikis Yap",
+    etiketKey: "komut-paleti.cikis-yap",
     ikon: LogOut,
     grup: "sistem",
-    grupBaslik: "Sistem",
+    grupBaslikKey: "komut-paleti.grup-sistem",
     eylem: "cikis",
-    anahtarKelime: ["cikis", "logout", "exit"],
+    anahtarKelime: ["çıkış", "cikis", "logout", "exit"],
   },
 
-  // Yardim
+  // ── Yardım ───────────────────────────
   {
     id: "yardim",
-    etiket: "Klavye Kisayollari",
+    etiketKey: "komut-paleti.klavye-kisayollari",
     ikon: HelpCircle,
     grup: "yardim",
-    grupBaslik: "Yardim",
-    anahtarKelime: ["yardim", "help", "kisayol"],
+    grupBaslikKey: "komut-paleti.grup-yardim",
+    anahtarKelime: ["yardım", "yardim", "help", "kısayol", "kisayol"],
   },
 ];
 
+/** Komutları grup başlıklarına göre grupla. Başlık resolvingi çağıranda yapılır. */
 export function grupluKomutlar(komutlar: Komut[]): Record<string, Komut[]> {
   return komutlar.reduce<Record<string, Komut[]>>((akum, k) => {
-    akum[k.grupBaslik] ??= [];
-    akum[k.grupBaslik].push(k);
+    akum[k.grupBaslikKey] ??= [];
+    akum[k.grupBaslikKey].push(k);
     return akum;
   }, {});
 }

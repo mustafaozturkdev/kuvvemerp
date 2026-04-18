@@ -19,6 +19,7 @@ import {
   Heading2,
   Minus,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface RichTextEditorProps {
@@ -33,11 +34,13 @@ interface RichTextEditorProps {
 export function RichTextEditor({
   value,
   onChange,
-  placeholder = "Icerik yazin...",
+  placeholder,
   disabled = false,
   className,
   minHeight = "150px",
 }: RichTextEditorProps) {
+  const { t } = useTranslation();
+  const ph = placeholder ?? t("editor.icerik-placeholder");
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -45,7 +48,7 @@ export function RichTextEditor({
       }),
       Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Placeholder.configure({ placeholder }),
+      Placeholder.configure({ placeholder: ph }),
     ],
     content: value ?? "",
     editable: !disabled,
@@ -100,7 +103,7 @@ export function RichTextEditor({
           onClick={() =>
             editor.chain().focus().toggleHeading({ level: 1 }).run()
           }
-          title="Baslik 1"
+          title={t("editor.baslik-1")}
         >
           <Heading1 className={iconSize} />
         </ToolBtn>
@@ -109,7 +112,7 @@ export function RichTextEditor({
           onClick={() =>
             editor.chain().focus().toggleHeading({ level: 2 }).run()
           }
-          title="Baslik 2"
+          title={t("editor.baslik-2")}
         >
           <Heading2 className={iconSize} />
         </ToolBtn>
@@ -119,28 +122,28 @@ export function RichTextEditor({
         <ToolBtn
           aktif={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
-          title="Kalin"
+          title={t("editor.kalin")}
         >
           <Bold className={iconSize} />
         </ToolBtn>
         <ToolBtn
           aktif={editor.isActive("italic")}
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          title="Italik"
+          title={t("editor.italik")}
         >
           <Italic className={iconSize} />
         </ToolBtn>
         <ToolBtn
           aktif={editor.isActive("underline")}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          title="Alti cizili"
+          title={t("editor.alti-cizili")}
         >
           <UnderlineIcon className={iconSize} />
         </ToolBtn>
         <ToolBtn
           aktif={editor.isActive("strike")}
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          title="Ustu cizili"
+          title={t("editor.ustu-cizili")}
         >
           <Strikethrough className={iconSize} />
         </ToolBtn>
@@ -150,14 +153,14 @@ export function RichTextEditor({
         <ToolBtn
           aktif={editor.isActive("bulletList")}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          title="Madde listesi"
+          title={t("editor.madde-listesi")}
         >
           <List className={iconSize} />
         </ToolBtn>
         <ToolBtn
           aktif={editor.isActive("orderedList")}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          title="Numarali liste"
+          title={t("editor.numarali-liste")}
         >
           <ListOrdered className={iconSize} />
         </ToolBtn>
@@ -167,21 +170,21 @@ export function RichTextEditor({
         <ToolBtn
           aktif={editor.isActive({ textAlign: "left" })}
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
-          title="Sola hizala"
+          title={t("editor.sola-hizala")}
         >
           <AlignLeft className={iconSize} />
         </ToolBtn>
         <ToolBtn
           aktif={editor.isActive({ textAlign: "center" })}
           onClick={() => editor.chain().focus().setTextAlign("center").run()}
-          title="Ortala"
+          title={t("editor.ortala")}
         >
           <AlignCenter className={iconSize} />
         </ToolBtn>
         <ToolBtn
           aktif={editor.isActive({ textAlign: "right" })}
           onClick={() => editor.chain().focus().setTextAlign("right").run()}
-          title="Saga hizala"
+          title={t("editor.saga-hizala")}
         >
           <AlignRight className={iconSize} />
         </ToolBtn>
@@ -191,7 +194,7 @@ export function RichTextEditor({
         <ToolBtn
           aktif={false}
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="Ayirici cizgi"
+          title={t("editor.ayirici-cizgi")}
         >
           <Minus className={iconSize} />
         </ToolBtn>
@@ -201,14 +204,14 @@ export function RichTextEditor({
         <ToolBtn
           aktif={false}
           onClick={() => editor.chain().focus().undo().run()}
-          title="Geri al"
+          title={t("editor.geri-al")}
         >
           <Undo className={iconSize} />
         </ToolBtn>
         <ToolBtn
           aktif={false}
           onClick={() => editor.chain().focus().redo().run()}
-          title="Ileri al"
+          title={t("editor.ileri-al")}
         >
           <Redo className={iconSize} />
         </ToolBtn>

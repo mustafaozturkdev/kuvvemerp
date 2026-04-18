@@ -1,6 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { Users as UsersIcon } from "lucide-react";
+import { apiIstemci } from "@/lib/api-client";
+
+interface CariSonuc {
+  id: string;
+  kod: string;
+  unvan: string | null;
+  ad: string | null;
+  soyad: string | null;
+  tip: string;
+}
+
 import {
   CommandDialog,
   CommandInput,
@@ -32,7 +44,7 @@ export function KomutPaleti() {
   const yonlendir = useNavigate();
   const { temaToggle } = kullanTema();
   const { cikis, girisYapilmis } = kullanKullanici();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   const gorunurKomutlar = useMemo(() => {
     return KOMUT_LISTESI.filter((k) => {
@@ -44,6 +56,26 @@ export function KomutPaleti() {
   }, [girisYapilmis]);
 
   const gruplu = useMemo(() => grupluKomutlar(gorunurKomutlar), [gorunurKomutlar]);
+
+  // Dinamik cari arama
+  const [cariSonuclar, setCariSonuclar] = useState<CariSonuc[]>([]);
+  useEffect(() => {
+    if (!deger || deger.length < 2) {
+      setCariSonuclar([]);
+      return;
+    }
+    const zamanlayici = setTimeout(async () => {
+      try {
+        const res = await apiIstemci.get<{ veriler: CariSonuc[] }>("/cari", {
+          params: { arama: deger, boyut: 5 },
+        });
+        setCariSonuclar(res.data.veriler);
+      } catch {
+        setCariSonuclar([]);
+      }
+    }, 300);
+    return () => clearTimeout(zamanlayici);
+  }, [deger]);
 
   const sonKullanilanlar = useMemo(() => {
     return gecmis
@@ -63,12 +95,12 @@ export function KomutPaleti() {
     switch (komut.eylem) {
       case "tema-degistir":
         temaToggle();
-        toast.bilgi("Tema degistirildi");
+        toast.bilgi(t("menu.tema-degistirildi"));
         break;
       case "dil-degistir": {
         const sonraki = i18n.language === "tr" ? "en" : "tr";
         void i18n.changeLanguage(sonraki);
-        toast.bilgi(`Dil: ${sonraki.toUpperCase()}`);
+        toast.bilgi(`${t("menu.dil")}: ${sonraki.toUpperCase()}`);
         break;
       }
       case "cikis":
@@ -81,7 +113,7 @@ export function KomutPaleti() {
   return (
     <CommandDialog open={acik} onOpenChange={degistir}>
       <CommandInput
-        placeholder="Ne yapmak istersin?"
+        placeholder={t("komut-paleti.placeholder")}
         value={deger}
         onValueChange={degerAyarla}
       />
@@ -90,14 +122,14 @@ export function KomutPaleti() {
           <div className="flex flex-col items-center gap-2 py-6">
             <span className="text-3xl" aria-hidden="true">🤔</span>
             <p className="text-sm text-metin-ikinci">
-              "{deger}" icin sonuc bulunamadi
+              {t("komut-paleti.sonuc-yok", { aranan: deger })}
             </p>
           </div>
         </CommandEmpty>
 
         {!deger && sonKullanilanlar.length > 0 && (
           <>
-            <CommandGroup heading="Son Kullanilanlar">
+            <CommandGroup heading={t("komut-paleti.son-kullanilanlar")}>
               {sonKullanilanlar.map((k) => (
                 <KomutSatir key={`son-${k.id}`} komut={k} onSec={() => calistir(k)} />
               ))}
@@ -106,8 +138,35 @@ export function KomutPaleti() {
           </>
         )}
 
-        {Object.entries(gruplu).map(([baslik, komutlar]) => (
-          <CommandGroup key={baslik} heading={baslik}>
+        {cariSonuclar.length > 0 && (
+          <>
+            <CommandGroup heading={t("komut-paleti.cariler")}>
+              {cariSonuclar.map((c) => {
+                const ad = c.unvan ?? [c.ad, c.soyad].filter(Boolean).join(" ") ?? c.kod;
+                return (
+                  <CommandItem
+                    key={`cari-${c.id}`}
+                    value={`cari-${c.id} ${ad} ${c.kod}`}
+                    onSelect={() => {
+                      kapat();
+                      void yonlendir({ to: "/cari/$cariId", params: { cariId: c.id } });
+                    }}
+                  >
+                    <UsersIcon />
+                    <span>
+                      {ad}{" "}
+                      <span className="text-metin-ikinci text-xs">({c.kod})</span>
+                    </span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
+
+        {Object.entries(gruplu).map(([baslikKey, komutlar]) => (
+          <CommandGroup key={baslikKey} heading={t(baslikKey)}>
             {komutlar.map((k) => (
               <KomutSatir key={k.id} komut={k} onSec={() => calistir(k)} />
             ))}
@@ -118,15 +177,15 @@ export function KomutPaleti() {
         <span>
           <kbd className="rounded border border-kenarlik bg-yuzey px-1">↑</kbd>
           <kbd className="ml-1 rounded border border-kenarlik bg-yuzey px-1">↓</kbd>
-          <span className="ml-1">gezin</span>
+          <span className="ml-1">{t("komut-paleti.gezin")}</span>
         </span>
         <span>
           <kbd className="rounded border border-kenarlik bg-yuzey px-1">↵</kbd>
-          <span className="ml-1">sec</span>
+          <span className="ml-1">{t("komut-paleti.sec")}</span>
         </span>
         <span className="ml-auto">
           <kbd className="rounded border border-kenarlik bg-yuzey px-1">Esc</kbd>
-          <span className="ml-1">kapat</span>
+          <span className="ml-1">{t("komut-paleti.kapat")}</span>
         </span>
       </div>
     </CommandDialog>
@@ -134,16 +193,18 @@ export function KomutPaleti() {
 }
 
 function KomutSatir({ komut, onSec }: { komut: Komut; onSec: () => void }) {
+  const { t } = useTranslation();
   const Ikon = komut.ikon;
-  const arama = [komut.etiket, ...(komut.anahtarKelime ?? [])].join(" ");
+  const etiket = t(komut.etiketKey);
+  const arama = [etiket, ...(komut.anahtarKelime ?? [])].join(" ");
   return (
     <CommandItem
       value={`${komut.id} ${arama}`}
       onSelect={onSec}
-      aria-label={komut.etiket}
+      aria-label={etiket}
     >
       <Ikon />
-      <span>{komut.etiket}</span>
+      <span>{etiket}</span>
       {komut.kisayol && (
         <CommandShortcut>
           {komut.kisayol.map((t) => (

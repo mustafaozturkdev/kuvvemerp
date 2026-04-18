@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -22,6 +23,7 @@ const BOYUT_SINIF: Record<Required<AvatarProps>["boyut"], string> = {
 
 const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   ({ className, src, adSoyad, boyut = "md", ...props }, ref) => {
+    const { t } = useTranslation();
     const [hata, setHata] = React.useState(false);
     const gosterimResim = src && !hata;
     return (
@@ -32,7 +34,7 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
           BOYUT_SINIF[boyut],
           className,
         )}
-        aria-label={adSoyad ?? "Kullanici"}
+        aria-label={adSoyad ?? t("menu.kullanici")}
         {...props}
       >
         {gosterimResim ? (

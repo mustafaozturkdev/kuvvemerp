@@ -16,8 +16,8 @@ import { ZodForm } from "@/components/form/ZodForm";
 import { toast } from "@/hooks/use-toast";
 
 const girisSemasi = z.object({
-  email: z.string().email("Gecerli bir e-posta girin"),
-  sifre: z.string().min(6, "Sifre en az 6 karakter olmali"),
+  email: z.string().email("Geçerli bir e-posta girin"),
+  sifre: z.string().min(6, "Şifre en az 6 karakter olmalı"),
   beniHatirla: z.boolean().optional(),
 });
 
