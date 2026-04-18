@@ -469,6 +469,23 @@
     "varsayilan-yap": "Set as default",
     "varsayilan-atandi": "Default variant updated",
 
+    "barkod-placeholder": "EAN-13 (13 digits)",
+    "barkod-uret": "Generate",
+    "barkod-uret-yardim": "Auto-generate EAN-13 barcode",
+    "barkod-uretildi": "Barcode generated: {{barkod}}",
+    "barkodsuz-uyari-baslik": "Variants Without Barcode",
+    "barkodsuz-uyari": "{{sayi}} variants have no barcode. Barcode is required for sales and stock — generate automatically with one click.",
+    "barkodsuz-varyant-yok": "All variants already have barcodes",
+    "toplu-barkod-uret": "Auto-Generate All",
+    "toplu-barkod-baslik": "Bulk barcode generation",
+    "toplu-barkod-mesaj": "{{sayi}} variants without barcode will get auto EAN-13 barcodes. Continue?",
+    "toplu-barkod-evet": "Generate",
+    "toplu-barkod-basarili": "{{sayi}} variants got barcodes",
+
+    "alis-fiyati-kisa": "Purchase",
+    "satis-fiyati-kisa": "Sale",
+    "guncelleme-hatasi": "Update failed — reverted to original value",
+
     "bolum-resimler": "Product Images",
     "bolum-resimler-altyazi": "Main image + gallery. Auto-converted to WebP, max 1600×1600 px.",
     "resim-once-kaydet-baslik": "Save Product First",

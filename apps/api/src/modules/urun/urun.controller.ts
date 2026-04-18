@@ -379,4 +379,25 @@ export class UrunController {
   ) {
     return this.urunService.varyantMatrisUret(req.prisma!, id, kullanici.id);
   }
+
+  @Post(':id/varyant/:varyantId/barkod-uret')
+  @RequireYetki('urun.varyant-yonet')
+  async varyantBarkodUret(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('varyantId', ParseIntPipe) varyantId: number,
+  ) {
+    return this.urunService.varyantBarkodUret(req.prisma!, id, varyantId, kullanici.id);
+  }
+
+  @Post(':id/toplu-barkod-uret')
+  @RequireYetki('urun.varyant-yonet')
+  async varyantTopluBarkodUret(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.urunService.varyantTopluBarkodUret(req.prisma!, id, kullanici.id);
+  }
 }

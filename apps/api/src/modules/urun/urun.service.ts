@@ -15,6 +15,7 @@ import type {
 import { TenantClient } from '@kuvvem/database';
 import { kodIleOlustur } from '../../common/helpers/kod-uretici.js';
 import { slugOlustur } from '../../common/helpers/slug.js';
+import { ean13BenzersizUret } from '../../common/helpers/barkod-uretici.js';
 import { UploadService } from '../upload/upload.service.js';
 
 type AnyPrisma = TenantClient | any;
@@ -721,7 +722,7 @@ export class UrunService {
           data: { varsayilanMi: false },
         });
       }
-      return tx.urunVaryant.create({
+      const varyant = await tx.urunVaryant.create({
         data: {
           urunId: BigInt(urunId),
           sku,
@@ -748,6 +749,34 @@ export class UrunService {
           olusturanKullaniciId: kullaniciId,
         },
       });
+
+      // Satis fiyati verildiyse varsayilan fiyat listesine yaz
+      if (girdi.satisFiyati !== undefined && girdi.satisFiyati !== null) {
+        const varsayilanFL = await tx.fiyatListesi.findFirst({
+          where: { varsayilanMi: true, aktifMi: true, silindiMi: false },
+          select: { id: true },
+        });
+        if (varsayilanFL) {
+          await tx.fiyatListesiVaryant.upsert({
+            where: {
+              fiyatListesiId_urunVaryantId_minimumMiktar: {
+                fiyatListesiId: varsayilanFL.id,
+                urunVaryantId: varyant.id,
+                minimumMiktar: 1,
+              },
+            },
+            create: {
+              fiyatListesiId: varsayilanFL.id,
+              urunVaryantId: varyant.id,
+              fiyat: girdi.satisFiyati,
+              minimumMiktar: 1,
+            },
+            update: { fiyat: girdi.satisFiyati },
+          });
+        }
+      }
+
+      return varyant;
     });
   }
 
@@ -785,17 +814,109 @@ export class UrunService {
       if (val !== undefined) veri[alan] = val;
     }
 
-    if (girdi.varsayilanMi === true) {
-      return prisma.$transaction(async (tx: any) => {
+    return prisma.$transaction(async (tx: any) => {
+      // Varsayilan ise digerlerini kapat
+      if (girdi.varsayilanMi === true) {
         await tx.urunVaryant.updateMany({
           where: { urunId: BigInt(urunId), NOT: { id: varyant.id } },
           data: { varsayilanMi: false },
         });
-        return tx.urunVaryant.update({ where: { id: varyant.id }, data: { ...veri, varsayilanMi: true } });
-      });
+        veri.varsayilanMi = true;
+      }
+
+      const guncelVaryant = Object.keys(veri).length > 1
+        ? await tx.urunVaryant.update({ where: { id: varyant.id }, data: veri })
+        : varyant;
+
+      // Satis fiyati verildiyse varsayilan fiyat listesine yaz
+      if (girdi.satisFiyati !== undefined && girdi.satisFiyati !== null) {
+        const varsayilanFL = await tx.fiyatListesi.findFirst({
+          where: { varsayilanMi: true, aktifMi: true, silindiMi: false },
+          select: { id: true },
+        });
+        if (varsayilanFL) {
+          await tx.fiyatListesiVaryant.upsert({
+            where: {
+              fiyatListesiId_urunVaryantId_minimumMiktar: {
+                fiyatListesiId: varsayilanFL.id,
+                urunVaryantId: varyant.id,
+                minimumMiktar: 1,
+              },
+            },
+            create: {
+              fiyatListesiId: varsayilanFL.id,
+              urunVaryantId: varyant.id,
+              fiyat: girdi.satisFiyati,
+              minimumMiktar: 1,
+            },
+            update: { fiyat: girdi.satisFiyati },
+          });
+        }
+      }
+
+      return guncelVaryant;
+    });
+  }
+
+  /**
+   * Varyant için otomatik EAN-13 barkod üretir ve kaydeder.
+   * Veritabanında benzersiz olana kadar dener.
+   */
+  async varyantBarkodUret(prisma: TenantClient, urunId: number, varyantId: number, kullaniciId: bigint) {
+    const varyant = await prisma.urunVaryant.findFirst({
+      where: { id: BigInt(varyantId), urunId: BigInt(urunId) },
+      select: { id: true, barkod: true },
+    });
+    if (!varyant) {
+      throw new NotFoundException({ kod: 'VARYANT_BULUNAMADI', mesaj: `Varyant bulunamadı: ${varyantId}` });
     }
 
-    return prisma.urunVaryant.update({ where: { id: varyant.id }, data: veri });
+    const barkod = await ean13BenzersizUret(async (b) => {
+      const varMi = await prisma.urunVaryant.findFirst({ where: { barkod: b }, select: { id: true } });
+      if (varMi) return false;
+      const altMi = await prisma.urunVaryantBarkod.findUnique({ where: { barkod: b }, select: { id: true } });
+      return !altMi;
+    });
+
+    return prisma.urunVaryant.update({
+      where: { id: varyant.id },
+      data: { barkod, guncelleyenKullaniciId: kullaniciId },
+    });
+  }
+
+  /**
+   * Barkodu olmayan tüm varyantlara toplu EAN-13 barkod üretir.
+   */
+  async varyantTopluBarkodUret(prisma: TenantClient, urunId: number, kullaniciId: bigint) {
+    await this.detay(prisma, urunId);
+    const barkodsuz = await prisma.urunVaryant.findMany({
+      where: {
+        urunId: BigInt(urunId),
+        silindiMi: false,
+        OR: [{ barkod: null }, { barkod: '' }],
+      },
+      select: { id: true },
+    });
+
+    if (barkodsuz.length === 0) {
+      return { uretilen: 0, mesaj: 'Tüm varyantların barkodu zaten var' };
+    }
+
+    let uretilen = 0;
+    for (const v of barkodsuz) {
+      const barkod = await ean13BenzersizUret(async (b) => {
+        const varMi = await prisma.urunVaryant.findFirst({ where: { barkod: b }, select: { id: true } });
+        if (varMi) return false;
+        const altMi = await prisma.urunVaryantBarkod.findUnique({ where: { barkod: b }, select: { id: true } });
+        return !altMi;
+      });
+      await prisma.urunVaryant.update({
+        where: { id: v.id },
+        data: { barkod, guncelleyenKullaniciId: kullaniciId },
+      });
+      uretilen++;
+    }
+    return { uretilen };
   }
 
   async varyantSil(prisma: TenantClient, urunId: number, varyantId: number, kullaniciId: bigint): Promise<void> {

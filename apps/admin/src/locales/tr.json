@@ -580,6 +580,23 @@
     "varsayilan-yap": "Varsayılan yap",
     "varsayilan-atandi": "Varsayılan varyant güncellendi",
 
+    "barkod-placeholder": "EAN-13 (13 hane)",
+    "barkod-uret": "Üret",
+    "barkod-uret-yardim": "Otomatik EAN-13 barkod üret",
+    "barkod-uretildi": "Barkod üretildi: {{barkod}}",
+    "barkodsuz-uyari-baslik": "Barkodsuz Varyantlar",
+    "barkodsuz-uyari": "{{sayi}} varyantın barkodu yok. Satış ve stok işlemleri için barkod zorunlu — tek tıkla otomatik üretebilirsin.",
+    "barkodsuz-varyant-yok": "Tüm varyantların barkodu zaten var",
+    "toplu-barkod-uret": "Hepsine Otomatik Üret",
+    "toplu-barkod-baslik": "Toplu barkod üretimi",
+    "toplu-barkod-mesaj": "Barkodu olmayan {{sayi}} varyanta otomatik EAN-13 barkod atanacak. Devam edilsin mi?",
+    "toplu-barkod-evet": "Üret",
+    "toplu-barkod-basarili": "{{sayi}} varyanta barkod atandı",
+
+    "alis-fiyati-kisa": "Alış",
+    "satis-fiyati-kisa": "Satış",
+    "guncelleme-hatasi": "Güncelleme başarısız — eski değere döndü",
+
     "bolum-resimler": "Ürün Resimleri",
     "bolum-resimler-altyazi": "Ana resim + ek görseller. Otomatik WebP'ye dönüştürülür, maksimum 1600×1600 piksel.",
     "resim-once-kaydet-baslik": "Önce Ürünü Kaydet",

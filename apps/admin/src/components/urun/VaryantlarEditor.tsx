@@ -9,6 +9,8 @@ import {
   StarOff,
   Package,
   Tag,
+  Barcode,
+  Zap,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
@@ -42,6 +44,11 @@ interface Eksen {
   secenekler: Secenek[];
 }
 
+interface FiyatListeVaryantDto {
+  fiyat: string;
+  fiyatListesi?: { varsayilanMi: boolean };
+}
+
 interface Varyant {
   id: string;
   sku: string;
@@ -55,6 +62,13 @@ interface Varyant {
   sira: number;
   aktifMi: boolean;
   silindiMi: boolean;
+  fiyatListeVaryantlar?: FiyatListeVaryantDto[];
+}
+
+// Varyantin varsayılan fiyat listesi'ndeki satış fiyatı
+function varyantSatisFiyati(v: Varyant): string {
+  const fl = (v.fiyatListeVaryantlar ?? []).find((f) => f.fiyatListesi?.varsayilanMi);
+  return fl ? String(fl.fiyat) : "";
 }
 
 interface VaryantlarEditorOzellik {
@@ -238,6 +252,97 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
     setIslemde(null);
   };
 
+  // ─── Inline edit: varyant alan güncelleme ───
+  const varyantGuncelle = async (
+    varyantId: string,
+    alan: "barkod" | "alisFiyati" | "satisFiyati",
+    deger: string,
+  ) => {
+    if (!urunId) return;
+    // Local optimistik guncelleme
+    setVaryantlar((mv) =>
+      mv.map((v) => {
+        if (v.id !== varyantId) return v;
+        if (alan === "barkod") return { ...v, barkod: deger || null };
+        if (alan === "alisFiyati") return { ...v, alisFiyati: deger || null };
+        if (alan === "satisFiyati") {
+          // FiyatListeVaryantlar arayını güncelle (sadece varsayılan fiyat listesi)
+          const mevcut = v.fiyatListeVaryantlar ?? [];
+          const varsayilanIdx = mevcut.findIndex((f) => f.fiyatListesi?.varsayilanMi);
+          if (varsayilanIdx >= 0) {
+            const yeniListe = [...mevcut];
+            yeniListe[varsayilanIdx] = { ...yeniListe[varsayilanIdx], fiyat: deger };
+            return { ...v, fiyatListeVaryantlar: yeniListe };
+          }
+          return {
+            ...v,
+            fiyatListeVaryantlar: [
+              ...mevcut,
+              { fiyat: deger, fiyatListesi: { varsayilanMi: true } },
+            ],
+          };
+        }
+        return v;
+      }),
+    );
+
+    try {
+      const payload: Record<string, unknown> = {};
+      if (alan === "barkod") payload.barkod = deger.trim() || null;
+      if (alan === "alisFiyati") payload.alisFiyati = deger.trim() ? Number(deger) : null;
+      if (alan === "satisFiyati" && deger.trim()) payload.satisFiyati = Number(deger);
+
+      await apiIstemci.patch(`/urun/${urunId}/varyant/${varyantId}`, payload);
+    } catch (err: any) {
+      toast.hata(err?.response?.data?.hata?.mesaj ?? t("urun.guncelleme-hatasi"));
+      await yukle(); // revert
+    }
+  };
+
+  // ─── Barkod: tekli otomatik üret ───
+  const barkodUret = async (varyantId: string) => {
+    if (!urunId) return;
+    setIslemde(`barkod-${varyantId}`);
+    try {
+      const res = await apiIstemci.post<{ barkod: string }>(
+        `/urun/${urunId}/varyant/${varyantId}/barkod-uret`,
+      );
+      toast.basarili(t("urun.barkod-uretildi", { barkod: res.data.barkod }));
+      await yukle();
+    } catch (err: any) {
+      toast.hata(err?.response?.data?.hata?.mesaj ?? t("genel.hata"));
+    }
+    setIslemde(null);
+  };
+
+  // ─── Toplu barkod üret ───
+  const topluBarkodUret = async () => {
+    if (!urunId) return;
+    const barkodsuz = varyantlar.filter((v) => !v.barkod);
+    if (barkodsuz.length === 0) {
+      toast.bilgi(t("urun.barkodsuz-varyant-yok"));
+      return;
+    }
+    const tamam = await onay.goster({
+      baslik: t("urun.toplu-barkod-baslik"),
+      mesaj: t("urun.toplu-barkod-mesaj", { sayi: barkodsuz.length }),
+      varyant: "bilgi",
+      onayMetni: t("urun.toplu-barkod-evet"),
+    });
+    if (!tamam) return;
+    setIslemde("toplu-barkod");
+    try {
+      const res = await apiIstemci.post<{ uretilen: number }>(
+        `/urun/${urunId}/toplu-barkod-uret`,
+      );
+      toast.basarili(t("urun.toplu-barkod-basarili", { sayi: res.data.uretilen }));
+      await yukle();
+    } catch (err: any) {
+      toast.hata(err?.response?.data?.hata?.mesaj ?? t("genel.hata"));
+    }
+    setIslemde(null);
+  };
+
   // ─── Varyant: varsayılan yap / sil ───
   const varsayilanYap = async (varyant: Varyant) => {
     setIslemde(varyant.id);
@@ -285,7 +390,7 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
 
   return (
     <div className="space-y-6">
-      {/* ══════ Matris eylem alanı ══════ */}
+      {/* ══════ Üst eylem kartları ══════ */}
       {eksenler.length > 0 && (
         <div className="rounded-lg border border-birincil/30 bg-birincil/5 p-4 flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
           <div className="flex items-start gap-3">
@@ -308,6 +413,34 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
               <Sparkles className="h-4 w-4" />
             )}
             {t("urun.matris-olustur")}
+          </Button>
+        </div>
+      )}
+
+      {/* Barkodsuz varyant uyarısı + toplu üretim */}
+      {varyantlar.some((v) => !v.barkod) && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
+          <div className="flex items-start gap-3">
+            <Barcode className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium text-metin">{t("urun.barkodsuz-uyari-baslik")}</p>
+              <p className="text-sm text-metin-ikinci mt-0.5">
+                {t("urun.barkodsuz-uyari", { sayi: varyantlar.filter((v) => !v.barkod).length })}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            onClick={topluBarkodUret}
+            disabled={islemde !== null}
+            className="shrink-0 border-amber-500/50 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+          >
+            {islemde === "toplu-barkod" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Zap className="h-4 w-4" />
+            )}
+            {t("urun.toplu-barkod-uret")}
           </Button>
         </div>
       )}
@@ -503,69 +636,154 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
               const kombinasyonEtiket = Object.entries(v.eksenKombinasyon ?? {}).map(
                 ([k, val]) => `${k}: ${val}`,
               );
+              const satisFiyati = varyantSatisFiyati(v);
               return (
                 <div
                   key={v.id}
                   className={cn(
-                    "rounded-lg border p-3 flex flex-col sm:flex-row sm:items-center gap-3",
+                    "rounded-lg border p-3 space-y-3",
                     v.varsayilanMi ? "border-birincil bg-birincil/5" : "border-kenarlik",
                   )}
                 >
-                  {/* Varyant bilgisi */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {v.varsayilanMi && (
-                        <Badge className="bg-birincil text-white text-[10px]">
-                          <Star className="h-2.5 w-2.5" />
-                          {t("urun.varsayilan")}
-                        </Badge>
-                      )}
-                      <span className="font-mono text-sm text-metin">{v.sku}</span>
-                      {v.barkod && (
-                        <span className="text-xs text-metin-pasif font-mono">· {v.barkod}</span>
+                  {/* Üst satır: SKU + kombinasyon + aksiyonlar */}
+                  <div className="flex items-start justify-between gap-2 flex-col sm:flex-row">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {v.varsayilanMi && (
+                          <Badge className="bg-birincil text-white text-[10px]">
+                            <Star className="h-2.5 w-2.5" />
+                            {t("urun.varsayilan")}
+                          </Badge>
+                        )}
+                        <span className="font-mono text-sm text-metin">{v.sku}</span>
+                      </div>
+                      {kombinasyonEtiket.length > 0 && (
+                        <div className="text-sm text-metin-ikinci mt-1 flex flex-wrap gap-1">
+                          {kombinasyonEtiket.map((e, i) => (
+                            <span key={i} className="bg-yuzey px-2 py-0.5 rounded text-xs">
+                              {e}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
-                    {kombinasyonEtiket.length > 0 && (
-                      <div className="text-sm text-metin-ikinci mt-0.5 flex flex-wrap gap-1">
-                        {kombinasyonEtiket.map((e, i) => (
-                          <span key={i} className="bg-yuzey px-2 py-0.5 rounded text-xs">
-                            {e}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Aksiyon butonları */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    {!v.varsayilanMi && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      {!v.varsayilanMi && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => varsayilanYap(v)}
+                          disabled={islemde === v.id}
+                          title={t("urun.varsayilan-yap")}
+                        >
+                          {islemde === v.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <StarOff className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => varsayilanYap(v)}
+                        onClick={() => varyantSil(v)}
                         disabled={islemde === v.id}
-                        title={t("urun.varsayilan-yap")}
+                        title={t("genel.sil")}
                       >
                         {islemde === v.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <StarOff className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-metin-pasif hover:text-red-500" />
                         )}
                       </Button>
-                    )}
+                    </div>
+                  </div>
+
+                  {/* Alt satır: Inline edit — Barkod, Alış, Satış */}
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_140px_140px] gap-2 items-end">
+                    {/* Barkod */}
+                    <div>
+                      <label className="block text-[11px] text-metin-pasif font-medium mb-1">
+                        {t("urun.barkod")}
+                      </label>
+                      <div className="flex gap-1">
+                        <Input
+                          key={`barkod-${v.id}-${v.barkod ?? ""}`}
+                          defaultValue={v.barkod ?? ""}
+                          placeholder={t("urun.barkod-placeholder")}
+                          className={cn(
+                            "min-h-[44px] sm:min-h-[36px] text-base sm:text-sm font-mono",
+                            !v.barkod && "border-amber-500/50",
+                          )}
+                          onBlur={(e) => {
+                            const yeni = e.target.value.trim();
+                            if (yeni !== (v.barkod ?? "")) {
+                              varyantGuncelle(v.id, "barkod", yeni);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    {/* Barkod üret butonu */}
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      onClick={() => varyantSil(v)}
-                      disabled={islemde === v.id}
-                      title={t("genel.sil")}
+                      onClick={() => barkodUret(v.id)}
+                      disabled={islemde === `barkod-${v.id}`}
+                      title={t("urun.barkod-uret-yardim")}
+                      className="h-11 sm:h-9"
                     >
-                      {islemde === v.id ? (
+                      {islemde === `barkod-${v.id}` ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Trash2 className="h-4 w-4 text-metin-pasif hover:text-red-500" />
+                        <Zap className="h-4 w-4" />
                       )}
+                      <span className="sm:hidden">{t("urun.barkod-uret")}</span>
                     </Button>
+                    {/* Alış fiyatı */}
+                    <div>
+                      <label className="block text-[11px] text-metin-pasif font-medium mb-1">
+                        {t("urun.alis-fiyati-kisa")}
+                      </label>
+                      <Input
+                        key={`alis-${v.id}-${v.alisFiyati ?? ""}`}
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        defaultValue={v.alisFiyati ?? ""}
+                        placeholder="0.00"
+                        className="min-h-[44px] sm:min-h-[36px] text-base sm:text-sm tabular-nums"
+                        onBlur={(e) => {
+                          const yeni = e.target.value.trim();
+                          if (yeni !== (v.alisFiyati ?? "")) {
+                            varyantGuncelle(v.id, "alisFiyati", yeni);
+                          }
+                        }}
+                      />
+                    </div>
+                    {/* Satış fiyatı */}
+                    <div>
+                      <label className="block text-[11px] text-metin-pasif font-medium mb-1">
+                        {t("urun.satis-fiyati-kisa")}
+                      </label>
+                      <Input
+                        key={`satis-${v.id}-${satisFiyati}`}
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min="0"
+                        defaultValue={satisFiyati}
+                        placeholder="0.00"
+                        className="min-h-[44px] sm:min-h-[36px] text-base sm:text-sm tabular-nums"
+                        onBlur={(e) => {
+                          const yeni = e.target.value.trim();
+                          if (yeni !== satisFiyati) {
+                            varyantGuncelle(v.id, "satisFiyati", yeni);
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               );
