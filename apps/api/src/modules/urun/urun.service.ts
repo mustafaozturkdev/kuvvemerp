@@ -1275,6 +1275,124 @@ export class UrunService {
   }
 
   // ════════════════════════════════════════════════════════════
+  // ŞUBE STOK — varyant × mağaza matrisi + hareket geçmişi
+  // ════════════════════════════════════════════════════════════
+
+  /**
+   * Bir ürünün tüm varyantlarının tüm mağazalardaki stok durumunu döner.
+   * Gruplandırma frontend tarafında yapılır.
+   */
+  async stokOzet(prisma: TenantClient, urunId: number) {
+    await this.detay(prisma, urunId);
+
+    // Aktif varyantlar
+    const varyantlar = await prisma.urunVaryant.findMany({
+      where: { urunId: BigInt(urunId), silindiMi: false },
+      orderBy: [{ varsayilanMi: 'desc' }, { sira: 'asc' }],
+      select: {
+        id: true,
+        sku: true,
+        barkod: true,
+        varyantAd: true,
+        varsayilanMi: true,
+        eksenKombinasyon: true,
+        paraBirimiKod: true,
+        kritikStok: true,
+      },
+    });
+
+    // Tüm aktif mağazalar
+    const magazalar = await prisma.magaza.findMany({
+      where: { aktifMi: true },
+      orderBy: [{ ad: 'asc' }],
+      select: { id: true, ad: true },
+    });
+
+    // Stok kayıtları (varyant × mağaza)
+    const stoklar = await prisma.urunStok.findMany({
+      where: { urunVaryantId: { in: varyantlar.map((v) => v.id) } },
+      select: {
+        urunVaryantId: true,
+        magazaId: true,
+        mevcutMiktar: true,
+        rezerveMiktar: true,
+        yoldaGelenMiktar: true,
+        ortalamaMaliyet: true,
+        sonAlisFiyati: true,
+        sonAlisTarihi: true,
+        sonAlisParaBirimi: true,
+        sonGirisTarihi: true,
+        sonCikisTarihi: true,
+        sonSayimTarihi: true,
+        kritikStok: true,
+      },
+    });
+
+    // Varyant ve mağazaya göre O(1) arama için map
+    const stokMap = new Map<string, (typeof stoklar)[number]>();
+    for (const s of stoklar) {
+      stokMap.set(`${s.urunVaryantId}_${s.magazaId}`, s);
+    }
+
+    return {
+      varyantlar,
+      magazalar,
+      stoklar: varyantlar.flatMap((v) =>
+        magazalar.map((m) => {
+          const mevcut = stokMap.get(`${v.id}_${m.id}`);
+          return {
+            urunVaryantId: v.id,
+            magazaId: m.id,
+            mevcutMiktar: mevcut?.mevcutMiktar ?? '0',
+            rezerveMiktar: mevcut?.rezerveMiktar ?? '0',
+            yoldaGelenMiktar: mevcut?.yoldaGelenMiktar ?? '0',
+            ortalamaMaliyet: mevcut?.ortalamaMaliyet ?? null,
+            sonAlisFiyati: mevcut?.sonAlisFiyati ?? null,
+            sonAlisTarihi: mevcut?.sonAlisTarihi ?? null,
+            sonAlisParaBirimi: mevcut?.sonAlisParaBirimi ?? null,
+            sonGirisTarihi: mevcut?.sonGirisTarihi ?? null,
+            sonCikisTarihi: mevcut?.sonCikisTarihi ?? null,
+            sonSayimTarihi: mevcut?.sonSayimTarihi ?? null,
+            kritikStok: mevcut?.kritikStok ?? v.kritikStok ?? null,
+          };
+        }),
+      ),
+    };
+  }
+
+  /**
+   * Bir varyantın bir mağazadaki stok hareket geçmişi.
+   * Sayfalı — default son 50 hareket.
+   */
+  async stokHareketleri(
+    prisma: TenantClient,
+    urunId: number,
+    varyantId: number,
+    opts: { magazaId?: number; sayfa?: number; boyut?: number } = {},
+  ) {
+    await this.detay(prisma, urunId);
+    const sayfa = opts.sayfa ?? 1;
+    const boyut = Math.min(opts.boyut ?? 50, 200);
+
+    const where: Record<string, unknown> = {
+      urunVaryantId: BigInt(varyantId),
+    };
+    if (opts.magazaId) where.magazaId = BigInt(opts.magazaId);
+
+    const [toplam, veriler] = await Promise.all([
+      prisma.urunStokHareket.count({ where }),
+      prisma.urunStokHareket.findMany({
+        where,
+        orderBy: { olusturmaTarihi: 'desc' },
+        skip: (sayfa - 1) * boyut,
+        take: boyut,
+      }),
+    ]);
+
+    return { veriler, meta: { toplam, sayfa, boyut } };
+  }
+
+  // ════════════════════════════════════════════════════════════
   // BARKOD İLE ÜRÜN ARAMA (POS ve alış ekranları için)
   // ════════════════════════════════════════════════════════════
 

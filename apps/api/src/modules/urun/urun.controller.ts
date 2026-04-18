@@ -434,4 +434,34 @@ export class UrunController {
   ) {
     return this.urunService.varyantTopluBarkodUret(req.prisma!, id, kullanici.id);
   }
+
+  // ──────────────────────────────────────────
+  // ŞUBE STOK (read-only görüntüleme + hareket logu)
+  // ──────────────────────────────────────────
+
+  @Get(':id/stok')
+  @RequireYetki('urun.goruntule')
+  async stokOzet(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.urunService.stokOzet(req.prisma!, id);
+  }
+
+  @Get(':id/varyant/:varyantId/stok-hareket')
+  @RequireYetki('urun.goruntule')
+  async stokHareketleri(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('varyantId', ParseIntPipe) varyantId: number,
+    @Query('magazaId') magazaId?: string,
+    @Query('sayfa') sayfa?: string,
+    @Query('boyut') boyut?: string,
+  ) {
+    return this.urunService.stokHareketleri(req.prisma!, id, varyantId, {
+      magazaId: magazaId ? Number(magazaId) : undefined,
+      sayfa: sayfa ? Number(sayfa) : 1,
+      boyut: boyut ? Number(boyut) : 50,
+    });
+  }
 }
