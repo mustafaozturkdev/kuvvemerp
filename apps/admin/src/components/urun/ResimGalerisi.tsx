@@ -26,15 +26,15 @@ interface ResimGalerisiOzellik {
   urunAdi: string;
 }
 
-const API_BASE = (import.meta as any).env?.VITE_API_URL ?? "http://localhost:4000";
 const MAX_BOYUT_MB = 5;
 const KABUL_EDILEN = "image/jpeg,image/png,image/gif,image/webp";
 
-// Resim URL'ini mutlak yap (API'den relative geliyor: /uploads/pilot/urun/...)
+// Resim URL — backend relative donuyor (/uploads/...). Vite proxy veya
+// aynı origin uzerinden servis edilir, bu yuzden olduğu gibi kullanılır.
 function resimUrl(url: string): string {
   if (!url) return "";
   if (url.startsWith("http")) return url;
-  return `${API_BASE}${url}`;
+  return url;
 }
 
 // ────────────────────────────────────────────────────────────
