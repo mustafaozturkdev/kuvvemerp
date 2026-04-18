@@ -1573,6 +1573,54 @@ model Urun {
   seoAnahtarKelimeler     String[]  @map("seo_anahtar_kelimeler")
   anaResimUrl             String?   @map("ana_resim_url") @db.Text
   pazaryeriAktif          Boolean   @default(false) @map("pazaryeri_aktif")
+
+  // ───────── PHP Parity — Ticari alanlar ─────────
+  faturaKalemAdi          String?   @map("fatura_kalem_adi") @db.VarChar(300)
+  takmaAdi                String?   @map("takma_adi") @db.VarChar(200)
+  dataSheetUrl            String?   @map("data_sheet_url") @db.Text
+  icerikAciklama          String?   @map("icerik_aciklama") @db.Text
+  kargoIadeMetin          String?   @map("kargo_iade_metin") @db.Text
+
+  // Entegrasyon eslemesi icin ozel alanlar (PHP OzelAlan1..5)
+  ozelAlan1               String?   @map("ozel_alan1") @db.VarChar(500)
+  ozelAlan2               String?   @map("ozel_alan2") @db.VarChar(500)
+  ozelAlan3               String?   @map("ozel_alan3") @db.VarChar(500)
+  ozelAlan4               String?   @map("ozel_alan4") @db.VarChar(500)
+  ozelAlan5               String?   @map("ozel_alan5") @db.VarChar(500)
+
+  // Muhasebe / liste siralama
+  muhasebeKodu            String?   @map("muhasebe_kodu") @db.VarChar(50)
+  sira                    Int       @default(0)
+  uretimTarihi            DateTime? @map("uretim_tarihi") @db.Date
+  tahminiTeslimSuresiGun  Int       @default(0) @map("tahmini_teslim_suresi_gun")
+
+  // Fiziksel — Desi degerleri (kargo hesabi)
+  desi1                   Decimal   @default(0) @map("desi1") @db.Decimal(10, 3)
+  desi2                   Decimal   @default(0) @map("desi2") @db.Decimal(10, 3)
+
+  // Vitrin / pazarlama bayraklari
+  vitrindeGoster          Boolean   @default(false) @map("vitrinde_goster")
+  vitrinSira              Int       @default(0) @map("vitrin_sira")
+  firsatUrun              Boolean   @default(false) @map("firsat_urun")
+  yeniUrun                Boolean   @default(false) @map("yeni_urun")
+
+  // B2B kanali
+  b2bAktif                Boolean   @default(false) @map("b2b_aktif")
+  b2bSatilikMi            Boolean   @default(true) @map("b2b_satilik_mi")
+
+  // Kargo / satis politikalari
+  ucretsizKargo           Boolean   @default(false) @map("ucretsiz_kargo")
+  primVarYok              Boolean   @default(false) @map("prim_var_yok")
+
+  // Sepet indirimleri (kanal bazli)
+  sepetIndirimEticaret    Decimal?  @map("sepet_indirim_eticaret") @db.Decimal(5, 2)
+  sepetIndirimB2b         Decimal?  @map("sepet_indirim_b2b") @db.Decimal(5, 2)
+
+  // Abonelik urunleri
+  abonelikAktif           Boolean   @default(false) @map("abonelik_aktif")
+  abonelikData            Json?     @map("abonelik_data") @db.JsonB
+
+  // ───────── Sistem alanlari ─────────
   aktifMi                 Boolean   @default(true) @map("aktif_mi")
   silindiMi               Boolean   @default(false) @map("silindi_mi")
   silinmeTarihi           DateTime? @map("silinme_tarihi") @db.Timestamptz(6)
@@ -1684,6 +1732,20 @@ model UrunVaryant {
   boyCm                   Decimal?  @map("boy_cm") @db.Decimal(10, 2)
   yukseklikCm             Decimal?  @map("yukseklik_cm") @db.Decimal(10, 2)
   hacimDm3                Decimal?  @map("hacim_dm3") @db.Decimal(15, 4)
+
+  // ───────── Fiyat bilgileri (PHP parity) ─────────
+  // alisFiyati: Bu varyantin varsayilan alis fiyati (ilk kayit sirasinda girilen)
+  alisFiyati              Decimal?  @map("alis_fiyati") @db.Decimal(15, 4)
+  // sonAlisFiyati: Son fiilen yapilan alis fiyati (alis faturalarindan cache)
+  sonAlisFiyati           Decimal?  @map("son_alis_fiyati") @db.Decimal(15, 4)
+  // piyasaFiyati: Piyasa karsilastirma fiyati (bilgi amacli)
+  piyasaFiyati            Decimal?  @map("piyasa_fiyati") @db.Decimal(15, 4)
+  // satilabilirSonFiyat: Kasiyere uyari — bu fiyatin altinda indirim yaparsa
+  //                      sistem uyarisi goruntulenir (blokaj yok, sadece bilgi).
+  satilabilirSonFiyat     Decimal?  @map("satilabilir_son_fiyat") @db.Decimal(15, 4)
+  karMarji                Decimal?  @map("kar_marji") @db.Decimal(5, 2)
+  fiyatDegisiklikTarihi   DateTime? @map("fiyat_degisiklik_tarihi") @db.Date
+
   kritikStok              Decimal?  @default(0) @map("kritik_stok") @db.Decimal(15, 4)
   minimumStok             Decimal?  @default(0) @map("minimum_stok") @db.Decimal(15, 4)
   maksimumStok            Decimal?  @map("maksimum_stok") @db.Decimal(15, 4)

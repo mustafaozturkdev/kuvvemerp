@@ -300,13 +300,13 @@ CREATE INDEX idx_yetki_modul ON yetki(modul);
 
 -- Çekirdek yetkiler (seed)
 INSERT INTO yetki (kod, modul, eylem, ad, riskli_mi) VALUES
--- Ürün
-('urun.goruntule', 'urun', 'goruntule', 'Ürünleri görüntüle', false),
-('urun.olustur', 'urun', 'olustur', 'Ürün oluştur', false),
-('urun.guncelle', 'urun', 'guncelle', 'Ürün güncelle', false),
-('urun.sil', 'urun', 'sil', 'Ürün sil', true),
-('urun.fiyat_degistir', 'urun', 'fiyat_degistir', 'Ürün fiyatı değiştir', true),
-('urun.maliyet_goruntule', 'urun', 'maliyet_goruntule', 'Maliyet fiyatını gör', true),
+-- Urun (cekirdek — detayli yetkiler urun-yetki-seed.sql'de)
+('urun.goruntule',         'urun', 'goruntule',         'Urunleri Goruntule',      false),
+('urun.olustur',           'urun', 'olustur',           'Yeni Urun Olustur',        false),
+('urun.duzenle',           'urun', 'duzenle',           'Urun Duzenle',             false),
+('urun.sil',               'urun', 'sil',               'Urun Sil',                 true),
+('urun.fiyat-guncelle',    'urun', 'fiyat-guncelle',    'Fiyat Guncelle',           true),
+('urun.maliyet-goruntule', 'urun', 'maliyet-goruntule', 'Maliyet Fiyati Goruntule', true),
 -- Sipariş
 ('siparis.goruntule', 'siparis', 'goruntule', 'Siparişleri görüntüle', false),
 ('siparis.olustur', 'siparis', 'olustur', 'Sipariş oluştur', false),

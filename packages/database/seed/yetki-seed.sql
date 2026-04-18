@@ -28,7 +28,6 @@ INSERT INTO yetki (kod, modul, eylem, ad, aciklama, riskli_mi) VALUES
 ('urun.goruntule',           'urun',      'goruntule',  'Urunleri Goruntule',             'Urun listesi, detay, stok durumu',                   false),
 ('urun.olustur',             'urun',      'olustur',    'Yeni Urun Olustur',              'Urun kaydi + varyant + fiyat',                       false),
 ('urun.duzenle',             'urun',      'duzenle',    'Urun Bilgilerini Duzenle',       'Mevcut urun bilgilerini gunceller',                  false),
-('urun.fiyat.duzenle',       'urun',      'fiyat',      'Urun Fiyatlarini Duzenle',       'Satis/alis fiyatlarini degistirir',                  true),
 ('urun.sil',                 'urun',      'sil',        'Urun Sil (Pasif Yap)',           'Urun kaydi pasif yapar',                             true),
 
 -- STOK
