@@ -434,18 +434,34 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4 md:gap-6 flex-1">
-          {/* ─── Tab Nav — mobilde yatay scroll, md+ sol sidebar ─── */}
-          <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible -mx-4 md:mx-0 px-4 md:px-0 pb-1 md:pb-0 md:sticky md:top-20 md:self-start border-b md:border-b-0 border-kenarlik">
+          {/* ─── Tab Nav — mobilde sticky yatay bar, md+ sol sidebar ─── */}
+          <nav
+            className={cn(
+              "flex md:flex-col gap-1",
+              // Mobilde sticky — header'ın hemen altında
+              "sticky top-[57px] md:top-20 z-[5] bg-arkaplan md:bg-transparent",
+              // Mobilde yatay scroll, md+ dikey
+              "overflow-x-auto md:overflow-visible",
+              "-mx-4 md:mx-0 px-4 md:px-0 py-2 md:py-0",
+              // Altında ayırıcı border
+              "border-b md:border-b-0 border-kenarlik",
+              "md:self-start",
+              // Scrollbar gizle (iOS + Firefox + Webkit)
+              "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            )}
+          >
             {tablar.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setAktifTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 md:gap-2.5 px-3 py-2 md:py-2 rounded-md text-sm whitespace-nowrap md:whitespace-normal text-left transition-colors shrink-0 md:shrink",
+                  "flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap md:whitespace-normal text-left transition-colors shrink-0 md:shrink",
+                  // Mobilde alt border ile aktif işareti; md+ rounded pill
+                  "md:rounded-md border-b-2 md:border-b-0",
                   aktifTab === tab.id
-                    ? "bg-birincil/10 text-birincil font-medium"
-                    : "text-metin-ikinci hover:bg-yuzey hover:text-metin",
+                    ? "text-birincil font-medium border-birincil md:bg-birincil/10 md:border-transparent"
+                    : "text-metin-ikinci hover:bg-yuzey hover:text-metin border-transparent",
                 )}
               >
                 {tab.ikon}
