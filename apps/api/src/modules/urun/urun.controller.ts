@@ -29,6 +29,14 @@ import {
   VaryantFiyatGuncelleSemasi,
   VaryantBarkodEkleGirdi,
   VaryantBarkodEkleSemasi,
+  EksenOlusturGirdi,
+  EksenOlusturSemasi,
+  SecenekOlusturGirdi,
+  SecenekOlusturSemasi,
+  VaryantOlusturGirdi,
+  VaryantOlusturSemasi,
+  VaryantGuncelleGirdi,
+  VaryantGuncelleSemasi,
 } from '@kuvvem/contracts';
 import { UrunService } from './urun.service.js';
 import { CurrentKullanici } from '../../common/decorators/kullanici.decorator.js';
@@ -264,5 +272,111 @@ export class UrunController {
     @Param('resimId', ParseIntPipe) resimId: number,
   ): Promise<void> {
     await this.urunService.resimSil(req.prisma!, id, resimId, kullanici.id);
+  }
+
+  // ──────────────────────────────────────────
+  // VARYANT EKSENLERİ & SEÇENEKLER
+  // ──────────────────────────────────────────
+
+  @Get(':id/eksen')
+  @RequireYetki('urun.goruntule')
+  async eksenleriListele(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.urunService.eksenleriListele(req.prisma!, id);
+  }
+
+  @Post(':id/eksen')
+  @RequireYetki('urun.varyant-yonet')
+  async eksenEkle(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(EksenOlusturSemasi)) girdi: EksenOlusturGirdi,
+  ) {
+    return this.urunService.eksenEkle(req.prisma!, id, girdi);
+  }
+
+  @Delete(':id/eksen/:eksenId')
+  @RequireYetki('urun.varyant-yonet')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async eksenSil(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('eksenId', ParseIntPipe) eksenId: number,
+  ): Promise<void> {
+    await this.urunService.eksenSil(req.prisma!, id, eksenId);
+  }
+
+  @Post(':id/eksen/:eksenId/secenek')
+  @RequireYetki('urun.varyant-yonet')
+  async secenekEkle(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('eksenId', ParseIntPipe) eksenId: number,
+    @Body(new ZodValidationPipe(SecenekOlusturSemasi)) girdi: SecenekOlusturGirdi,
+  ) {
+    return this.urunService.secenekEkle(req.prisma!, id, eksenId, girdi);
+  }
+
+  @Delete(':id/eksen/:eksenId/secenek/:secenekId')
+  @RequireYetki('urun.varyant-yonet')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async secenekSil(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('eksenId', ParseIntPipe) eksenId: number,
+    @Param('secenekId', ParseIntPipe) secenekId: number,
+  ): Promise<void> {
+    await this.urunService.secenekSil(req.prisma!, id, eksenId, secenekId);
+  }
+
+  // ──────────────────────────────────────────
+  // VARYANT CRUD (ekle / guncelle / sil / matris)
+  // ──────────────────────────────────────────
+
+  @Post(':id/varyant')
+  @RequireYetki('urun.varyant-yonet')
+  async varyantOlustur(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(VaryantOlusturSemasi)) girdi: VaryantOlusturGirdi,
+  ) {
+    return this.urunService.varyantOlustur(req.prisma!, id, girdi, kullanici.id);
+  }
+
+  @Patch(':id/varyant/:varyantId')
+  @RequireYetki('urun.varyant-yonet')
+  async varyantGuncelle(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('varyantId', ParseIntPipe) varyantId: number,
+    @Body(new ZodValidationPipe(VaryantGuncelleSemasi)) girdi: VaryantGuncelleGirdi,
+  ) {
+    return this.urunService.varyantGuncelle(req.prisma!, id, varyantId, girdi, kullanici.id);
+  }
+
+  @Delete(':id/varyant/:varyantId')
+  @RequireYetki('urun.varyant-yonet')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async varyantSil(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('varyantId', ParseIntPipe) varyantId: number,
+  ): Promise<void> {
+    await this.urunService.varyantSil(req.prisma!, id, varyantId, kullanici.id);
+  }
+
+  @Post(':id/varyant-matris')
+  @RequireYetki('urun.varyant-yonet')
+  async varyantMatrisUret(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.urunService.varyantMatrisUret(req.prisma!, id, kullanici.id);
   }
 }

@@ -7,6 +7,10 @@ import type {
   UrunTopluAlanGuncelleGirdi,
   VaryantFiyatGuncelleGirdi,
   VaryantBarkodEkleGirdi,
+  EksenOlusturGirdi,
+  SecenekOlusturGirdi,
+  VaryantOlusturGirdi,
+  VaryantGuncelleGirdi,
 } from '@kuvvem/contracts';
 import { TenantClient } from '@kuvvem/database';
 import { kodIleOlustur } from '../../common/helpers/kod-uretici.js';
@@ -606,8 +610,315 @@ export class UrunService {
   }
 
   // ════════════════════════════════════════════════════════════
-  // BARKOD İLE ÜRÜN ARAMA (POS ve alış ekranları için)
+  // VARYANT EKSENLERİ (Renk, Beden vb.)
   // ════════════════════════════════════════════════════════════
+
+  async eksenleriListele(prisma: TenantClient, urunId: number) {
+    await this.detay(prisma, urunId);
+    return prisma.urunVaryantEksen.findMany({
+      where: { urunId: BigInt(urunId) },
+      orderBy: { sira: 'asc' },
+      include: { secenekler: { orderBy: { sira: 'asc' } } },
+    });
+  }
+
+  async eksenEkle(prisma: TenantClient, urunId: number, girdi: EksenOlusturGirdi) {
+    await this.detay(prisma, urunId);
+    const cakisma = await prisma.urunVaryantEksen.findFirst({
+      where: { urunId: BigInt(urunId), eksenKod: girdi.eksenKod },
+      select: { id: true },
+    });
+    if (cakisma) {
+      throw new BadRequestException({ kod: 'EKSEN_MEVCUT', mesaj: `Bu üründe '${girdi.eksenKod}' ekseni zaten var` });
+    }
+    return prisma.urunVaryantEksen.create({
+      data: {
+        urunId: BigInt(urunId),
+        eksenKod: girdi.eksenKod,
+        eksenAd: girdi.eksenAd,
+        sira: girdi.sira,
+      },
+    });
+  }
+
+  async eksenSil(prisma: TenantClient, urunId: number, eksenId: number): Promise<void> {
+    const eksen = await prisma.urunVaryantEksen.findFirst({
+      where: { id: BigInt(eksenId), urunId: BigInt(urunId) },
+    });
+    if (!eksen) {
+      throw new NotFoundException({ kod: 'EKSEN_BULUNAMADI', mesaj: `Eksen bulunamadı: ${eksenId}` });
+    }
+    await prisma.urunVaryantEksen.delete({ where: { id: eksen.id } });
+  }
+
+  async secenekEkle(prisma: TenantClient, urunId: number, eksenId: number, girdi: SecenekOlusturGirdi) {
+    await this.detay(prisma, urunId);
+    const eksen = await prisma.urunVaryantEksen.findFirst({
+      where: { id: BigInt(eksenId), urunId: BigInt(urunId) },
+      select: { id: true },
+    });
+    if (!eksen) {
+      throw new NotFoundException({ kod: 'EKSEN_BULUNAMADI', mesaj: `Eksen bulunamadı: ${eksenId}` });
+    }
+    const cakisma = await prisma.urunVaryantSecenek.findFirst({
+      where: { eksenId: eksen.id, degerKod: girdi.degerKod },
+      select: { id: true },
+    });
+    if (cakisma) {
+      throw new BadRequestException({ kod: 'SECENEK_MEVCUT', mesaj: `Bu eksende '${girdi.degerKod}' seçeneği zaten var` });
+    }
+    return prisma.urunVaryantSecenek.create({
+      data: {
+        eksenId: eksen.id,
+        degerKod: girdi.degerKod,
+        degerAd: girdi.degerAd,
+        hexRenk: girdi.hexRenk ?? null,
+        resimUrl: girdi.resimUrl ?? null,
+        sira: girdi.sira,
+        aktifMi: girdi.aktifMi,
+      },
+    });
+  }
+
+  async secenekSil(prisma: TenantClient, urunId: number, eksenId: number, secenekId: number): Promise<void> {
+    const secenek = await prisma.urunVaryantSecenek.findFirst({
+      where: { id: BigInt(secenekId), eksen: { id: BigInt(eksenId), urunId: BigInt(urunId) } },
+    });
+    if (!secenek) {
+      throw new NotFoundException({ kod: 'SECENEK_BULUNAMADI', mesaj: `Seçenek bulunamadı: ${secenekId}` });
+    }
+    await prisma.urunVaryantSecenek.delete({ where: { id: secenek.id } });
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // VARYANT CRUD (manuel + matris)
+  // ════════════════════════════════════════════════════════════
+
+  private skuUret(urunKod: string, eksenKombinasyon: Record<string, string>): string {
+    const parts = Object.values(eksenKombinasyon)
+      .map((v) => v.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4))
+      .filter(Boolean);
+    return parts.length > 0 ? `${urunKod}-${parts.join('-')}` : urunKod;
+  }
+
+  async varyantOlustur(
+    prisma: TenantClient,
+    urunId: number,
+    girdi: VaryantOlusturGirdi,
+    kullaniciId: bigint,
+  ) {
+    const urun = await this.detay(prisma, urunId);
+    const sku = girdi.sku?.trim() || this.skuUret(urun.kod, girdi.eksenKombinasyon);
+    const cakisma = await prisma.urunVaryant.findUnique({ where: { sku }, select: { id: true } });
+    if (cakisma) {
+      throw new BadRequestException({ kod: 'SKU_TEKRAR', mesaj: `Bu SKU kullanılıyor: ${sku}` });
+    }
+
+    return prisma.$transaction(async (tx: any) => {
+      if (girdi.varsayilanMi) {
+        await tx.urunVaryant.updateMany({
+          where: { urunId: BigInt(urunId), varsayilanMi: true },
+          data: { varsayilanMi: false },
+        });
+      }
+      return tx.urunVaryant.create({
+        data: {
+          urunId: BigInt(urunId),
+          sku,
+          barkod: girdi.barkod ?? null,
+          varyantAd: girdi.varyantAd ?? null,
+          varsayilanMi: girdi.varsayilanMi,
+          eksenKombinasyon: girdi.eksenKombinasyon ?? {},
+          paraBirimiKod: (urun as any).varyantlar?.[0]?.paraBirimiKod ?? 'TRY',
+          vergiOraniId: urun.vergiOraniId,
+          birimId: urun.anaBirimId,
+          alisFiyati: girdi.alisFiyati ?? null,
+          sonAlisFiyati: girdi.sonAlisFiyati ?? null,
+          piyasaFiyati: girdi.piyasaFiyati ?? null,
+          satilabilirSonFiyat: girdi.satilabilirSonFiyat ?? null,
+          karMarji: girdi.karMarji ?? null,
+          agirlikGr: girdi.agirlikGr ?? null,
+          enCm: girdi.enCm ?? null,
+          boyCm: girdi.boyCm ?? null,
+          yukseklikCm: girdi.yukseklikCm ?? null,
+          kritikStok: girdi.kritikStok,
+          minimumStok: girdi.minimumStok,
+          anaResimUrl: girdi.anaResimUrl ?? null,
+          sira: girdi.sira,
+          olusturanKullaniciId: kullaniciId,
+        },
+      });
+    });
+  }
+
+  async varyantGuncelle(
+    prisma: TenantClient,
+    urunId: number,
+    varyantId: number,
+    girdi: VaryantGuncelleGirdi,
+    kullaniciId: bigint,
+  ) {
+    const varyant = await prisma.urunVaryant.findFirst({
+      where: { id: BigInt(varyantId), urunId: BigInt(urunId) },
+    });
+    if (!varyant) {
+      throw new NotFoundException({ kod: 'VARYANT_BULUNAMADI', mesaj: `Varyant bulunamadı: ${varyantId}` });
+    }
+
+    if (girdi.sku && girdi.sku !== varyant.sku) {
+      const cakisma = await prisma.urunVaryant.findUnique({ where: { sku: girdi.sku }, select: { id: true } });
+      if (cakisma) {
+        throw new BadRequestException({ kod: 'SKU_TEKRAR', mesaj: `Bu SKU kullanılıyor: ${girdi.sku}` });
+      }
+    }
+
+    const veri: Record<string, unknown> = { guncelleyenKullaniciId: kullaniciId };
+    const alanlar: Array<keyof VaryantGuncelleGirdi> = [
+      'sku', 'barkod', 'varyantAd', 'eksenKombinasyon',
+      'alisFiyati', 'sonAlisFiyati', 'piyasaFiyati', 'satilabilirSonFiyat', 'karMarji',
+      'agirlikGr', 'enCm', 'boyCm', 'yukseklikCm',
+      'kritikStok', 'minimumStok',
+      'anaResimUrl', 'sira', 'aktifMi',
+    ];
+    for (const alan of alanlar) {
+      const val = (girdi as Record<string, unknown>)[alan];
+      if (val !== undefined) veri[alan] = val;
+    }
+
+    if (girdi.varsayilanMi === true) {
+      return prisma.$transaction(async (tx: any) => {
+        await tx.urunVaryant.updateMany({
+          where: { urunId: BigInt(urunId), NOT: { id: varyant.id } },
+          data: { varsayilanMi: false },
+        });
+        return tx.urunVaryant.update({ where: { id: varyant.id }, data: { ...veri, varsayilanMi: true } });
+      });
+    }
+
+    return prisma.urunVaryant.update({ where: { id: varyant.id }, data: veri });
+  }
+
+  async varyantSil(prisma: TenantClient, urunId: number, varyantId: number, kullaniciId: bigint): Promise<void> {
+    const varyant = await prisma.urunVaryant.findFirst({
+      where: { id: BigInt(varyantId), urunId: BigInt(urunId) },
+    });
+    if (!varyant) {
+      throw new NotFoundException({ kod: 'VARYANT_BULUNAMADI', mesaj: `Varyant bulunamadı: ${varyantId}` });
+    }
+
+    const siparisKalemi = await prisma.siparisKalem.findFirst({
+      where: { urunVaryantId: varyant.id },
+      select: { id: true },
+    });
+    if (siparisKalemi) {
+      throw new BadRequestException({
+        kod: 'VARYANT_KULLANIMDA',
+        mesaj: 'Bu varyanta bağlı sipariş var, silinemez. Pasife alabilirsiniz.',
+      });
+    }
+
+    await prisma.$transaction(async (tx: any) => {
+      await tx.urunVaryant.update({
+        where: { id: varyant.id },
+        data: { silindiMi: true, silinmeTarihi: new Date(), silenKullaniciId: kullaniciId, aktifMi: false },
+      });
+      if (varyant.varsayilanMi) {
+        const sonraki = await tx.urunVaryant.findFirst({
+          where: { urunId: BigInt(urunId), silindiMi: false, NOT: { id: varyant.id } },
+          orderBy: { sira: 'asc' },
+        });
+        if (sonraki) {
+          await tx.urunVaryant.update({ where: { id: sonraki.id }, data: { varsayilanMi: true } });
+        }
+      }
+    });
+  }
+
+  /**
+   * Matris oto-üret: Eksenler × Seçenekler kombinasyonlarını varyant olarak oluşturur.
+   * Mevcut kombinasyonları atlar.
+   */
+  async varyantMatrisUret(prisma: TenantClient, urunId: number, kullaniciId: bigint) {
+    const urun = await this.detay(prisma, urunId);
+    const eksenler = await prisma.urunVaryantEksen.findMany({
+      where: { urunId: BigInt(urunId) },
+      orderBy: { sira: 'asc' },
+      include: { secenekler: { where: { aktifMi: true }, orderBy: { sira: 'asc' } } },
+    });
+
+    if (eksenler.length === 0) {
+      throw new BadRequestException({
+        kod: 'EKSEN_YOK',
+        mesaj: 'Matris oluşturmak için önce en az bir eksen ve seçenek eklemelisin',
+      });
+    }
+
+    // Cartesian product
+    let kombinasyonlar: Array<Record<string, string>> = [{}];
+    for (const eksen of eksenler) {
+      if (eksen.secenekler.length === 0) continue;
+      const yeni: Array<Record<string, string>> = [];
+      for (const mevcut of kombinasyonlar) {
+        for (const secenek of eksen.secenekler) {
+          yeni.push({ ...mevcut, [eksen.eksenAd]: secenek.degerAd });
+        }
+      }
+      kombinasyonlar = yeni;
+    }
+
+    if (kombinasyonlar.length === 0 || (kombinasyonlar.length === 1 && Object.keys(kombinasyonlar[0]).length === 0)) {
+      throw new BadRequestException({ kod: 'KOMBINASYON_YOK', mesaj: 'Hiçbir eksende seçenek tanımlanmamış' });
+    }
+
+    const mevcutVaryantlar = await prisma.urunVaryant.findMany({
+      where: { urunId: BigInt(urunId), silindiMi: false },
+      select: { sku: true, eksenKombinasyon: true, varsayilanMi: true },
+    });
+
+    const mevcutKombKeys = new Set(
+      mevcutVaryantlar.map((v) => JSON.stringify(v.eksenKombinasyon ?? {})),
+    );
+
+    const yeniKombinasyonlar = kombinasyonlar.filter(
+      (k) => !mevcutKombKeys.has(JSON.stringify(k)),
+    );
+
+    if (yeniKombinasyonlar.length === 0) {
+      return { eklenen: 0, toplam: mevcutVaryantlar.length, mesaj: 'Tüm kombinasyonlar zaten var' };
+    }
+
+    const varsayilanMevcutMu = mevcutVaryantlar.some((v) => v.varsayilanMi);
+
+    return prisma.$transaction(async (tx: any) => {
+      let eklenenSayi = 0;
+      let ilkEklenen = true;
+      for (const kombinasyon of yeniKombinasyonlar) {
+        const sku = this.skuUret(urun.kod, kombinasyon);
+        const varMi = await tx.urunVaryant.findUnique({ where: { sku }, select: { id: true } });
+        if (varMi) continue;
+
+        await tx.urunVaryant.create({
+          data: {
+            urunId: BigInt(urunId),
+            sku,
+            varyantAd: Object.values(kombinasyon).join(' / '),
+            eksenKombinasyon: kombinasyon,
+            varsayilanMi: !varsayilanMevcutMu && ilkEklenen,
+            paraBirimiKod: 'TRY',
+            vergiOraniId: urun.vergiOraniId,
+            birimId: urun.anaBirimId,
+            kritikStok: 0,
+            minimumStok: 0,
+            sira: eklenenSayi,
+            olusturanKullaniciId: kullaniciId,
+          },
+        });
+        eklenenSayi++;
+        ilkEklenen = false;
+      }
+      return { eklenen: eklenenSayi, toplam: mevcutVaryantlar.length + eklenenSayi };
+    });
+  }
 
   // ════════════════════════════════════════════════════════════
   // RESİM YÖNETİMİ — UrunResim N-1 (bir urunun N resmi)

@@ -206,6 +206,78 @@ export const VaryantBarkodEkleSemasi = z.object({
 export type VaryantBarkodEkleGirdi = z.infer<typeof VaryantBarkodEkleSemasi>;
 
 // ════════════════════════════════════════════════════════════
+// VARYANT ESENLERI & SECENEKLER (Renk, Beden vb.)
+// ════════════════════════════════════════════════════════════
+
+/**
+ * EksenOlusturSemasi — Ürüne yeni varyant ekseni ekler.
+ * Eksen = Renk, Beden, Boyut gibi varyasyon kategorisi.
+ */
+export const EksenOlusturSemasi = z.object({
+  eksenKod: z.string().min(1).max(50),          // "renk", "beden"
+  eksenAd: z.string().min(1).max(100),           // "Renk", "Beden"
+  sira: z.number().int().nonnegative().default(0),
+});
+export type EksenOlusturGirdi = z.infer<typeof EksenOlusturSemasi>;
+
+/**
+ * SecenekOlusturSemasi — Eksene seçenek ekler.
+ * Seçenek = Kırmızı, Mavi, S, M, L gibi eksen değerleri.
+ */
+export const SecenekOlusturSemasi = z.object({
+  degerKod: z.string().min(1).max(50),           // "kirmizi", "s"
+  degerAd: z.string().min(1).max(100),            // "Kırmızı", "S"
+  hexRenk: z.string().max(20).optional().nullable(),  // "#FF0000"
+  resimUrl: z.string().optional().nullable(),
+  sira: z.number().int().nonnegative().default(0),
+  aktifMi: z.boolean().default(true),
+});
+export type SecenekOlusturGirdi = z.infer<typeof SecenekOlusturSemasi>;
+
+// ════════════════════════════════════════════════════════════
+// VARYANT CRUD (manuel + matris)
+// ════════════════════════════════════════════════════════════
+
+/**
+ * VaryantOlusturSemasi — Manuel tek bir varyant ekler.
+ * eksenKombinasyon: {"Renk": "Kırmızı", "Beden": "S"}
+ */
+export const VaryantOlusturSemasi = z.object({
+  eksenKombinasyon: z.record(z.string(), z.string()).default({}),
+  sku: z.string().max(100).optional(),           // bossa otomatik uretilir
+  barkod: z.string().max(100).optional().nullable(),
+  varyantAd: z.string().max(300).optional().nullable(),  // "Kırmızı - Small" gibi gosterim
+  varsayilanMi: z.boolean().default(false),
+  // Fiyatlar (ürün default'tan farklıysa override)
+  alisFiyati: z.coerce.number().nonnegative().optional().nullable(),
+  sonAlisFiyati: z.coerce.number().nonnegative().optional().nullable(),
+  piyasaFiyati: z.coerce.number().nonnegative().optional().nullable(),
+  satilabilirSonFiyat: z.coerce.number().nonnegative().optional().nullable(),
+  satisFiyati: z.coerce.number().nonnegative().optional().nullable(),
+  karMarji: z.coerce.number().optional().nullable(),
+  // Fiziksel (ürün'den override)
+  agirlikGr: z.coerce.number().nonnegative().optional().nullable(),
+  enCm: z.coerce.number().nonnegative().optional().nullable(),
+  boyCm: z.coerce.number().nonnegative().optional().nullable(),
+  yukseklikCm: z.coerce.number().nonnegative().optional().nullable(),
+  // Stok esikleri
+  kritikStok: z.coerce.number().nonnegative().default(0),
+  minimumStok: z.coerce.number().nonnegative().default(0),
+  // Resim
+  anaResimUrl: z.string().optional().nullable(),
+  sira: z.number().int().nonnegative().default(0),
+});
+export type VaryantOlusturGirdi = z.infer<typeof VaryantOlusturSemasi>;
+
+/**
+ * VaryantGuncelleSemasi — .partial() ile tüm alanlar opsiyonel.
+ */
+export const VaryantGuncelleSemasi = VaryantOlusturSemasi.partial().extend({
+  aktifMi: z.boolean().optional(),
+});
+export type VaryantGuncelleGirdi = z.infer<typeof VaryantGuncelleSemasi>;
+
+// ════════════════════════════════════════════════════════════
 // TOPLU İŞLEMLER
 // ════════════════════════════════════════════════════════════
 
