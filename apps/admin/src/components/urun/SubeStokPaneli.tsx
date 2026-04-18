@@ -13,8 +13,14 @@ import {
   TrendingDown,
   Info,
   ClipboardCheck,
+  PackageOpen,
+  Pencil,
+  Check,
 } from "lucide-react";
 import { SayimWizardModal } from "@/components/urun/SayimWizardModal";
+import { DevirWizardModal } from "@/components/urun/DevirWizardModal";
+import { Input } from "@/components/ui/input";
+import { useOnay } from "@/components/ortak/OnayDialog";
 import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
@@ -123,8 +129,17 @@ export function SubeStokPaneli({ urunId }: SubeStokPaneliOzellik) {
     magazaAd: string;
   } | null>(null);
 
-  // Sayım modal
+  const onay = useOnay();
+
+  // Sayım + Devir modalları
   const [sayimAcik, setSayimAcik] = useState(false);
+  const [devirAcik, setDevirAcik] = useState(false);
+
+  // Ortalama maliyet inline edit state
+  const [maliyetEditKey, setMaliyetEditKey] = useState<string | null>(null);
+  const [maliyetDeger, setMaliyetDeger] = useState("");
+  const [maliyetAciklama, setMaliyetAciklama] = useState("");
+  const [maliyetKaydediyor, setMaliyetKaydediyor] = useState(false);
 
   const yukle = useCallback(async () => {
     if (!urunId) return;
@@ -192,22 +207,73 @@ export function SubeStokPaneli({ urunId }: SubeStokPaneliOzellik) {
   const magazaAd = (id: string) =>
     ozet.magazalar.find((m) => m.id === id)?.ad ?? "—";
 
+  const maliyetEditAc = (varyantId: string, magazaId: string, mevcut: string | null) => {
+    setMaliyetEditKey(`${varyantId}_${magazaId}`);
+    setMaliyetDeger(mevcut ?? "");
+    setMaliyetAciklama("");
+  };
+
+  const maliyetKaydet = async (varyantId: string, magazaId: string) => {
+    const yeni = Number(maliyetDeger);
+    if (isNaN(yeni) || yeni < 0) {
+      toast.hata(t("urun.maliyet-gecersiz"));
+      return;
+    }
+    if (!maliyetAciklama.trim()) {
+      toast.hata(t("urun.maliyet-aciklama-zorunlu"));
+      return;
+    }
+    const tamam = await onay.goster({
+      baslik: t("urun.maliyet-onay-baslik"),
+      mesaj: t("urun.maliyet-onay-mesaj", { yeni: yeni.toString() }),
+      varyant: "uyari",
+      onayMetni: t("urun.maliyet-onay-btn"),
+    });
+    if (!tamam) return;
+
+    setMaliyetKaydediyor(true);
+    try {
+      await apiIstemci.patch(`/urun/${urunId}/stok/ortalama-maliyet`, {
+        urunVaryantId: Number(varyantId),
+        magazaId: Number(magazaId),
+        yeniMaliyet: yeni,
+        aciklama: maliyetAciklama.trim(),
+      });
+      toast.basarili(t("urun.maliyet-basarili"));
+      setMaliyetEditKey(null);
+      await yukle();
+    } catch (err: any) {
+      toast.hata(err?.response?.data?.hata?.mesaj ?? t("genel.hata"));
+    }
+    setMaliyetKaydediyor(false);
+  };
+
   return (
     <div className="space-y-4">
       {/* Bilgi kartı + aksiyonlar */}
-      <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 md:p-4 flex flex-col sm:flex-row items-start gap-3">
+      <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 md:p-4 flex flex-col md:flex-row items-start gap-3">
         <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
         <div className="text-sm text-metin-ikinci flex-1">
           <p className="font-medium text-metin mb-1">{t("urun.stok-disiplini-baslik")}</p>
           <p>{t("urun.stok-disiplini-aciklama")}</p>
         </div>
-        <Button
-          onClick={() => setSayimAcik(true)}
-          className="w-full sm:w-auto shrink-0 min-h-[44px] sm:min-h-[36px]"
-        >
-          <ClipboardCheck className="h-4 w-4" />
-          {t("urun.sayim-baslat")}
-        </Button>
+        <div className="flex gap-2 w-full md:w-auto shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setDevirAcik(true)}
+            className="flex-1 md:flex-none min-h-[44px] sm:min-h-[36px]"
+          >
+            <PackageOpen className="h-4 w-4" />
+            {t("urun.devir-baslat")}
+          </Button>
+          <Button
+            onClick={() => setSayimAcik(true)}
+            className="flex-1 md:flex-none min-h-[44px] sm:min-h-[36px]"
+          >
+            <ClipboardCheck className="h-4 w-4" />
+            {t("urun.sayim-baslat")}
+          </Button>
+        </div>
       </div>
 
       {/* Varyant listesi — her biri collapsible */}
@@ -332,9 +398,65 @@ export function SubeStokPaneli({ urunId }: SubeStokPaneliOzellik) {
                             )}
                           </td>
                           <td className="px-3 md:px-4 py-3 text-right hidden md:table-cell tabular-nums">
-                            <span className="text-metin-ikinci">
-                              {paraFormat(s.ortalamaMaliyet, paraBirimi)}
-                            </span>
+                            {maliyetEditKey === `${s.urunVaryantId}_${s.magazaId}` ? (
+                              <div className="flex flex-col gap-1">
+                                <Input
+                                  type="number"
+                                  inputMode="decimal"
+                                  step="any"
+                                  min="0"
+                                  value={maliyetDeger}
+                                  onChange={(e) => setMaliyetDeger(e.target.value)}
+                                  onFocus={(e) => e.target.select()}
+                                  className="text-right text-sm tabular-nums min-h-[36px]"
+                                  autoFocus
+                                />
+                                <Input
+                                  value={maliyetAciklama}
+                                  onChange={(e) => setMaliyetAciklama(e.target.value)}
+                                  placeholder={t("urun.maliyet-sebep-ph")}
+                                  className="text-sm min-h-[36px]"
+                                />
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => maliyetKaydet(s.urunVaryantId, s.magazaId)}
+                                    disabled={maliyetKaydediyor}
+                                    className="flex-1"
+                                  >
+                                    {maliyetKaydediyor ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Check className="h-3 w-3" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setMaliyetEditKey(null)}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="group flex items-center justify-end gap-1">
+                                <span className="text-metin-ikinci">
+                                  {paraFormat(s.ortalamaMaliyet, paraBirimi)}
+                                </span>
+                                {Number(s.mevcutMiktar) > 0 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => maliyetEditAc(s.urunVaryantId, s.magazaId, s.ortalamaMaliyet)}
+                                    className="opacity-0 group-hover:opacity-100 md:opacity-0 transition-opacity h-6 w-6"
+                                    title={t("urun.maliyet-duzelt")}
+                                  >
+                                    <Pencil className="h-3 w-3 text-metin-pasif" />
+                                  </Button>
+                                )}
+                              </div>
+                            )}
                           </td>
                           <td className="px-3 md:px-4 py-3 text-right hidden lg:table-cell tabular-nums">
                             <span className="text-metin-ikinci text-xs">
@@ -385,6 +507,14 @@ export function SubeStokPaneli({ urunId }: SubeStokPaneliOzellik) {
       <SayimWizardModal
         acik={sayimAcik}
         kapat={() => setSayimAcik(false)}
+        urunId={urunId}
+        onKaydet={() => void yukle()}
+      />
+
+      {/* Devir Wizard */}
+      <DevirWizardModal
+        acik={devirAcik}
+        kapat={() => setDevirAcik(false)}
         urunId={urunId}
         onKaydet={() => void yukle()}
       />
