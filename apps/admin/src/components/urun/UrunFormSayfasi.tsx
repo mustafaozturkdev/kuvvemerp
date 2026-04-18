@@ -433,7 +433,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
           <Loader2 className="h-6 w-6 animate-spin text-metin-pasif" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4 md:gap-6 flex-1">
+        <div className="flex flex-col gap-4 md:grid md:grid-cols-[220px_1fr] md:gap-6 flex-1">
           {/* ─── Tab Nav — mobilde sticky yatay bar, md+ sol sidebar ─── */}
           <nav
             className={cn(
