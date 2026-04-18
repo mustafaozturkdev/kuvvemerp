@@ -21,6 +21,8 @@ import { toast } from "@/hooks/use-toast";
 import { useOnay } from "@/components/ortak/OnayDialog";
 import { FormAlani } from "@/components/ortak/FormAlani";
 import { cn } from "@/lib/utils";
+import { slugOlustur } from "@/lib/slug";
+import { HazirEksenModal } from "@/components/urun/HazirEksenModal";
 
 // ────────────────────────────────────────────────────────────
 // Tipler
@@ -88,9 +90,8 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
   const [yukleniyor, setYukleniyor] = useState(false);
   const [islemde, setIslemde] = useState<string | null>(null);
 
-  // Yeni eksen formu
-  const [yeniEksenAcik, setYeniEksenAcik] = useState(false);
-  const [yeniEksenAd, setYeniEksenAd] = useState("");
+  // Hazır eksen modal
+  const [hazirModalAcik, setHazirModalAcik] = useState(false);
 
   // Yeni seçenek formu
   const [secenekAcikEksenId, setSecenekAcikEksenId] = useState<string | null>(null);
@@ -131,33 +132,28 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
     );
   }
 
-  // ─── Slug helper: "Kırmızı" → "kirmizi" ───
-  const kodUret = (ad: string) =>
-    ad
-      .toLowerCase()
-      .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s")
-      .replace(/ı/g, "i").replace(/ö/g, "o").replace(/ç/g, "c")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-
-  // ─── Eksen ekle ───
-  const eksenEkle = async () => {
-    if (!yeniEksenAd.trim()) return;
-    setIslemde("eksen-ekle");
+  // ─── Eksen toplu ekle (hazır eksen modalından) ───
+  const eksenTopluEkle = async (veri: {
+    eksenKod: string;
+    eksenAd: string;
+    secenekler: Array<{ degerKod: string; degerAd: string; hexRenk?: string | null }>;
+  }) => {
+    if (!urunId) return;
     try {
-      await apiIstemci.post(`/urun/${urunId}/eksen`, {
-        eksenAd: yeniEksenAd.trim(),
-        eksenKod: kodUret(yeniEksenAd.trim()),
+      await apiIstemci.post(`/urun/${urunId}/eksen-toplu`, {
+        ...veri,
         sira: eksenler.length,
       });
-      toast.basarili(t("urun.eksen-eklendi"));
-      setYeniEksenAd("");
-      setYeniEksenAcik(false);
+      toast.basarili(
+        veri.secenekler.length > 0
+          ? t("urun.eksen-secenek-eklendi", { sayi: veri.secenekler.length })
+          : t("urun.eksen-eklendi"),
+      );
       await yukle();
     } catch (err: any) {
       toast.hata(err?.response?.data?.hata?.mesaj ?? t("genel.hata"));
+      throw err; // modal'ın kapanmasını durdur
     }
-    setIslemde(null);
   };
 
   const eksenSil = async (eksen: Eksen) => {
@@ -187,7 +183,7 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
       const eksen = eksenler.find((e) => e.id === eksenId)!;
       await apiIstemci.post(`/urun/${urunId}/eksen/${eksenId}/secenek`, {
         degerAd: yeniSecenekAd.trim(),
-        degerKod: kodUret(yeniSecenekAd.trim()),
+        degerKod: slugOlustur(yeniSecenekAd.trim()),
         hexRenk: yeniSecenekRenk.trim() || null,
         sira: eksen.secenekler.length,
         aktifMi: true,
@@ -450,7 +446,7 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
         baslik={t("urun.bolum-eksenler")}
         altyazi={t("urun.bolum-eksenler-altyazi")}
       >
-        {eksenler.length === 0 && !yeniEksenAcik && (
+        {eksenler.length === 0 && (
           <div className="text-center py-6 text-sm text-metin-pasif border-2 border-dashed border-kenarlik rounded-lg">
             <Package className="h-10 w-10 mx-auto mb-2 opacity-30" />
             <p>{t("urun.eksen-yok")}</p>
@@ -582,42 +578,15 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
           </div>
         ))}
 
-        {/* Yeni eksen formu */}
-        {yeniEksenAcik ? (
-          <div className="flex flex-col sm:flex-row gap-2 border-2 border-dashed border-birincil/50 rounded-lg p-3 bg-birincil/5">
-            <Input
-              autoFocus
-              placeholder={t("urun.eksen-ad-placeholder")}
-              value={yeniEksenAd}
-              onChange={(e) => setYeniEksenAd(e.target.value)}
-              className="flex-1 min-h-[44px] sm:min-h-[36px]"
-              onKeyDown={(e) => e.key === "Enter" && eksenEkle()}
-            />
-            <div className="flex gap-2">
-              <Button onClick={eksenEkle} disabled={!yeniEksenAd.trim() || islemde !== null}>
-                {islemde === "eksen-ekle" ? <Loader2 className="h-4 w-4 animate-spin" /> : t("genel.ekle")}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setYeniEksenAcik(false);
-                  setYeniEksenAd("");
-                }}
-              >
-                {t("genel.iptal")}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button
-            variant="outline"
-            onClick={() => setYeniEksenAcik(true)}
-            className="w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4" />
-            {t("urun.eksen-ekle")}
-          </Button>
-        )}
+        {/* Eksen Ekle — hazır modal açar */}
+        <Button
+          variant="outline"
+          onClick={() => setHazirModalAcik(true)}
+          className="w-full sm:w-auto min-h-[44px] sm:min-h-[36px]"
+        >
+          <Plus className="h-4 w-4" />
+          {t("urun.eksen-ekle")}
+        </Button>
       </FormAlani.Bolum>
 
       {/* ══════ VARYANT LİSTESİ ══════ */}
@@ -791,6 +760,13 @@ export function VaryantlarEditor({ urunId }: VaryantlarEditorOzellik) {
           </div>
         )}
       </FormAlani.Bolum>
+
+      {/* Hazır eksen modal */}
+      <HazirEksenModal
+        acik={hazirModalAcik}
+        kapat={() => setHazirModalAcik(false)}
+        onEkle={eksenTopluEkle}
+      />
     </div>
   );
 }

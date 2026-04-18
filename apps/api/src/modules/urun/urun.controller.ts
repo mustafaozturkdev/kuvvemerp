@@ -49,6 +49,16 @@ export class UrunController {
   constructor(private readonly urunService: UrunService) {}
 
   // ──────────────────────────────────────────
+  // HAZIR EKSEN KÜTÜPHANESİ (her ürün için ortak referans data)
+  // ──────────────────────────────────────────
+
+  @Get('hazir-eksenler')
+  @RequireYetki('urun.goruntule')
+  async hazirEksenler() {
+    return this.urunService.hazirEksenler();
+  }
+
+  // ──────────────────────────────────────────
   // LISTE / DETAY
   // ──────────────────────────────────────────
 
@@ -295,6 +305,30 @@ export class UrunController {
     @Body(new ZodValidationPipe(EksenOlusturSemasi)) girdi: EksenOlusturGirdi,
   ) {
     return this.urunService.eksenEkle(req.prisma!, id, girdi);
+  }
+
+  /**
+   * Hazir eksen (kutuphane) kullanilarak eksen + secenekler bulk eklenir.
+   */
+  @Post(':id/eksen-toplu')
+  @RequireYetki('urun.varyant-yonet')
+  async eksenToplu(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: {
+      eksenKod: string;
+      eksenAd: string;
+      sira?: number;
+      secenekler: Array<{ degerKod: string; degerAd: string; hexRenk?: string | null; sira?: number }>;
+    },
+  ) {
+    if (!body?.eksenKod || !body?.eksenAd || !Array.isArray(body.secenekler)) {
+      throw new BadRequestException({
+        kod: 'GECERSIZ_ISTEK',
+        mesaj: 'eksenKod, eksenAd ve secenekler[] gerekli',
+      });
+    }
+    return this.urunService.eksenVeSecenekToplu(req.prisma!, id, body);
   }
 
   @Delete(':id/eksen/:eksenId')

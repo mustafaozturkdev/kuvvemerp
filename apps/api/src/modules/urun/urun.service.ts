@@ -17,6 +17,7 @@ import { kodIleOlustur } from '../../common/helpers/kod-uretici.js';
 import { slugOlustur } from '../../common/helpers/slug.js';
 import { ean13BenzersizUret } from '../../common/helpers/barkod-uretici.js';
 import { UploadService } from '../upload/upload.service.js';
+import { HAZIR_EKSENLER } from './hazir-eksenler.js';
 
 type AnyPrisma = TenantClient | any;
 
@@ -678,6 +679,72 @@ export class UrunService {
         sira: girdi.sira,
         aktifMi: girdi.aktifMi,
       },
+    });
+  }
+
+  /**
+   * Hazır eksen kütüphanesi (sistem seviyesinde, tenant'tan bağımsız).
+   */
+  hazirEksenler() {
+    return HAZIR_EKSENLER;
+  }
+
+  /**
+   * Toplu eksen + seçenekler ekleme — hazır eksenden veya özel seçim'den gelir.
+   * Transaction atomik: biri başarısızsa tümü geri alınır.
+   */
+  async eksenVeSecenekToplu(
+    prisma: TenantClient,
+    urunId: number,
+    girdi: {
+      eksenKod: string;
+      eksenAd: string;
+      sira?: number;
+      secenekler: Array<{ degerKod: string; degerAd: string; hexRenk?: string | null; sira?: number }>;
+    },
+  ) {
+    await this.detay(prisma, urunId);
+
+    // Mevcut eksen var mı?
+    const mevcut = await prisma.urunVaryantEksen.findFirst({
+      where: { urunId: BigInt(urunId), eksenKod: girdi.eksenKod },
+      select: { id: true },
+    });
+    if (mevcut) {
+      throw new BadRequestException({
+        kod: 'EKSEN_MEVCUT',
+        mesaj: `Bu üründe '${girdi.eksenAd}' ekseni zaten var`,
+      });
+    }
+
+    return prisma.$transaction(async (tx: any) => {
+      const eksen = await tx.urunVaryantEksen.create({
+        data: {
+          urunId: BigInt(urunId),
+          eksenKod: girdi.eksenKod,
+          eksenAd: girdi.eksenAd,
+          sira: girdi.sira ?? 0,
+        },
+      });
+
+      if (girdi.secenekler.length > 0) {
+        await tx.urunVaryantSecenek.createMany({
+          data: girdi.secenekler.map((s, idx) => ({
+            eksenId: eksen.id,
+            degerKod: s.degerKod,
+            degerAd: s.degerAd,
+            hexRenk: s.hexRenk ?? null,
+            sira: s.sira ?? idx,
+            aktifMi: true,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      return tx.urunVaryantEksen.findUnique({
+        where: { id: eksen.id },
+        include: { secenekler: { orderBy: { sira: 'asc' } } },
+      });
     });
   }
 
