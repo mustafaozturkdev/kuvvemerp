@@ -329,6 +329,32 @@ export const OrtalamaMaliyetOverrideSemasi = z.object({
 });
 export type OrtalamaMaliyetOverrideGirdi = z.infer<typeof OrtalamaMaliyetOverrideSemasi>;
 
+/**
+ * StokTransferOlusturSemasi — Mağazalar arası virman başlatır.
+ * Oluşturulunca: durum='yolda', kaynak stok düşer, hedef yoldaGelen artar.
+ */
+export const StokTransferOlusturSemasi = z.object({
+  kaynakMagazaId: z.coerce.number().int().positive(),
+  hedefMagazaId: z.coerce.number().int().positive(),
+  aciklama: z.string().max(500).optional().nullable(),
+  beklenenTeslimTarihi: z.string().optional().nullable(),   // ISO date
+  aracPlaka: z.string().max(20).optional().nullable(),
+  soforAdSoyad: z.string().max(200).optional().nullable(),
+  kargoFirma: z.string().max(100).optional().nullable(),
+  kargoTakipNo: z.string().max(100).optional().nullable(),
+  kalemler: z.array(
+    z.object({
+      urunVaryantId: z.coerce.number().int().positive(),
+      miktar: z.coerce.number().positive(),
+      aciklama: z.string().max(300).optional().nullable(),
+    }),
+  ).min(1, 'En az bir kalem gerekli'),
+}).refine((d) => d.kaynakMagazaId !== d.hedefMagazaId, {
+  message: 'Kaynak ve hedef mağaza aynı olamaz',
+  path: ['hedefMagazaId'],
+});
+export type StokTransferOlusturGirdi = z.infer<typeof StokTransferOlusturSemasi>;
+
 // ════════════════════════════════════════════════════════════
 // TOPLU İŞLEMLER
 // ════════════════════════════════════════════════════════════

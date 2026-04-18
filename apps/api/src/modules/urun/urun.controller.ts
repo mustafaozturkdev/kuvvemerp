@@ -43,6 +43,8 @@ import {
   StokDevirSemasi,
   OrtalamaMaliyetOverrideGirdi,
   OrtalamaMaliyetOverrideSemasi,
+  StokTransferOlusturGirdi,
+  StokTransferOlusturSemasi,
 } from '@kuvvem/contracts';
 import { UrunService } from './urun.service.js';
 import { CurrentKullanici } from '../../common/decorators/kullanici.decorator.js';
@@ -506,5 +508,59 @@ export class UrunController {
     @Body(new ZodValidationPipe(OrtalamaMaliyetOverrideSemasi)) girdi: OrtalamaMaliyetOverrideGirdi,
   ) {
     return this.urunService.ortalamaMaliyetOverride(req.prisma!, id, girdi, kullanici.id);
+  }
+
+  // ──────────────────────────────────────────
+  // VIRMAN / TRANSFER
+  // ──────────────────────────────────────────
+
+  @Get(':id/transfer')
+  @RequireYetki('urun.goruntule')
+  async transferListele(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Query('durum') durum?: string,
+    @Query('sayfa') sayfa?: string,
+    @Query('boyut') boyut?: string,
+  ) {
+    return this.urunService.transferListele(req.prisma!, id, {
+      durum,
+      sayfa: sayfa ? Number(sayfa) : 1,
+      boyut: boyut ? Number(boyut) : 50,
+    });
+  }
+
+  @Post(':id/transfer')
+  @RequireYetki('urun.stok-ayarla')
+  async transferOlustur(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(StokTransferOlusturSemasi)) girdi: StokTransferOlusturGirdi,
+  ) {
+    return this.urunService.transferOlustur(req.prisma!, id, girdi, kullanici.id);
+  }
+
+  @Patch(':id/transfer/:transferId/teslim-al')
+  @RequireYetki('urun.stok-ayarla')
+  async transferTeslimAl(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('transferId', ParseIntPipe) transferId: number,
+  ) {
+    return this.urunService.transferTeslimAl(req.prisma!, id, transferId, kullanici.id);
+  }
+
+  @Patch(':id/transfer/:transferId/iptal')
+  @RequireYetki('urun.stok-ayarla')
+  async transferIptal(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('transferId', ParseIntPipe) transferId: number,
+    @Body() body: { aciklama?: string },
+  ) {
+    return this.urunService.transferIptal(req.prisma!, id, transferId, body?.aciklama ?? null, kullanici.id);
   }
 }

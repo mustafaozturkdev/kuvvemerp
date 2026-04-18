@@ -14,6 +14,7 @@ import type {
   StokSayimGirdi,
   StokDevirGirdi,
   OrtalamaMaliyetOverrideGirdi,
+  StokTransferOlusturGirdi,
 } from '@kuvvem/contracts';
 import { TenantClient } from '@kuvvem/database';
 import { kodIleOlustur } from '../../common/helpers/kod-uretici.js';
@@ -1667,6 +1668,417 @@ export class UrunService {
       });
 
       return { eskiMaliyet, yeniMaliyet: girdi.yeniMaliyet };
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // VIRMAN / TRANSFER (Mağazalar arası stok transferi)
+  // ════════════════════════════════════════════════════════════
+
+  /**
+   * Yeni transfer oluştur — atomik olarak:
+   *  1) StokTransfer belgesi (durum='yolda', transferNo oto üretim)
+   *  2) StokTransferKalem'ler
+   *  3) Her kalem için kaynak UrunStok.mevcutMiktar -= miktar
+   *     + hedef UrunStok.yoldaGelenMiktar += miktar
+   *     + UrunStokHareket: 2 adet (transfer_cikis kaynak, transfer_yolda hedef)
+   * Hata: kaynakta yetersiz stok varsa işlem reddedilir.
+   */
+  async transferOlustur(
+    prisma: TenantClient,
+    urunId: number,
+    girdi: StokTransferOlusturGirdi,
+    kullaniciId: bigint,
+  ) {
+    await this.detay(prisma, urunId);
+
+    const kaynakMagazaId = BigInt(girdi.kaynakMagazaId);
+    const hedefMagazaId = BigInt(girdi.hedefMagazaId);
+
+    if (kaynakMagazaId === hedefMagazaId) {
+      throw new BadRequestException({ kod: 'AYNI_MAGAZA', mesaj: 'Kaynak ve hedef mağaza aynı olamaz' });
+    }
+
+    const varyantIdler = Array.from(new Set(girdi.kalemler.map((k) => BigInt(k.urunVaryantId))));
+    const varyantlar = await prisma.urunVaryant.findMany({
+      where: { id: { in: varyantIdler }, urunId: BigInt(urunId), silindiMi: false },
+      select: { id: true, paraBirimiKod: true, sku: true },
+    });
+    if (varyantlar.length !== varyantIdler.length) {
+      throw new BadRequestException({ kod: 'VARYANT_HATALI', mesaj: 'Bazı varyantlar bu ürüne ait değil' });
+    }
+    const paraBirimiMap = new Map(varyantlar.map((v) => [String(v.id), v.paraBirimiKod]));
+    const skuMap = new Map(varyantlar.map((v) => [String(v.id), v.sku]));
+
+    // Kaynak stok yeterlilik ön kontrolü
+    const kaynakStoklar = await prisma.urunStok.findMany({
+      where: { urunVaryantId: { in: varyantIdler }, magazaId: kaynakMagazaId },
+      select: { urunVaryantId: true, mevcutMiktar: true, rezerveMiktar: true },
+    });
+    const kaynakMap = new Map(
+      kaynakStoklar.map((s) => [String(s.urunVaryantId), { mevcut: Number(s.mevcutMiktar), rezerve: Number(s.rezerveMiktar) }]),
+    );
+    const yetersiz: Array<{ varyantId: string; sku: string; mevcut: number; istenen: number }> = [];
+    for (const k of girdi.kalemler) {
+      const mevcut = kaynakMap.get(String(k.urunVaryantId))?.mevcut ?? 0;
+      if (k.miktar > mevcut) {
+        yetersiz.push({
+          varyantId: String(k.urunVaryantId),
+          sku: skuMap.get(String(k.urunVaryantId)) ?? String(k.urunVaryantId),
+          mevcut,
+          istenen: k.miktar,
+        });
+      }
+    }
+    if (yetersiz.length > 0) {
+      throw new BadRequestException({
+        kod: 'YETERSIZ_STOK',
+        mesaj: `${yetersiz.length} kalemde kaynak stok yetersiz`,
+        detay: { yetersiz },
+      });
+    }
+
+    return prisma.$transaction(async (tx: any) => {
+      // 1) Transfer belgesi
+      const transferOlusturFn = (transferNo: string) => tx.stokTransfer.create({
+        data: {
+          transferNo,
+          kaynakMagazaId,
+          hedefMagazaId,
+          durum: 'yolda',
+          talepTarihi: new Date(),
+          gonderimTarihi: new Date(),
+          beklenenTeslimTarihi: girdi.beklenenTeslimTarihi ? new Date(girdi.beklenenTeslimTarihi) : null,
+          aracPlaka: girdi.aracPlaka ?? null,
+          soforAdSoyad: girdi.soforAdSoyad ?? null,
+          kargoFirma: girdi.kargoFirma ?? null,
+          kargoTakipNo: girdi.kargoTakipNo ?? null,
+          aciklama: girdi.aciklama ?? null,
+          talepEdenKullaniciId: kullaniciId,
+          gonderenKullaniciId: kullaniciId,
+          onaylayanKullaniciId: kullaniciId,
+          onayTarihi: new Date(),
+          kalemler: {
+            create: girdi.kalemler.map((k, idx) => ({
+              urunVaryantId: BigInt(k.urunVaryantId),
+              talepMiktar: k.miktar,
+              gonderilenMiktar: k.miktar,
+              teslimAlinanMiktar: 0,
+              aciklama: k.aciklama ?? null,
+              sira: idx,
+            })),
+          },
+        },
+      });
+
+      const transfer: any = await kodIleOlustur(tx, 'stok_transfer', 'TRN', transferOlusturFn, 6);
+
+      // 2) Her kalem için UrunStok + UrunStokHareket
+      for (const kalem of girdi.kalemler) {
+        const varyantId = BigInt(kalem.urunVaryantId);
+        const paraBirimi = paraBirimiMap.get(String(varyantId)) ?? 'TRY';
+
+        // Kaynak stok — mevcut azalır
+        const kaynakStok = await tx.urunStok.findUnique({
+          where: { urunVaryantId_magazaId: { urunVaryantId: varyantId, magazaId: kaynakMagazaId } },
+        });
+        if (!kaynakStok) {
+          throw new BadRequestException({ kod: 'KAYNAK_STOK_YOK', mesaj: 'Kaynak stok kaydı bulunamadı' });
+        }
+        const kaynakYeni = Number(kaynakStok.mevcutMiktar) - kalem.miktar;
+        await tx.urunStok.update({
+          where: { id: kaynakStok.id },
+          data: { mevcutMiktar: kaynakYeni, sonCikisTarihi: new Date() },
+        });
+
+        // Hedef stok — yolda artar (yoksa oluştur)
+        const hedefStok = await tx.urunStok.findUnique({
+          where: { urunVaryantId_magazaId: { urunVaryantId: varyantId, magazaId: hedefMagazaId } },
+        });
+        if (hedefStok) {
+          await tx.urunStok.update({
+            where: { id: hedefStok.id },
+            data: { yoldaGelenMiktar: Number(hedefStok.yoldaGelenMiktar) + kalem.miktar },
+          });
+        } else {
+          await tx.urunStok.create({
+            data: {
+              urunVaryantId: varyantId,
+              magazaId: hedefMagazaId,
+              mevcutMiktar: 0,
+              yoldaGelenMiktar: kalem.miktar,
+            },
+          });
+        }
+
+        // Hareket logu — kaynak çıkış
+        await tx.urunStokHareket.create({
+          data: {
+            urunVaryantId: varyantId,
+            magazaId: kaynakMagazaId,
+            hareketTipi: 'transfer_cikis',
+            girisMiktar: 0,
+            cikisMiktar: kalem.miktar,
+            oncesiMiktar: kaynakStok.mevcutMiktar,
+            sonrasiMiktar: kaynakYeni,
+            paraBirimiKod: paraBirimi,
+            kaynakBelgeTipi: 'stok_transfer',
+            kaynakBelgeId: transfer.id,
+            aciklama: `Transfer ${transfer.transferNo} → gönderildi`,
+            kullaniciId,
+          },
+        });
+      }
+
+      return tx.stokTransfer.findUnique({
+        where: { id: transfer.id },
+        include: { kalemler: true },
+      });
+    });
+  }
+
+  /**
+   * Ürüne ait transferleri listele (ürünün varyantlarının dahil olduğu).
+   */
+  async transferListele(prisma: TenantClient, urunId: number, opts: { durum?: string; sayfa?: number; boyut?: number } = {}) {
+    await this.detay(prisma, urunId);
+    const sayfa = opts.sayfa ?? 1;
+    const boyut = Math.min(opts.boyut ?? 50, 200);
+
+    // Bu ürüne ait varyantları bul
+    const varyantlar = await prisma.urunVaryant.findMany({
+      where: { urunId: BigInt(urunId) },
+      select: { id: true },
+    });
+    const varyantIdler = varyantlar.map((v) => v.id);
+
+    const where: Record<string, unknown> = {
+      kalemler: { some: { urunVaryantId: { in: varyantIdler } } },
+    };
+    if (opts.durum) where.durum = opts.durum;
+
+    const [toplam, veriler] = await Promise.all([
+      prisma.stokTransfer.count({ where }),
+      prisma.stokTransfer.findMany({
+        where,
+        orderBy: { olusturmaTarihi: 'desc' },
+        skip: (sayfa - 1) * boyut,
+        take: boyut,
+        include: {
+          kalemler: {
+            where: { urunVaryantId: { in: varyantIdler } },
+            include: {
+              urunVaryant: {
+                select: { id: true, sku: true, varyantAd: true, eksenKombinasyon: true },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return { veriler, meta: { toplam, sayfa, boyut } };
+  }
+
+  /**
+   * Transfer teslim al — hedef mağazada mevcutMiktar artar, yoldaGelenMiktar azalır.
+   * Durum: yolda → tamamlandi
+   */
+  async transferTeslimAl(
+    prisma: TenantClient,
+    urunId: number,
+    transferId: number,
+    kullaniciId: bigint,
+  ) {
+    await this.detay(prisma, urunId);
+
+    const transfer = await prisma.stokTransfer.findUnique({
+      where: { id: BigInt(transferId) },
+      include: {
+        kalemler: {
+          include: { urunVaryant: { select: { paraBirimiKod: true, urunId: true } } },
+        },
+      },
+    });
+    if (!transfer) {
+      throw new NotFoundException({ kod: 'TRANSFER_BULUNAMADI', mesaj: 'Transfer bulunamadı' });
+    }
+    if (transfer.durum !== 'yolda') {
+      throw new BadRequestException({
+        kod: 'DURUM_UYGUN_DEGIL',
+        mesaj: `Sadece yoldaki transferler teslim alınabilir (mevcut durum: ${transfer.durum})`,
+      });
+    }
+    // Bu ürüne ait kalemler var mı?
+    const urunIdBig = BigInt(urunId);
+    if (!transfer.kalemler.some((k) => k.urunVaryant.urunId === urunIdBig)) {
+      throw new BadRequestException({ kod: 'URUN_HATALI', mesaj: 'Bu transfer bu ürüne ait değil' });
+    }
+
+    return prisma.$transaction(async (tx: any) => {
+      for (const kalem of transfer.kalemler) {
+        const miktar = Number(kalem.gonderilenMiktar);
+        if (miktar <= 0) continue;
+
+        const hedefStok = await tx.urunStok.findUnique({
+          where: {
+            urunVaryantId_magazaId: {
+              urunVaryantId: kalem.urunVaryantId,
+              magazaId: transfer.hedefMagazaId,
+            },
+          },
+        });
+        if (!hedefStok) {
+          throw new BadRequestException({ kod: 'HEDEF_STOK_YOK', mesaj: 'Hedef stok kaydı yok' });
+        }
+
+        const oncesiMevcut = Number(hedefStok.mevcutMiktar);
+        const oncesiYolda = Number(hedefStok.yoldaGelenMiktar);
+        const sonrasiMevcut = oncesiMevcut + miktar;
+        const sonrasiYolda = Math.max(0, oncesiYolda - miktar);
+
+        await tx.urunStok.update({
+          where: { id: hedefStok.id },
+          data: {
+            mevcutMiktar: sonrasiMevcut,
+            yoldaGelenMiktar: sonrasiYolda,
+            sonGirisTarihi: new Date(),
+          },
+        });
+
+        await tx.stokTransferKalem.update({
+          where: { id: kalem.id },
+          data: { teslimAlinanMiktar: miktar },
+        });
+
+        await tx.urunStokHareket.create({
+          data: {
+            urunVaryantId: kalem.urunVaryantId,
+            magazaId: transfer.hedefMagazaId,
+            hareketTipi: 'transfer_giris',
+            girisMiktar: miktar,
+            cikisMiktar: 0,
+            oncesiMiktar: oncesiMevcut,
+            sonrasiMiktar: sonrasiMevcut,
+            paraBirimiKod: kalem.urunVaryant.paraBirimiKod,
+            kaynakBelgeTipi: 'stok_transfer',
+            kaynakBelgeId: transfer.id,
+            aciklama: `Transfer ${transfer.transferNo} → teslim alındı`,
+            kullaniciId,
+          },
+        });
+      }
+
+      return tx.stokTransfer.update({
+        where: { id: transfer.id },
+        data: {
+          durum: 'tamamlandi',
+          teslimTarihi: new Date(),
+          teslimAlanKullaniciId: kullaniciId,
+        },
+        include: { kalemler: true },
+      });
+    });
+  }
+
+  /**
+   * Transfer iptal — durum='yolda' ise kaynağa geri döndürür.
+   * taslak durumdan iptal stok etkisi yok.
+   */
+  async transferIptal(
+    prisma: TenantClient,
+    urunId: number,
+    transferId: number,
+    aciklama: string | null,
+    kullaniciId: bigint,
+  ) {
+    await this.detay(prisma, urunId);
+
+    const transfer = await prisma.stokTransfer.findUnique({
+      where: { id: BigInt(transferId) },
+      include: {
+        kalemler: {
+          include: { urunVaryant: { select: { paraBirimiKod: true, urunId: true } } },
+        },
+      },
+    });
+    if (!transfer) {
+      throw new NotFoundException({ kod: 'TRANSFER_BULUNAMADI', mesaj: 'Transfer bulunamadı' });
+    }
+    if (!['taslak', 'yolda'].includes(transfer.durum)) {
+      throw new BadRequestException({
+        kod: 'DURUM_UYGUN_DEGIL',
+        mesaj: `Tamamlanmış transferler iptal edilemez (durum: ${transfer.durum})`,
+      });
+    }
+
+    return prisma.$transaction(async (tx: any) => {
+      // Yolda ise stok kaynağa geri dön
+      if (transfer.durum === 'yolda') {
+        for (const kalem of transfer.kalemler) {
+          const miktar = Number(kalem.gonderilenMiktar);
+          if (miktar <= 0) continue;
+
+          const kaynakStok = await tx.urunStok.findUnique({
+            where: {
+              urunVaryantId_magazaId: {
+                urunVaryantId: kalem.urunVaryantId,
+                magazaId: transfer.kaynakMagazaId,
+              },
+            },
+          });
+          if (kaynakStok) {
+            const yeniMiktar = Number(kaynakStok.mevcutMiktar) + miktar;
+            await tx.urunStok.update({
+              where: { id: kaynakStok.id },
+              data: { mevcutMiktar: yeniMiktar, sonGirisTarihi: new Date() },
+            });
+            await tx.urunStokHareket.create({
+              data: {
+                urunVaryantId: kalem.urunVaryantId,
+                magazaId: transfer.kaynakMagazaId,
+                hareketTipi: 'transfer_iptal',
+                girisMiktar: miktar,
+                cikisMiktar: 0,
+                oncesiMiktar: kaynakStok.mevcutMiktar,
+                sonrasiMiktar: yeniMiktar,
+                paraBirimiKod: kalem.urunVaryant.paraBirimiKod,
+                kaynakBelgeTipi: 'stok_transfer',
+                kaynakBelgeId: transfer.id,
+                aciklama: `Transfer ${transfer.transferNo} iptal — stok kaynağa iade`,
+                kullaniciId,
+              },
+            });
+          }
+
+          // Hedef stokta yoldaGelen azalt
+          const hedefStok = await tx.urunStok.findUnique({
+            where: {
+              urunVaryantId_magazaId: {
+                urunVaryantId: kalem.urunVaryantId,
+                magazaId: transfer.hedefMagazaId,
+              },
+            },
+          });
+          if (hedefStok) {
+            await tx.urunStok.update({
+              where: { id: hedefStok.id },
+              data: { yoldaGelenMiktar: Math.max(0, Number(hedefStok.yoldaGelenMiktar) - miktar) },
+            });
+          }
+        }
+      }
+
+      return tx.stokTransfer.update({
+        where: { id: transfer.id },
+        data: {
+          durum: 'iptal',
+          notlar: aciklama
+            ? `${transfer.notlar ?? ''}\n[İptal] ${aciklama}`.trim()
+            : transfer.notlar,
+        },
+        include: { kalemler: true },
+      });
     });
   }
 

@@ -1773,6 +1773,7 @@ model UrunVaryant {
   stokRezervasyonlar  UrunStokRezervasyon[]
   siparisKalemler     SiparisKalem[]
   resimler            UrunResim[]
+  stokTransferKalemler StokTransferKalem[]
 
   @@map("urun_varyant")
 }
@@ -2128,7 +2129,8 @@ model StokTransferKalem {
   sira                Int      @default(0)
   olusturmaTarihi     DateTime @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
 
-  transfer StokTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  transfer    StokTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  urunVaryant UrunVaryant  @relation(fields: [urunVaryantId], references: [id], onDelete: Restrict)
 
   @@map("stok_transfer_kalem")
 }
