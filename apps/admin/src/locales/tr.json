@@ -638,6 +638,14 @@
     "resim-sil-baslik": "Resmi sil",
     "resim-sil-mesaj": "Bu resim kalıcı olarak silinecek. Emin misin?",
     "resim-sil-ana-uyari": "Bu resim ÜRÜN ANA RESMİ. Silinince sıradaki resim otomatik ana yapılır. Emin misin?",
+    "resim-yukleme-hedef": "Bu resim hangi varyant için?",
+    "resim-hedef-tum-urun": "Tüm ürün (genel resim)",
+    "resim-hedef-varyant-yardim": "Resim sadece seçili varyantta görünecek (ör: Kırmızı renk ayrı görsel).",
+    "resim-hedef-genel-yardim": "Resim tüm varyantlarda ortak görünür (farklı belirtilmezse).",
+    "resim-filtre": "Göster",
+    "resim-filtre-tumu": "Tümü",
+    "resim-filtre-genel": "Genel",
+    "resim-filtre-bos": "Bu filtrede hiç resim yok",
 
     "bolum-kargo": "Kargo Politikaları"
   },

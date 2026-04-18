@@ -1772,6 +1772,7 @@ model UrunVaryant {
   stokHareketler      UrunStokHareket[]
   stokRezervasyonlar  UrunStokRezervasyon[]
   siparisKalemler     SiparisKalem[]
+  resimler            UrunResim[]
 
   @@map("urun_varyant")
 }
@@ -1801,7 +1802,8 @@ model UrunResim {
   anaResimMi      Boolean  @default(false) @map("ana_resim_mi")
   olusturmaTarihi DateTime @default(now()) @map("olusturma_tarihi") @db.Timestamptz(6)
 
-  urun Urun @relation(fields: [urunId], references: [id], onDelete: Cascade)
+  urun        Urun         @relation(fields: [urunId], references: [id], onDelete: Cascade)
+  urunVaryant UrunVaryant? @relation(fields: [urunVaryantId], references: [id], onDelete: SetNull)
 
   @@map("urun_resim")
 }

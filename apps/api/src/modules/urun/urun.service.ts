@@ -1117,6 +1117,11 @@ export class UrunService {
     return prisma.urunResim.findMany({
       where: { urunId: BigInt(urunId) },
       orderBy: [{ anaResimMi: 'desc' }, { sira: 'asc' }],
+      include: {
+        urunVaryant: {
+          select: { id: true, sku: true, varyantAd: true, eksenKombinasyon: true },
+        },
+      },
     });
   }
 

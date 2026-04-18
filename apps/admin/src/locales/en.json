@@ -527,6 +527,14 @@
     "resim-sil-baslik": "Delete image",
     "resim-sil-mesaj": "This image will be permanently deleted. Are you sure?",
     "resim-sil-ana-uyari": "This is the PRODUCT MAIN IMAGE. When deleted, the next image becomes main automatically. Are you sure?",
+    "resim-yukleme-hedef": "Which variant is this image for?",
+    "resim-hedef-tum-urun": "All product (generic image)",
+    "resim-hedef-varyant-yardim": "Image will only show on the selected variant (e.g. Red color has its own image).",
+    "resim-hedef-genel-yardim": "Image shows on all variants (unless variant-specific ones are added).",
+    "resim-filtre": "Filter",
+    "resim-filtre-tumu": "All",
+    "resim-filtre-genel": "Generic",
+    "resim-filtre-bos": "No images in this filter",
 
     "bolum-kargo": "Shipping Policies"
   },

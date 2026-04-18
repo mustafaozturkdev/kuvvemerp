@@ -12,6 +12,13 @@ import { cn } from "@/lib/utils";
 // Tipler
 // ────────────────────────────────────────────────────────────
 
+interface VaryantBilgi {
+  id: string;
+  sku: string;
+  varyantAd: string | null;
+  eksenKombinasyon: Record<string, string>;
+}
+
 interface UrunResim {
   id: string;
   url: string;
@@ -19,6 +26,15 @@ interface UrunResim {
   baslik: string | null;
   sira: number;
   anaResimMi: boolean;
+  urunVaryantId: string | null;
+  urunVaryant: VaryantBilgi | null;
+}
+
+// Varyant için görsel etiket: "Kırmızı / S" veya SKU
+function varyantEtiketi(v: VaryantBilgi): string {
+  const komb = Object.values(v.eksenKombinasyon ?? {});
+  if (komb.length > 0) return komb.join(" / ");
+  return v.varyantAd ?? v.sku;
 }
 
 interface ResimGalerisiOzellik {
@@ -45,16 +61,29 @@ export function ResimGalerisi({ urunId, urunAdi }: ResimGalerisiOzellik) {
   const { t } = useTranslation();
   const onay = useOnay();
   const [resimler, setResimler] = useState<UrunResim[]>([]);
+  const [varyantlar, setVaryantlar] = useState<VaryantBilgi[]>([]);
   const [yukleniyor, setYukleniyor] = useState(false);
   const [islemDe, setIslemDe] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Upload için seçilen varyant (boş = tüm ürün)
+  const [yuklemeVaryantId, setYuklemeVaryantId] = useState<string>("");
+  // Filtre için seçilen varyant (boş = hepsini göster)
+  const [filtreVaryantId, setFiltreVaryantId] = useState<string>("");
 
   const yukle = useCallback(async () => {
     if (!urunId) return;
     setYukleniyor(true);
     try {
-      const res = await apiIstemci.get<UrunResim[]>(`/urun/${urunId}/resim`);
-      setResimler(res.data);
+      const [resRes, urunRes] = await Promise.all([
+        apiIstemci.get<UrunResim[]>(`/urun/${urunId}/resim`),
+        apiIstemci.get<{ varyantlar: Array<VaryantBilgi & { silindiMi: boolean }> }>(`/urun/${urunId}`),
+      ]);
+      setResimler(resRes.data);
+      const varyantListesi = (urunRes.data.varyantlar ?? []).filter(
+        (v) => !v.silindiMi,
+      );
+      setVaryantlar(varyantListesi);
     } catch {
       toast.hata(t("urun.resim-yuklenemedi"));
     }
@@ -84,6 +113,7 @@ export function ResimGalerisi({ urunId, urunAdi }: ResimGalerisiOzellik) {
       const formData = new FormData();
       formData.append("file", dosya);
       formData.append("altText", urunAdi);
+      if (yuklemeVaryantId) formData.append("varyantId", yuklemeVaryantId);
       await apiIstemci.post(`/urun/${urunId}/resim`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -175,8 +205,42 @@ export function ResimGalerisi({ urunId, urunAdi }: ResimGalerisiOzellik) {
     );
   }
 
+  // Filtrelenmis resimler
+  const gorunenResimler = filtreVaryantId
+    ? resimler.filter((r) => {
+        if (filtreVaryantId === "__genel") return !r.urunVaryantId;
+        return String(r.urunVaryantId) === filtreVaryantId;
+      })
+    : resimler;
+
   return (
     <div className="space-y-4">
+      {/* ─── Varyant seçimi: hangi varyanta yükleniyor ─── */}
+      {varyantlar.length > 0 && (
+        <div className="rounded-lg border border-kenarlik bg-yuzey/30 p-3 sm:p-4">
+          <label className="block text-[15px] sm:text-sm font-medium text-metin mb-2">
+            {t("urun.resim-yukleme-hedef")}
+          </label>
+          <select
+            value={yuklemeVaryantId}
+            onChange={(e) => setYuklemeVaryantId(e.target.value)}
+            className="w-full rounded-md border border-kenarlik bg-arkaplan px-3 py-2.5 sm:py-2 text-base sm:text-sm text-metin min-h-[44px] sm:min-h-[36px]"
+          >
+            <option value="">{t("urun.resim-hedef-tum-urun")}</option>
+            {varyantlar.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.sku} — {varyantEtiketi(v)}
+              </option>
+            ))}
+          </select>
+          <p className="text-sm sm:text-xs text-metin-pasif mt-1.5">
+            {yuklemeVaryantId
+              ? t("urun.resim-hedef-varyant-yardim")
+              : t("urun.resim-hedef-genel-yardim")}
+          </p>
+        </div>
+      )}
+
       {/* ─── Upload alanı ─── */}
       <div
         onDragOver={(e) => e.preventDefault()}
@@ -200,6 +264,56 @@ export function ResimGalerisi({ urunId, urunAdi }: ResimGalerisiOzellik) {
         <p className="text-[11px] text-metin-pasif mt-2">{t("urun.resim-yukle-ipucu")}</p>
       </div>
 
+      {/* ─── Filtre — varyantlar varsa ─── */}
+      {varyantlar.length > 0 && resimler.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-metin-pasif">{t("urun.resim-filtre")}:</span>
+          <button
+            type="button"
+            onClick={() => setFiltreVaryantId("")}
+            className={cn(
+              "px-2.5 py-1 rounded-md text-xs border transition-colors",
+              !filtreVaryantId
+                ? "bg-birincil/10 border-birincil text-birincil font-medium"
+                : "border-kenarlik text-metin-ikinci hover:bg-yuzey",
+            )}
+          >
+            {t("urun.resim-filtre-tumu")} ({resimler.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFiltreVaryantId("__genel")}
+            className={cn(
+              "px-2.5 py-1 rounded-md text-xs border transition-colors",
+              filtreVaryantId === "__genel"
+                ? "bg-birincil/10 border-birincil text-birincil font-medium"
+                : "border-kenarlik text-metin-ikinci hover:bg-yuzey",
+            )}
+          >
+            {t("urun.resim-filtre-genel")} ({resimler.filter((r) => !r.urunVaryantId).length})
+          </button>
+          {varyantlar.map((v) => {
+            const sayi = resimler.filter((r) => String(r.urunVaryantId) === v.id).length;
+            if (sayi === 0) return null;
+            return (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => setFiltreVaryantId(v.id)}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-xs border transition-colors",
+                  filtreVaryantId === v.id
+                    ? "bg-birincil/10 border-birincil text-birincil font-medium"
+                    : "border-kenarlik text-metin-ikinci hover:bg-yuzey",
+                )}
+              >
+                {varyantEtiketi(v)} ({sayi})
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* ─── Yukleniyor durumu ─── */}
       {islemDe === "yukleme" && (
         <div className="flex items-center gap-2 text-sm text-metin-ikinci">
@@ -213,14 +327,14 @@ export function ResimGalerisi({ urunId, urunAdi }: ResimGalerisiOzellik) {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-metin-pasif" />
         </div>
-      ) : resimler.length === 0 ? (
+      ) : gorunenResimler.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-metin-pasif">
           <ImageIcon className="h-10 w-10 mb-2 opacity-30" />
-          <p className="text-sm">{t("urun.resim-yok")}</p>
+          <p className="text-sm">{filtreVaryantId ? t("urun.resim-filtre-bos") : t("urun.resim-yok")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {resimler.map((resim, index) => (
+          {gorunenResimler.map((resim, index) => (
             <div
               key={resim.id}
               className={cn(
@@ -234,6 +348,19 @@ export function ResimGalerisi({ urunId, urunAdi }: ResimGalerisiOzellik) {
                   <Star className="h-3 w-3" /> {t("urun.resim-ana")}
                 </Badge>
               )}
+
+              {/* Varyant rozeti — varsayılan varyant yoksa "Genel" */}
+              <Badge
+                variant="outline"
+                className={cn(
+                  "absolute top-2 right-2 z-10 text-[10px] backdrop-blur-sm",
+                  resim.urunVaryant
+                    ? "bg-white/80 dark:bg-black/60 text-metin border-kenarlik"
+                    : "bg-white/60 dark:bg-black/40 text-metin-pasif border-kenarlik italic",
+                )}
+              >
+                {resim.urunVaryant ? varyantEtiketi(resim.urunVaryant) : t("urun.resim-filtre-genel")}
+              </Badge>
 
               {/* Resim */}
               <div className="aspect-square bg-arkaplan">
