@@ -169,26 +169,27 @@ export function KategoriSelect(props: KategoriSelectOzellik) {
   return (
     <div className={cn(props.hata && "has-error")}>
       {props.etiket && (
-        <label className="block text-sm font-medium text-metin mb-1.5">
+        <label className="block text-[15px] sm:text-sm font-medium text-metin mb-1.5">
           {props.etiket}
           {props.zorunlu && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
 
       <div ref={wrapperRef} className="relative">
-        {/* Tetikleyici */}
+        {/* Tetikleyici — mobile-first: 44px touch target, 16px font */}
         <button
           type="button"
           disabled={props.disabled}
           onClick={() => setAcik((a) => !a)}
           className={cn(
-            "w-full flex items-center gap-2 rounded-md border bg-arkaplan px-3 py-1.5 text-sm text-left transition-colors",
+            "w-full flex items-center gap-2 rounded-md border bg-arkaplan text-left transition-colors",
+            "px-3.5 sm:px-3 py-2.5 sm:py-1.5 text-base sm:text-sm min-h-[44px] sm:min-h-[36px]",
             "hover:border-metin-ikinci focus:outline-none focus:ring-2 focus:ring-birincil/30",
             props.hata ? "border-red-500" : "border-kenarlik",
             props.disabled && "opacity-50 cursor-not-allowed",
           )}
         >
-          <FolderTree className="h-4 w-4 text-metin-pasif shrink-0" />
+          <FolderTree className="h-5 w-5 sm:h-4 sm:w-4 text-metin-pasif shrink-0" />
           <span className={cn("flex-1 truncate", seciliSet.size === 0 && "text-metin-pasif")}>
             {ozetEtiket}
           </span>
@@ -251,8 +252,9 @@ export function KategoriSelect(props: KategoriSelectOzellik) {
                       type="button"
                       onClick={() => (props.mod === "tekli" ? tekliSec(k.id) : cokluSec(k.id))}
                       className={cn(
-                        "w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left transition-colors",
-                        "hover:bg-yuzey",
+                        "w-full flex items-center gap-2 text-left transition-colors",
+                        "px-3 py-3 sm:py-1.5 text-base sm:text-sm min-h-[44px] sm:min-h-0",
+                        "hover:bg-yuzey active:bg-yuzey",
                         secili && "bg-birincil/5 text-birincil",
                       )}
                       style={{ paddingLeft: `${12 + k.derinlik * 16}px` }}

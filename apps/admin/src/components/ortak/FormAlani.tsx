@@ -40,12 +40,12 @@ interface OrtakProp {
 
 function Etiket({ etiket, zorunlu, yardim }: { etiket: string; zorunlu?: boolean; yardim?: string }) {
   return (
-    <label className="flex items-center gap-1.5 text-sm font-medium text-metin">
+    <label className="flex items-center gap-1.5 text-[15px] sm:text-sm font-medium text-metin mb-1.5">
       <span>{etiket}</span>
       {zorunlu && <span className="text-[color:var(--renk-tehlike)]" aria-label="zorunlu">*</span>}
       {yardim && (
         <span title={yardim} className="cursor-help text-metin-pasif">
-          <HelpCircle className="h-3.5 w-3.5" />
+          <HelpCircle className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
         </span>
       )}
     </label>
@@ -55,11 +55,14 @@ function Etiket({ etiket, zorunlu, yardim }: { etiket: string; zorunlu?: boolean
 function HataMetni({ hata }: { hata?: string }) {
   if (!hata) return null;
   return (
-    <p className="mt-1 text-xs text-[color:var(--renk-tehlike)]" role="alert">
+    <p className="mt-1.5 text-sm sm:text-xs text-[color:var(--renk-tehlike)]" role="alert">
       {hata}
     </p>
   );
 }
+
+// Ortak input/select/textarea className'i (mobile-first: iOS zoom icin 16px, 44px touch)
+const MOBILE_INPUT = "text-base sm:text-sm min-h-[44px] sm:min-h-[36px] px-3.5 sm:px-3 py-2.5 sm:py-2";
 
 // ───────────────── Metin ─────────────────
 
@@ -87,7 +90,7 @@ function Metin({ etiket, zorunlu, hata, yardim, className, disabled, deger, onCh
         aria-invalid={!!hata}
         aria-describedby={hata ? `${etiket}-hata` : undefined}
         className={cn(
-          "mt-1",
+          MOBILE_INPUT,
           readOnly && "bg-yuzey cursor-not-allowed",
           hata && "border-[color:var(--renk-tehlike)] focus:ring-[color:var(--renk-tehlike)]/30",
         )}
@@ -114,6 +117,7 @@ function Sayi({ etiket, zorunlu, hata, yardim, className, disabled, deger, onCha
       <Etiket etiket={etiket} zorunlu={zorunlu} yardim={yardim} />
       <Input
         type="number"
+        inputMode="decimal"
         value={deger}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -122,7 +126,7 @@ function Sayi({ etiket, zorunlu, hata, yardim, className, disabled, deger, onCha
         step={step}
         disabled={disabled}
         aria-invalid={!!hata}
-        className={cn("mt-1", hata && "border-[color:var(--renk-tehlike)] focus:ring-[color:var(--renk-tehlike)]/30")}
+        className={cn(MOBILE_INPUT, hata && "border-[color:var(--renk-tehlike)] focus:ring-[color:var(--renk-tehlike)]/30")}
       />
       <HataMetni hata={hata} />
     </div>
@@ -150,7 +154,7 @@ function Sifre({ etiket, zorunlu, hata, yardim, className, disabled, deger, onCh
         autoComplete={autoComplete}
         disabled={disabled}
         aria-invalid={!!hata}
-        className={cn("mt-1", hata && "border-[color:var(--renk-tehlike)] focus:ring-[color:var(--renk-tehlike)]/30")}
+        className={cn(MOBILE_INPUT, hata && "border-[color:var(--renk-tehlike)] focus:ring-[color:var(--renk-tehlike)]/30")}
       />
       <HataMetni hata={hata} />
     </div>
@@ -181,14 +185,15 @@ function Secim({ etiket, zorunlu, hata, yardim, className, disabled, deger, onCh
   return (
     <div className={className}>
       <Etiket etiket={etiket} zorunlu={zorunlu} yardim={yardim} />
-      <div className="relative mt-1">
+      <div className="relative">
         <select
           value={deger}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           aria-invalid={!!hata}
           className={cn(
-            "w-full appearance-none rounded-md border border-kenarlik bg-arkaplan px-3 py-2 pr-8 text-sm text-metin",
+            "w-full appearance-none rounded-md border border-kenarlik bg-arkaplan text-metin pr-10 sm:pr-8",
+            MOBILE_INPUT,
             "focus:outline-none focus:ring-2 focus:ring-birincil/30 focus:border-birincil",
             hata && "border-[color:var(--renk-tehlike)] focus:ring-[color:var(--renk-tehlike)]/30",
             disabled && "opacity-60 cursor-not-allowed",
@@ -201,7 +206,7 @@ function Secim({ etiket, zorunlu, hata, yardim, className, disabled, deger, onCh
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-metin-pasif" />
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 sm:h-4 sm:w-4 -translate-y-1/2 text-metin-pasif" />
       </div>
       <HataMetni hata={hata} />
     </div>
@@ -219,17 +224,17 @@ interface OnayProp extends OrtakProp {
 function Onay({ etiket, hata, className, disabled, deger, onChange, aciklama }: OnayProp) {
   return (
     <div className={className}>
-      <label className="flex items-start gap-3 cursor-pointer">
+      <label className="flex items-start gap-3 cursor-pointer py-1.5 sm:py-0.5 -mx-1 sm:mx-0 px-1 sm:px-0 rounded hover:bg-yuzey/50 sm:hover:bg-transparent transition-colors">
         <input
           type="checkbox"
           checked={deger}
           onChange={(e) => onChange(e.target.checked)}
           disabled={disabled}
-          className="mt-0.5 h-4 w-4 rounded border-kenarlik text-birincil focus:ring-birincil/30"
+          className="mt-1 sm:mt-0.5 h-5 w-5 sm:h-4 sm:w-4 rounded border-kenarlik text-birincil focus:ring-birincil/30 shrink-0"
         />
-        <div>
-          <div className="text-sm text-metin">{etiket}</div>
-          {aciklama && <div className="text-xs text-metin-pasif mt-0.5">{aciklama}</div>}
+        <div className="flex-1 min-w-0">
+          <div className="text-[15px] sm:text-sm text-metin leading-snug">{etiket}</div>
+          {aciklama && <div className="text-sm sm:text-xs text-metin-pasif mt-0.5 leading-snug">{aciklama}</div>}
         </div>
       </label>
       <HataMetni hata={hata} />
@@ -260,7 +265,8 @@ function UzunMetin({ etiket, zorunlu, hata, yardim, className, disabled, deger, 
         disabled={disabled}
         aria-invalid={!!hata}
         className={cn(
-          "mt-1 w-full rounded-md border border-kenarlik bg-arkaplan px-3 py-2 text-sm text-metin",
+          "w-full rounded-md border border-kenarlik bg-arkaplan text-metin",
+          "px-3.5 sm:px-3 py-2.5 sm:py-2 text-base sm:text-sm",
           "focus:outline-none focus:ring-2 focus:ring-birincil/30 focus:border-birincil",
           hata && "border-[color:var(--renk-tehlike)] focus:ring-[color:var(--renk-tehlike)]/30",
           disabled && "opacity-60 cursor-not-allowed",
@@ -282,12 +288,12 @@ interface BolumProp {
 
 function Bolum({ baslik, altyazi, children, className }: BolumProp) {
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-4 sm:space-y-3", className)}>
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-metin-ikinci">
+        <h3 className="text-[15px] sm:text-sm font-semibold uppercase tracking-wider text-metin-ikinci">
           {baslik}
         </h3>
-        {altyazi && <p className="text-xs text-metin-pasif mt-0.5">{altyazi}</p>}
+        {altyazi && <p className="text-sm sm:text-xs text-metin-pasif mt-1 sm:mt-0.5 leading-snug">{altyazi}</p>}
       </div>
       {children}
     </div>

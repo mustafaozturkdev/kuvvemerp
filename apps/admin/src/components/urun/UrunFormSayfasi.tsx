@@ -387,13 +387,13 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
   };
 
   const tablar: { id: Tab; label: string; ikon: React.ReactNode }[] = [
-    { id: "temel", label: t("urun.tab-temel"), ikon: <Info className="h-4 w-4" /> },
-    { id: "fiyat", label: t("urun.tab-fiyat-stok"), ikon: <Banknote className="h-4 w-4" /> },
-    { id: "fiziksel", label: t("urun.tab-fiziksel"), ikon: <Package className="h-4 w-4" /> },
-    { id: "kanallar", label: t("urun.tab-kanallar"), ikon: <Store className="h-4 w-4" /> },
-    { id: "icerik", label: t("urun.tab-icerik-seo"), ikon: <FileText className="h-4 w-4" /> },
-    { id: "resim", label: t("urun.tab-resim"), ikon: <ImageIcon className="h-4 w-4" /> },
-    { id: "ek", label: t("urun.tab-ek"), ikon: <MoreHorizontal className="h-4 w-4" /> },
+    { id: "temel", label: t("urun.tab-temel"), ikon: <Info className="h-5 w-5 md:h-4 md:w-4" /> },
+    { id: "fiyat", label: t("urun.tab-fiyat-stok"), ikon: <Banknote className="h-5 w-5 md:h-4 md:w-4" /> },
+    { id: "fiziksel", label: t("urun.tab-fiziksel"), ikon: <Package className="h-5 w-5 md:h-4 md:w-4" /> },
+    { id: "kanallar", label: t("urun.tab-kanallar"), ikon: <Store className="h-5 w-5 md:h-4 md:w-4" /> },
+    { id: "icerik", label: t("urun.tab-icerik-seo"), ikon: <FileText className="h-5 w-5 md:h-4 md:w-4" /> },
+    { id: "resim", label: t("urun.tab-resim"), ikon: <ImageIcon className="h-5 w-5 md:h-4 md:w-4" /> },
+    { id: "ek", label: t("urun.tab-ek"), ikon: <MoreHorizontal className="h-5 w-5 md:h-4 md:w-4" /> },
   ];
 
   return (
@@ -401,8 +401,8 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
       {/* ─── Sticky Başlık — mobilde compact ─── */}
       <header className="flex items-center justify-between gap-2 md:gap-4 bg-arkaplan border-b border-kenarlik -mx-4 md:-mx-6 -mt-4 md:-mt-6 px-4 md:px-6 py-3 md:py-4 sticky top-0 z-10">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          <Button variant="ghost" size="sm" onClick={geriDon} className="shrink-0" title={t("genel.geri")}>
-            <ArrowLeft className="h-4 w-4" />
+          <Button variant="ghost" size="sm" onClick={geriDon} className="shrink-0 h-10 md:h-9 w-10 md:w-auto" title={t("genel.geri")}>
+            <ArrowLeft className="h-5 w-5 md:h-4 md:w-4" />
             <span className="hidden md:inline">{t("genel.geri")}</span>
           </Button>
           <div className="min-w-0">
@@ -421,7 +421,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
           <Button variant="outline" size="sm" onClick={geriDon} disabled={kaydediyor} className="hidden md:inline-flex">
             {t("genel.iptal")}
           </Button>
-          <Button size="sm" onClick={kaydet} disabled={kaydediyor || yukleniyor}>
+          <Button onClick={kaydet} disabled={kaydediyor || yukleniyor} className="h-10 md:h-9 px-4 md:px-3 text-[15px] md:text-sm">
             {kaydediyor && <Loader2 className="h-4 w-4 animate-spin" />}
             {duzenlemeModu ? t("genel.guncelle") : t("genel.kaydet")}
           </Button>
@@ -456,7 +456,9 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                 type="button"
                 onClick={() => setAktifTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 text-sm whitespace-nowrap md:whitespace-normal text-left transition-colors shrink-0 md:shrink",
+                  "flex items-center gap-2 whitespace-nowrap md:whitespace-normal text-left transition-colors shrink-0 md:shrink",
+                  // Mobilde dokunma dostu boyut (44px+), md+ kompakt
+                  "px-4 md:px-3 py-3 md:py-2 text-[15px] md:text-sm min-h-[44px] md:min-h-0",
                   // Mobilde alt border ile aktif işareti; md+ rounded pill
                   "md:rounded-md border-b-2 md:border-b-0",
                   aktifTab === tab.id
@@ -466,7 +468,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
               >
                 {tab.ikon}
                 <span className="md:flex-1">{tab.label}</span>
-                {tabZorunluEksik[tab.id] && <AlertCircle className="h-3.5 w-3.5 text-red-500" />}
+                {tabZorunluEksik[tab.id] && <AlertCircle className="h-4 w-4 md:h-3.5 md:w-3.5 text-red-500" />}
               </button>
             ))}
           </nav>
