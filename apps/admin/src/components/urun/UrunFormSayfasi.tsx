@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, ArrowLeft, Info, Banknote, Package, Store, FileText, MoreHorizontal, AlertCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Info, Banknote, Package, Store, FileText, MoreHorizontal, AlertCircle, ImageIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { slugOlustur } from "@/lib/slug";
 import { KategoriSelect } from "@/components/urun/KategoriSelect";
 import { SerpOnizleme } from "@/components/urun/SerpOnizleme";
+import { ResimGalerisi } from "@/components/urun/ResimGalerisi";
 
 // ────────────────────────────────────────────────────────────
 // Tipler
@@ -130,7 +131,7 @@ const BOS_FORM: UrunFormVeri = {
   ekKategoriIds: [],
 };
 
-type Tab = "temel" | "fiyat" | "fiziksel" | "kanallar" | "icerik" | "ek";
+type Tab = "temel" | "fiyat" | "fiziksel" | "kanallar" | "icerik" | "resim" | "ek";
 
 interface UrunFormSayfasiOzellik {
   urunId?: string;
@@ -382,7 +383,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
 
   const tabZorunluEksik: Record<Tab, boolean> = {
     temel: Boolean(hatalar.ad || hatalar.anaBirimId || hatalar.vergiOraniId),
-    fiyat: false, fiziksel: false, kanallar: false, icerik: false, ek: false,
+    fiyat: false, fiziksel: false, kanallar: false, icerik: false, resim: false, ek: false,
   };
 
   const tablar: { id: Tab; label: string; ikon: React.ReactNode }[] = [
@@ -391,6 +392,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
     { id: "fiziksel", label: t("urun.tab-fiziksel"), ikon: <Package className="h-4 w-4" /> },
     { id: "kanallar", label: t("urun.tab-kanallar"), ikon: <Store className="h-4 w-4" /> },
     { id: "icerik", label: t("urun.tab-icerik-seo"), ikon: <FileText className="h-4 w-4" /> },
+    { id: "resim", label: t("urun.tab-resim"), ikon: <ImageIcon className="h-4 w-4" /> },
     { id: "ek", label: t("urun.tab-ek"), ikon: <MoreHorizontal className="h-4 w-4" /> },
   ];
 
@@ -688,7 +690,14 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
               </>
             )}
 
-            {/* ══════ TAB 6: EK BİLGİLER & ÖZEL ══════ */}
+            {/* ══════ TAB 6: RESİMLER ══════ */}
+            {aktifTab === "resim" && (
+              <FormAlani.Bolum baslik={t("urun.bolum-resimler")} altyazi={t("urun.bolum-resimler-altyazi")}>
+                <ResimGalerisi urunId={urunId ?? null} urunAdi={form.ad} />
+              </FormAlani.Bolum>
+            )}
+
+            {/* ══════ TAB 7: EK BİLGİLER & ÖZEL ══════ */}
             {aktifTab === "ek" && (
               <>
                 <FormAlani.Bolum baslik={t("urun.bolum-ek-bilgi")}>

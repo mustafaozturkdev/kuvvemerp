@@ -10,11 +10,15 @@ import type {
 } from '@kuvvem/contracts';
 import { TenantClient } from '@kuvvem/database';
 import { kodIleOlustur } from '../../common/helpers/kod-uretici.js';
+import { slugOlustur } from '../../common/helpers/slug.js';
+import { UploadService } from '../upload/upload.service.js';
 
 type AnyPrisma = TenantClient | any;
 
 @Injectable()
 export class UrunService {
+  constructor(private readonly uploadService: UploadService) {}
+
   // ════════════════════════════════════════════════════════════
   // LISTE / DETAY
   // ════════════════════════════════════════════════════════════
@@ -599,6 +603,171 @@ export class UrunService {
       throw new NotFoundException({ kod: 'BARKOD_BULUNAMADI', mesaj: `Barkod bulunamadı: ${barkodId}` });
     }
     await prisma.urunVaryantBarkod.delete({ where: { id: BigInt(barkodId) } });
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // BARKOD İLE ÜRÜN ARAMA (POS ve alış ekranları için)
+  // ════════════════════════════════════════════════════════════
+
+  // ════════════════════════════════════════════════════════════
+  // RESİM YÖNETİMİ — UrunResim N-1 (bir urunun N resmi)
+  // ════════════════════════════════════════════════════════════
+
+  async resimleriListele(prisma: TenantClient, urunId: number) {
+    await this.detay(prisma, urunId);
+    return prisma.urunResim.findMany({
+      where: { urunId: BigInt(urunId) },
+      orderBy: [{ anaResimMi: 'desc' }, { sira: 'asc' }],
+    });
+  }
+
+  async resimYukle(
+    prisma: TenantClient,
+    urunId: number,
+    dosya: { buffer: Buffer; filename: string; mimetype: string },
+    tenantSlug: string,
+    kullaniciId: bigint,
+    options?: { varyantId?: number; altText?: string },
+  ) {
+    const urun = await this.detay(prisma, urunId);
+
+    // SEO-friendly dosya adı: önce urun.seoUrl, yoksa slug(ad), yoksa kod
+    const dosyaAdiSlug =
+      (urun.seoUrl && urun.seoUrl.trim()) ||
+      slugOlustur(urun.ad) ||
+      urun.kod;
+
+    // Yükle + WebP dönüşümü
+    const yuklenen = await this.uploadService.resimYukle(
+      dosya.buffer,
+      dosya.filename,
+      dosya.mimetype,
+      {
+        klasor: 'urun',
+        tenantSlug,
+        dosyaAdiSlug,
+        maxGenislik: 1600,
+        maxYukseklik: 1600,
+        webpDonustur: true,
+        kalite: 85,
+      },
+    );
+
+    // Mevcut resim sayısı — ilk resim ise ana resim yap
+    const mevcutSayi = await prisma.urunResim.count({
+      where: { urunId: BigInt(urunId) },
+    });
+    const anaMi = mevcutSayi === 0;
+
+    // Transaction: kayit olustur + urun.anaResimUrl cache guncelle (ilk resimse)
+    const olusturulanResim = await prisma.$transaction(async (tx) => {
+      const resim = await tx.urunResim.create({
+        data: {
+          urunId: BigInt(urunId),
+          urunVaryantId: options?.varyantId ? BigInt(options.varyantId) : null,
+          url: yuklenen.url,
+          altText: options?.altText ?? urun.ad,
+          sira: mevcutSayi,
+          anaResimMi: anaMi,
+        },
+      });
+
+      if (anaMi) {
+        await tx.urun.update({
+          where: { id: BigInt(urunId) },
+          data: { anaResimUrl: yuklenen.url, guncelleyenKullaniciId: kullaniciId },
+        });
+      }
+
+      return resim;
+    });
+
+    return olusturulanResim;
+  }
+
+  async resimSil(prisma: TenantClient, urunId: number, resimId: number, kullaniciId: bigint) {
+    await this.detay(prisma, urunId);
+    const resim = await prisma.urunResim.findFirst({
+      where: { id: BigInt(resimId), urunId: BigInt(urunId) },
+    });
+    if (!resim) {
+      throw new NotFoundException({ kod: 'RESIM_BULUNAMADI', mesaj: `Resim bulunamadı: ${resimId}` });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.urunResim.delete({ where: { id: resim.id } });
+
+      // Silinen ana resim ise ilk kalan resmi ana yap
+      if (resim.anaResimMi) {
+        const sonraki = await tx.urunResim.findFirst({
+          where: { urunId: BigInt(urunId) },
+          orderBy: { sira: 'asc' },
+        });
+        if (sonraki) {
+          await tx.urunResim.update({
+            where: { id: sonraki.id },
+            data: { anaResimMi: true },
+          });
+          await tx.urun.update({
+            where: { id: BigInt(urunId) },
+            data: { anaResimUrl: sonraki.url, guncelleyenKullaniciId: kullaniciId },
+          });
+        } else {
+          // Hiç resim kalmadı
+          await tx.urun.update({
+            where: { id: BigInt(urunId) },
+            data: { anaResimUrl: null, guncelleyenKullaniciId: kullaniciId },
+          });
+        }
+      }
+    });
+
+    // Fiziksel dosyayı sil (best-effort, hata olursa sessizce geç)
+    await this.uploadService.dosyaSil(resim.url);
+  }
+
+  async resimAnaYap(prisma: TenantClient, urunId: number, resimId: number, kullaniciId: bigint) {
+    await this.detay(prisma, urunId);
+    const resim = await prisma.urunResim.findFirst({
+      where: { id: BigInt(resimId), urunId: BigInt(urunId) },
+    });
+    if (!resim) {
+      throw new NotFoundException({ kod: 'RESIM_BULUNAMADI', mesaj: `Resim bulunamadı: ${resimId}` });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Diğer tüm resimleri ana=false yap
+      await tx.urunResim.updateMany({
+        where: { urunId: BigInt(urunId), NOT: { id: resim.id } },
+        data: { anaResimMi: false },
+      });
+      // Bu resmi ana yap
+      await tx.urunResim.update({
+        where: { id: resim.id },
+        data: { anaResimMi: true },
+      });
+      // Urun cache guncelle
+      await tx.urun.update({
+        where: { id: BigInt(urunId) },
+        data: { anaResimUrl: resim.url, guncelleyenKullaniciId: kullaniciId },
+      });
+    });
+
+    return prisma.urunResim.findUnique({ where: { id: resim.id } });
+  }
+
+  async resimSiralama(prisma: TenantClient, urunId: number, resimIds: number[]) {
+    await this.detay(prisma, urunId);
+    // Verilen sıraya göre UrunResim.sira alanlarını güncelle
+    await prisma.$transaction(
+      resimIds.map((id, idx) =>
+        prisma.urunResim.update({
+          where: { id: BigInt(id) },
+          data: { sira: idx },
+        }),
+      ),
+    );
+    return this.resimleriListele(prisma, urunId);
   }
 
   // ════════════════════════════════════════════════════════════

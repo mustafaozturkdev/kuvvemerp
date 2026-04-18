@@ -34,6 +34,8 @@ export class UploadService {
       kalite?: number;
       klasor?: string;
       webpDonustur?: boolean; // true = WebP, false = orijinal format korunur
+      tenantSlug?: string;    // uploads/{tenantSlug}/{klasor}/ altina kaydedilir
+      dosyaAdiSlug?: string;  // SEO-friendly prefix — {slug}-{hash}.webp
     },
   ): Promise<UploadSonuc> {
     if (!IZIN_VERILEN_TIPLER.includes(mimeTipi)) {
@@ -55,11 +57,16 @@ export class UploadService {
     const kalite = options?.kalite ?? 85;
     const klasor = options?.klasor ?? 'genel';
     const webpDonustur = options?.webpDonustur ?? true;
+    const tenantSlug = options?.tenantSlug?.replace(/[^a-z0-9-]/gi, '').toLowerCase() || null;
+    const dosyaAdiSlug = options?.dosyaAdiSlug?.replace(/[^a-z0-9-]/gi, '').toLowerCase() || null;
 
-    const hedefKlasor = path.join(this.uploadDir, klasor);
+    // Klasor yolu: tenant varsa uploads/{tenantSlug}/{klasor}/, yoksa uploads/{klasor}/
+    const hedefKlasor = tenantSlug
+      ? path.join(this.uploadDir, tenantSlug, klasor)
+      : path.join(this.uploadDir, klasor);
     await fs.mkdir(hedefKlasor, { recursive: true });
 
-    const hash = crypto.randomBytes(8).toString('hex');
+    const hash = crypto.randomBytes(6).toString('hex'); // 12 karakterlik random
 
     let pipeline = sharp(buffer).resize(maxG, maxY, {
       fit: 'inside',
@@ -94,13 +101,21 @@ export class UploadService {
       }
     }
 
-    const dosyaAdi = `${hash}.${uzanti}`;
+    // Dosya adı: slug varsa {slug}-{hash}.{uzanti}, yoksa {hash}.{uzanti}
+    const dosyaAdi = dosyaAdiSlug
+      ? `${dosyaAdiSlug}-${hash}.${uzanti}`
+      : `${hash}.${uzanti}`;
     const dosyaYolu = path.join(hedefKlasor, dosyaAdi);
     const sonuc = await pipeline.toFile(dosyaYolu);
 
+    // URL: tenant varsa /uploads/{tenantSlug}/{klasor}/{dosyaAdi}
+    const url = tenantSlug
+      ? `/uploads/${tenantSlug}/${klasor}/${dosyaAdi}`
+      : `/uploads/${klasor}/${dosyaAdi}`;
+
     return {
       dosyaAdi,
-      url: `/uploads/${klasor}/${dosyaAdi}`,
+      url,
       genislik: sonuc.width,
       yukseklik: sonuc.height,
       boyutByte: sonuc.size,
