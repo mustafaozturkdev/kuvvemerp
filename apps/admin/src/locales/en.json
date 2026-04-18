@@ -287,6 +287,12 @@
 
     "fiyatlar-kdv-dahil": "Prices VAT Inclusive?",
     "fiyatlar-kdv-dahil-aciklama": "On: prices include VAT. Off: VAT is added on top.",
+    "para-birimi": "Sale Currency",
+    "para-birimi-yardim": "All prices of this product are stored in the selected currency (USD/EUR for imports, TRY for domestic). Converted to customer/store currency at checkout.",
+    "para-try": "TRY — Turkish Lira (₺)",
+    "para-usd": "USD — US Dollar ($)",
+    "para-eur": "EUR — Euro (€)",
+    "para-gbp": "GBP — British Pound (£)",
 
     "bolum-temel": "Basic Info",
     "bolum-isim-kod": "Name & Coding",

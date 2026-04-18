@@ -58,6 +58,10 @@ export const UrunOlusturSemasi = z.object({
   // ─── Vergi/Fiyat politikasi ───
   fiyatlarKdvDahilMi: z.boolean().default(true),
 
+  // Urunun satis para birimi (ithal: USD/EUR, yerli: TRY vb.).
+  // Bos birakilirsa tenant varsayilan para birimi kullanilir (sistem_ayar.varsayilan_para_birimi).
+  paraBirimiKod: z.string().length(3).optional(),
+
   // ─── Stok ve takip ───
   stokTakibi: z.boolean().default(true),
   seriNoTakibi: z.boolean().default(false),

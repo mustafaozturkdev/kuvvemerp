@@ -44,6 +44,7 @@ interface UrunFormVeri {
   anaBirimId: string;
   vergiOraniId: string;
   fiyatlarKdvDahilMi: boolean;
+  paraBirimiKod: string;
   faturaKalemAdi: string;
   takmaAdi: string;
   muhasebeKodu: string;
@@ -108,7 +109,7 @@ interface UrunFormVeri {
 
 const BOS_FORM: UrunFormVeri = {
   kod: "", ad: "", tip: "fiziksel", kategoriId: "", markaId: "", markaModelId: "",
-  anaBirimId: "", vergiOraniId: "", fiyatlarKdvDahilMi: true,
+  anaBirimId: "", vergiOraniId: "", fiyatlarKdvDahilMi: true, paraBirimiKod: "TRY",
   faturaKalemAdi: "", takmaAdi: "", muhasebeKodu: "", gtipKodu: "",
   barkod: "",
   alisFiyati: "", sonAlisFiyati: "", piyasaFiyati: "", satilabilirSonFiyat: "",
@@ -212,6 +213,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
           kategoriId: asStr(u.kategoriId), markaId: asStr(u.markaId), markaModelId: asStr(u.markaModelId),
           anaBirimId: asStr(u.anaBirimId), vergiOraniId: asStr(u.vergiOraniId),
           fiyatlarKdvDahilMi: Boolean(u.fiyatlarKdvDahilMi),
+          paraBirimiKod: asStr(v.paraBirimiKod) || "TRY",
           faturaKalemAdi: asStr(u.faturaKalemAdi), takmaAdi: asStr(u.takmaAdi),
           muhasebeKodu: asStr(u.muhasebeKodu), gtipKodu: asStr(u.gtipKodu),
           barkod: asStr(v.barkod),
@@ -296,6 +298,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
         ad: form.ad.trim(), tip: form.tip,
         anaBirimId: Number(form.anaBirimId), vergiOraniId: Number(form.vergiOraniId),
         fiyatlarKdvDahilMi: form.fiyatlarKdvDahilMi,
+        paraBirimiKod: form.paraBirimiKod,
         kod: form.kod.trim() || undefined,
         kategoriId: form.kategoriId ? Number(form.kategoriId) : null,
         markaId: form.markaId ? Number(form.markaId) : null,
@@ -532,16 +535,28 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
             {aktifTab === "fiyat" && (
               <>
                 <FormAlani.Bolum baslik={t("urun.bolum-fiyat")} altyazi={t("urun.bolum-fiyat-altyazi")}>
+                  <FormAlani.Secim
+                    etiket={t("urun.para-birimi")}
+                    deger={form.paraBirimiKod}
+                    secenekler={[
+                      { deger: "TRY", etiket: t("urun.para-try") },
+                      { deger: "USD", etiket: t("urun.para-usd") },
+                      { deger: "EUR", etiket: t("urun.para-eur") },
+                      { deger: "GBP", etiket: t("urun.para-gbp") },
+                    ]}
+                    onChange={(v) => alan("paraBirimiKod", v)}
+                    yardim={t("urun.para-birimi-yardim")}
+                  />
                   <div className="grid grid-cols-2 gap-3">
-                    <FormAlani.Sayi etiket={t("urun.alis-fiyati")} deger={form.alisFiyati} onChange={(v) => alan("alisFiyati", v)} step={0.01} min={0} placeholder="0.00" />
-                    <FormAlani.Sayi etiket={t("urun.son-alis-fiyati")} deger={form.sonAlisFiyati} onChange={(v) => alan("sonAlisFiyati", v)} step={0.01} min={0} yardim={t("urun.son-alis-yardim")} />
+                    <FormAlani.Sayi etiket={`${t("urun.alis-fiyati")} (${form.paraBirimiKod})`} deger={form.alisFiyati} onChange={(v) => alan("alisFiyati", v)} step={0.01} min={0} placeholder="0.00" />
+                    <FormAlani.Sayi etiket={`${t("urun.son-alis-fiyati")} (${form.paraBirimiKod})`} deger={form.sonAlisFiyati} onChange={(v) => alan("sonAlisFiyati", v)} step={0.01} min={0} yardim={t("urun.son-alis-yardim")} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <FormAlani.Sayi etiket={t("urun.piyasa-fiyati")} deger={form.piyasaFiyati} onChange={(v) => alan("piyasaFiyati", v)} step={0.01} min={0} yardim={t("urun.piyasa-yardim")} />
-                    <FormAlani.Sayi etiket={t("urun.satis-fiyati")} deger={form.satisFiyati} onChange={(v) => alan("satisFiyati", v)} step={0.01} min={0} yardim={t("urun.satis-yardim")} />
+                    <FormAlani.Sayi etiket={`${t("urun.piyasa-fiyati")} (${form.paraBirimiKod})`} deger={form.piyasaFiyati} onChange={(v) => alan("piyasaFiyati", v)} step={0.01} min={0} yardim={t("urun.piyasa-yardim")} />
+                    <FormAlani.Sayi etiket={`${t("urun.satis-fiyati")} (${form.paraBirimiKod})`} deger={form.satisFiyati} onChange={(v) => alan("satisFiyati", v)} step={0.01} min={0} yardim={t("urun.satis-yardim")} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <FormAlani.Sayi etiket={t("urun.satilabilir-son-fiyat")} deger={form.satilabilirSonFiyat} onChange={(v) => alan("satilabilirSonFiyat", v)} step={0.01} min={0} yardim={t("urun.satilabilir-son-fiyat-yardim")} />
+                    <FormAlani.Sayi etiket={`${t("urun.satilabilir-son-fiyat")} (${form.paraBirimiKod})`} deger={form.satilabilirSonFiyat} onChange={(v) => alan("satilabilirSonFiyat", v)} step={0.01} min={0} yardim={t("urun.satilabilir-son-fiyat-yardim")} />
                     <FormAlani.Sayi etiket={t("urun.kar-marji")} deger={form.karMarji} onChange={(v) => alan("karMarji", v)} step={0.01} placeholder="%" yardim={t("urun.kar-marji-yardim")} />
                   </div>
                 </FormAlani.Bolum>

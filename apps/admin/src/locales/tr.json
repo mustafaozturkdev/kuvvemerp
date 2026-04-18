@@ -398,6 +398,12 @@
 
     "fiyatlar-kdv-dahil": "Fiyatlar KDV Dahil mi?",
     "fiyatlar-kdv-dahil-aciklama": "Açık: girdiğiniz fiyatlar KDV içerir. Kapalı: KDV üste eklenir.",
+    "para-birimi": "Satış Para Birimi",
+    "para-birimi-yardim": "Bu ürünün tüm fiyatları seçilen para biriminde saklanır (ithal ürünler için USD/EUR, yerli için TRY vb.). Satışta müşteri/mağaza para birimine dönüştürülür.",
+    "para-try": "TRY — Türk Lirası (₺)",
+    "para-usd": "USD — Amerikan Doları ($)",
+    "para-eur": "EUR — Euro (€)",
+    "para-gbp": "GBP — İngiliz Sterlini (£)",
 
     "bolum-temel": "Temel Bilgiler",
     "bolum-isim-kod": "İsim & Kodlama",

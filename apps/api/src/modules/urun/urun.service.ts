@@ -256,6 +256,7 @@ export class UrunService {
         minimumStok:  girdi.minimumStok,
         olusturanKullaniciId: kullaniciId,
       };
+      if (girdi.paraBirimiKod) varyantVeri.paraBirimiKod = girdi.paraBirimiKod.toUpperCase();
       if (girdi.barkod !== undefined)              varyantVeri.barkod = girdi.barkod;
       if (girdi.alisFiyati !== undefined)          varyantVeri.alisFiyati = girdi.alisFiyati;
       if (girdi.sonAlisFiyati !== undefined)       varyantVeri.sonAlisFiyati = girdi.sonAlisFiyati;
@@ -390,6 +391,9 @@ export class UrunService {
       if (girdi.minimumStok !== undefined)         varyantData.minimumStok = girdi.minimumStok;
       if (girdi.maksimumStok !== undefined)        varyantData.maksimumStok = girdi.maksimumStok;
       if (girdi.vergiOraniId !== undefined)        varyantData.vergiOraniId = BigInt(girdi.vergiOraniId);
+      if (girdi.paraBirimiKod !== undefined && girdi.paraBirimiKod) {
+        varyantData.paraBirimiKod = girdi.paraBirimiKod.toUpperCase();
+      }
 
       if (Object.keys(varyantData).length > 0) {
         varyantData.guncelleyenKullaniciId = kullaniciId;
