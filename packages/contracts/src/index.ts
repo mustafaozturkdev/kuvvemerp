@@ -9,3 +9,4 @@ export * from './personel.js';
 export * from './hesap.js';
 export * from './marka.js';
 export * from './kategori.js';
+export * from './urun.js';

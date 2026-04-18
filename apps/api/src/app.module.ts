@@ -27,6 +27,7 @@ import { HesapModule } from './modules/hesap/hesap.module.js';
 import { MarkaModule } from './modules/marka/marka.module.js';
 import { MarkaModelModule } from './modules/marka-model/marka-model.module.js';
 import { KategoriModule } from './modules/kategori/kategori.module.js';
+import { UrunModule } from './modules/urun/urun.module.js';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { KategoriModule } from './modules/kategori/kategori.module.js';
     MarkaModule,
     MarkaModelModule,
     KategoriModule,
+    UrunModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
