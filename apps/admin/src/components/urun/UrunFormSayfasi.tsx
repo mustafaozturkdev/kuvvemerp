@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Loader2, ArrowLeft, Info, DollarSign, Package, Store, FileText, MoreHorizontal, AlertCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Info, Banknote, Package, Store, FileText, MoreHorizontal, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
@@ -384,7 +384,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
 
   const tablar: { id: Tab; label: string; ikon: React.ReactNode }[] = [
     { id: "temel", label: t("urun.tab-temel"), ikon: <Info className="h-4 w-4" /> },
-    { id: "fiyat", label: t("urun.tab-fiyat-stok"), ikon: <DollarSign className="h-4 w-4" /> },
+    { id: "fiyat", label: t("urun.tab-fiyat-stok"), ikon: <Banknote className="h-4 w-4" /> },
     { id: "fiziksel", label: t("urun.tab-fiziksel"), ikon: <Package className="h-4 w-4" /> },
     { id: "kanallar", label: t("urun.tab-kanallar"), ikon: <Store className="h-4 w-4" /> },
     { id: "icerik", label: t("urun.tab-icerik-seo"), ikon: <FileText className="h-4 w-4" /> },
@@ -667,6 +667,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                     baslik={form.seoBaslik || form.ad}
                     aciklama={form.seoAciklama || form.kisaAciklama}
                     slug={form.seoUrl || slugOlustur(form.ad)}
+                    urunId={urunId}
                   />
                 </FormAlani.Bolum>
               </>

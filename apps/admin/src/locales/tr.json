@@ -491,7 +491,7 @@
     "kargo-iade-placeholder": "Kargo süresi, iade koşulları...",
 
     "seo-url": "SEO URL (Slug)",
-    "seo-url-yardim": "Ürün detay sayfası URL'i. Boş bırakılırsa otomatik üretilir.",
+    "seo-url-yardim": "URL'e ürün ID otomatik eklenir (ör: erkek-gomlek-5396). Aynı isimde ürün olsa bile çakışmaz.",
     "seo-baslik": "SEO Başlık",
     "seo-aciklama": "SEO Meta Açıklama",
     "seo-anahtar-kelimeler": "Anahtar Kelimeler",
@@ -534,6 +534,7 @@
     "baslik-bos": "[Başlık boş — SEO başlık veya ürün adı buraya gelir]",
     "aciklama-bos": "[Açıklama boş — SEO açıklama veya kısa açıklama buraya gelir]",
     "slug-bos": "[slug-boş]",
+    "id-placeholder": "ID",
     "baslik-karakter": "Başlık: {{mevcut}}/{{max}} karakter",
     "aciklama-karakter": "Açıklama: {{mevcut}}/{{max}} karakter"
   },

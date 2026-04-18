@@ -5,6 +5,7 @@ interface SerpOnizlemeOzellik {
   baslik: string;
   aciklama: string;
   slug: string;
+  urunId?: string | null;  // Varsa URL sonuna -ID eklenir (e-ticaret patternī)
   alanAdi?: string;
   yolPrefix?: string; // "urun" gibi
 }
@@ -18,6 +19,7 @@ export function SerpOnizleme({
   baslik,
   aciklama,
   slug,
+  urunId,
   alanAdi = "kuvvem.com",
   yolPrefix = "urun",
 }: SerpOnizlemeOzellik) {
@@ -25,7 +27,11 @@ export function SerpOnizleme({
 
   const baslikMetin = baslik.trim() || t("serp.baslik-bos");
   const aciklamaMetin = aciklama.trim() || t("serp.aciklama-bos");
-  const slugMetin = slug.trim() || t("serp.slug-bos");
+  const slugSade = slug.trim();
+  // URL pattern: {slug}-{id}  (kullanici ID yeni urun ise otomatik olusacagi placeholder ile)
+  const slugMetin = slugSade
+    ? (urunId ? `${slugSade}-${urunId}` : `${slugSade}-${t("serp.id-placeholder")}`)
+    : t("serp.slug-bos");
 
   // Google SERP limitleri:
   //   Baslik ~60 karakter, aciklama ~160 karakter

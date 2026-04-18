@@ -380,7 +380,7 @@
     "kargo-iade-placeholder": "Shipping duration, return policy...",
 
     "seo-url": "SEO URL (Slug)",
-    "seo-url-yardim": "Product detail page URL. Auto-generated if left empty.",
+    "seo-url-yardim": "Product ID is auto-appended to URL (e.g. mens-shirt-5396). Safe against duplicate names.",
     "seo-baslik": "SEO Title",
     "seo-aciklama": "SEO Meta Description",
     "seo-anahtar-kelimeler": "Keywords",
@@ -423,6 +423,7 @@
     "baslik-bos": "[Title empty — SEO title or product name goes here]",
     "aciklama-bos": "[Description empty — SEO description or short description goes here]",
     "slug-bos": "[slug-empty]",
+    "id-placeholder": "ID",
     "baslik-karakter": "Title: {{mevcut}}/{{max}} characters",
     "aciklama-karakter": "Description: {{mevcut}}/{{max}} characters"
   }
