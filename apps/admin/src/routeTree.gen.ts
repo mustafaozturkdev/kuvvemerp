@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as GirisRouteImport } from './routes/giris'
 import { Route as YetkiliRouteImport } from './routes/_yetkili'
 import { Route as YetkiliIndexRouteImport } from './routes/_yetkili.index'
+import { Route as YetkiliUrunYeniRouteImport } from './routes/_yetkili.urun.yeni'
 import { Route as YetkiliUrunListeRouteImport } from './routes/_yetkili.urun.liste'
+import { Route as YetkiliUrunUrunIdRouteImport } from './routes/_yetkili.urun.$urunId'
 import { Route as YetkiliFinansOdemeAraclariRouteImport } from './routes/_yetkili.finans.odeme-araclari'
 import { Route as YetkiliCariListeRouteImport } from './routes/_yetkili.cari.liste'
 import { Route as YetkiliCariIceAktarRouteImport } from './routes/_yetkili.cari.ice-aktar'
@@ -41,9 +43,19 @@ const YetkiliIndexRoute = YetkiliIndexRouteImport.update({
   path: '/',
   getParentRoute: () => YetkiliRoute,
 } as any)
+const YetkiliUrunYeniRoute = YetkiliUrunYeniRouteImport.update({
+  id: '/urun/yeni',
+  path: '/urun/yeni',
+  getParentRoute: () => YetkiliRoute,
+} as any)
 const YetkiliUrunListeRoute = YetkiliUrunListeRouteImport.update({
   id: '/urun/liste',
   path: '/urun/liste',
+  getParentRoute: () => YetkiliRoute,
+} as any)
+const YetkiliUrunUrunIdRoute = YetkiliUrunUrunIdRouteImport.update({
+  id: '/urun/$urunId',
+  path: '/urun/$urunId',
   getParentRoute: () => YetkiliRoute,
 } as any)
 const YetkiliFinansOdemeAraclariRoute =
@@ -130,7 +142,9 @@ export interface FileRoutesByFullPath {
   '/cari/ice-aktar': typeof YetkiliCariIceAktarRoute
   '/cari/liste': typeof YetkiliCariListeRoute
   '/finans/odeme-araclari': typeof YetkiliFinansOdemeAraclariRoute
+  '/urun/$urunId': typeof YetkiliUrunUrunIdRoute
   '/urun/liste': typeof YetkiliUrunListeRoute
+  '/urun/yeni': typeof YetkiliUrunYeniRoute
   '/ayarlar/firma/sirket': typeof YetkiliAyarlarFirmaSirketRoute
   '/ayarlar/firma/subeler': typeof YetkiliAyarlarFirmaSubelerRoute
   '/urun/tanimlar/kategoriler': typeof YetkiliUrunTanimlarKategorilerRoute
@@ -148,7 +162,9 @@ export interface FileRoutesByTo {
   '/cari/ice-aktar': typeof YetkiliCariIceAktarRoute
   '/cari/liste': typeof YetkiliCariListeRoute
   '/finans/odeme-araclari': typeof YetkiliFinansOdemeAraclariRoute
+  '/urun/$urunId': typeof YetkiliUrunUrunIdRoute
   '/urun/liste': typeof YetkiliUrunListeRoute
+  '/urun/yeni': typeof YetkiliUrunYeniRoute
   '/ayarlar/firma/sirket': typeof YetkiliAyarlarFirmaSirketRoute
   '/ayarlar/firma/subeler': typeof YetkiliAyarlarFirmaSubelerRoute
   '/urun/tanimlar/kategoriler': typeof YetkiliUrunTanimlarKategorilerRoute
@@ -168,7 +184,9 @@ export interface FileRoutesById {
   '/_yetkili/cari/ice-aktar': typeof YetkiliCariIceAktarRoute
   '/_yetkili/cari/liste': typeof YetkiliCariListeRoute
   '/_yetkili/finans/odeme-araclari': typeof YetkiliFinansOdemeAraclariRoute
+  '/_yetkili/urun/$urunId': typeof YetkiliUrunUrunIdRoute
   '/_yetkili/urun/liste': typeof YetkiliUrunListeRoute
+  '/_yetkili/urun/yeni': typeof YetkiliUrunYeniRoute
   '/_yetkili/ayarlar/firma/sirket': typeof YetkiliAyarlarFirmaSirketRoute
   '/_yetkili/ayarlar/firma/subeler': typeof YetkiliAyarlarFirmaSubelerRoute
   '/_yetkili/urun/tanimlar/kategoriler': typeof YetkiliUrunTanimlarKategorilerRoute
@@ -188,7 +206,9 @@ export interface FileRouteTypes {
     | '/cari/ice-aktar'
     | '/cari/liste'
     | '/finans/odeme-araclari'
+    | '/urun/$urunId'
     | '/urun/liste'
+    | '/urun/yeni'
     | '/ayarlar/firma/sirket'
     | '/ayarlar/firma/subeler'
     | '/urun/tanimlar/kategoriler'
@@ -206,7 +226,9 @@ export interface FileRouteTypes {
     | '/cari/ice-aktar'
     | '/cari/liste'
     | '/finans/odeme-araclari'
+    | '/urun/$urunId'
     | '/urun/liste'
+    | '/urun/yeni'
     | '/ayarlar/firma/sirket'
     | '/ayarlar/firma/subeler'
     | '/urun/tanimlar/kategoriler'
@@ -225,7 +247,9 @@ export interface FileRouteTypes {
     | '/_yetkili/cari/ice-aktar'
     | '/_yetkili/cari/liste'
     | '/_yetkili/finans/odeme-araclari'
+    | '/_yetkili/urun/$urunId'
     | '/_yetkili/urun/liste'
+    | '/_yetkili/urun/yeni'
     | '/_yetkili/ayarlar/firma/sirket'
     | '/_yetkili/ayarlar/firma/subeler'
     | '/_yetkili/urun/tanimlar/kategoriler'
@@ -260,11 +284,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof YetkiliIndexRouteImport
       parentRoute: typeof YetkiliRoute
     }
+    '/_yetkili/urun/yeni': {
+      id: '/_yetkili/urun/yeni'
+      path: '/urun/yeni'
+      fullPath: '/urun/yeni'
+      preLoaderRoute: typeof YetkiliUrunYeniRouteImport
+      parentRoute: typeof YetkiliRoute
+    }
     '/_yetkili/urun/liste': {
       id: '/_yetkili/urun/liste'
       path: '/urun/liste'
       fullPath: '/urun/liste'
       preLoaderRoute: typeof YetkiliUrunListeRouteImport
+      parentRoute: typeof YetkiliRoute
+    }
+    '/_yetkili/urun/$urunId': {
+      id: '/_yetkili/urun/$urunId'
+      path: '/urun/$urunId'
+      fullPath: '/urun/$urunId'
+      preLoaderRoute: typeof YetkiliUrunUrunIdRouteImport
       parentRoute: typeof YetkiliRoute
     }
     '/_yetkili/finans/odeme-araclari': {
@@ -372,7 +410,9 @@ interface YetkiliRouteChildren {
   YetkiliCariIceAktarRoute: typeof YetkiliCariIceAktarRoute
   YetkiliCariListeRoute: typeof YetkiliCariListeRoute
   YetkiliFinansOdemeAraclariRoute: typeof YetkiliFinansOdemeAraclariRoute
+  YetkiliUrunUrunIdRoute: typeof YetkiliUrunUrunIdRoute
   YetkiliUrunListeRoute: typeof YetkiliUrunListeRoute
+  YetkiliUrunYeniRoute: typeof YetkiliUrunYeniRoute
   YetkiliAyarlarFirmaSirketRoute: typeof YetkiliAyarlarFirmaSirketRoute
   YetkiliAyarlarFirmaSubelerRoute: typeof YetkiliAyarlarFirmaSubelerRoute
   YetkiliUrunTanimlarKategorilerRoute: typeof YetkiliUrunTanimlarKategorilerRoute
@@ -390,7 +430,9 @@ const YetkiliRouteChildren: YetkiliRouteChildren = {
   YetkiliCariIceAktarRoute: YetkiliCariIceAktarRoute,
   YetkiliCariListeRoute: YetkiliCariListeRoute,
   YetkiliFinansOdemeAraclariRoute: YetkiliFinansOdemeAraclariRoute,
+  YetkiliUrunUrunIdRoute: YetkiliUrunUrunIdRoute,
   YetkiliUrunListeRoute: YetkiliUrunListeRoute,
+  YetkiliUrunYeniRoute: YetkiliUrunYeniRoute,
   YetkiliAyarlarFirmaSirketRoute: YetkiliAyarlarFirmaSirketRoute,
   YetkiliAyarlarFirmaSubelerRoute: YetkiliAyarlarFirmaSubelerRoute,
   YetkiliUrunTanimlarKategorilerRoute: YetkiliUrunTanimlarKategorilerRoute,

@@ -35,6 +35,10 @@
     "ana-sayfa": "Ana Sayfa",
     "zorunlu-alan": "Bu alan zorunlu",
     "zorunlu-alanlari-doldurun": "Lütfen zorunlu alanları doldurun",
+    "geri": "Geri",
+    "kaydedilmemis-degisiklik": "kaydedilmemiş değişiklikler var",
+    "dirty-baslik": "Kaydedilmemiş değişiklikler",
+    "dirty-mesaj": "Bu sayfadan ayrılırsan yaptığın değişiklikler kaybolacak. Emin misin?",
     "kod": "Kod",
     "ad": "Ad",
     "aciklama": "Açıklama",
@@ -504,7 +508,16 @@
     "abonelik-aktif": "Abonelik Ürünü",
     "abonelik-aciklama": "Periyodik olarak teslim edilen ürün (haftalık kahve, aylık vitamin vb.)",
     "aktif": "Ürün Aktif",
-    "aktif-aciklama": "Pasif edilen ürünler satış ekranlarında görünmez"
+    "aktif-aciklama": "Pasif edilen ürünler satış ekranlarında görünmez",
+
+    "tab-temel": "Temel Bilgiler",
+    "tab-fiyat-stok": "Fiyat & Stok",
+    "tab-fiziksel": "Fiziksel & Kargo",
+    "tab-kanallar": "Kanallar & Vitrin",
+    "tab-icerik-seo": "İçerik & SEO",
+    "tab-ek": "Ek Bilgiler",
+
+    "bolum-kargo": "Kargo Politikaları"
   },
   "konum": {
     "bolge": "Bölge",

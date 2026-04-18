@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
@@ -37,7 +37,6 @@ import { ParaTutar } from "@/components/ortak/ParaTutar";
 import { useOnay } from "@/components/ortak/OnayDialog";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { UrunFormDrawer } from "@/components/urun/UrunFormDrawer";
 
 export const Route = createFileRoute("/_yetkili/urun/liste")({
   component: UrunListe,
@@ -150,6 +149,7 @@ function kritikMi(u: Urun): boolean {
 function UrunListe() {
   const { t, i18n } = useTranslation();
   const onay = useOnay();
+  const navigate = useNavigate();
   const sayiFormat = new Intl.NumberFormat(i18n.language, { minimumFractionDigits: 2 });
 
   const [urunler, setUrunler] = useState<Urun[]>([]);
@@ -171,10 +171,6 @@ function UrunListe() {
 
   // Secim (toplu islem)
   const [seciliIds, setSeciliIds] = useState<Set<string>>(new Set());
-
-  // Drawer state
-  const [drawerAcik, setDrawerAcik] = useState(false);
-  const [duzenlenecekUrunId, setDuzenlenecekUrunId] = useState<string | null>(null);
 
   // Dropdown kaynaklari
   const [kategoriler, setKategoriler] = useState<KategoriSecim[]>([]);
@@ -313,15 +309,12 @@ function UrunListe() {
             <Upload />
             {t("urun.ice-aktar")}
           </Button>
-          <Button
-            onClick={() => {
-              setDuzenlenecekUrunId(null);
-              setDrawerAcik(true);
-            }}
-          >
-            <Plus />
-            {t("urun.yeni-ekle")}
-          </Button>
+          <Link to="/urun/yeni">
+            <Button>
+              <Plus />
+              {t("urun.yeni-ekle")}
+            </Button>
+          </Link>
         </div>
       </header>
 
@@ -621,8 +614,7 @@ function UrunListe() {
                             size="sm"
                             onClick={(e) => {
                               e.preventDefault();
-                              setDuzenlenecekUrunId(u.id);
-                              setDrawerAcik(true);
+                              navigate({ to: "/urun/$urunId", params: { urunId: u.id } });
                             }}
                             title={t("urun.duzenle")}
                           >
@@ -665,14 +657,6 @@ function UrunListe() {
           )}
         </CardContent>
       </Card>
-
-      {/* Ürün Form Drawer */}
-      <UrunFormDrawer
-        acik={drawerAcik}
-        kapat={() => setDrawerAcik(false)}
-        urunId={duzenlenecekUrunId}
-        onKaydet={() => void yukle()}
-      />
     </div>
   );
 }

@@ -35,6 +35,10 @@
     "ana-sayfa": "Home",
     "zorunlu-alan": "This field is required",
     "zorunlu-alanlari-doldurun": "Please fill in the required fields",
+    "geri": "Back",
+    "kaydedilmemis-degisiklik": "unsaved changes",
+    "dirty-baslik": "Unsaved Changes",
+    "dirty-mesaj": "You have unsaved changes. Leave this page and discard them?",
     "kod": "Code",
     "ad": "Name",
     "aciklama": "Description",
@@ -393,6 +397,15 @@
     "abonelik-aktif": "Subscription Product",
     "abonelik-aciklama": "Product delivered periodically (weekly coffee, monthly vitamins, etc.)",
     "aktif": "Product Active",
-    "aktif-aciklama": "Inactive products are hidden from sales screens"
+    "aktif-aciklama": "Inactive products are hidden from sales screens",
+
+    "tab-temel": "Basic Info",
+    "tab-fiyat-stok": "Price & Stock",
+    "tab-fiziksel": "Physical & Shipping",
+    "tab-kanallar": "Channels & Showcase",
+    "tab-icerik-seo": "Content & SEO",
+    "tab-ek": "Additional",
+
+    "bolum-kargo": "Shipping Policies"
   }
 }
