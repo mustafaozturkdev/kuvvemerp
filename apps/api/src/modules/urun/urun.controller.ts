@@ -37,6 +37,12 @@ import {
   VaryantOlusturSemasi,
   VaryantGuncelleGirdi,
   VaryantGuncelleSemasi,
+  StokSayimGirdi,
+  StokSayimSemasi,
+  StokDevirGirdi,
+  StokDevirSemasi,
+  OrtalamaMaliyetOverrideGirdi,
+  OrtalamaMaliyetOverrideSemasi,
 } from '@kuvvem/contracts';
 import { UrunService } from './urun.service.js';
 import { CurrentKullanici } from '../../common/decorators/kullanici.decorator.js';
@@ -463,5 +469,42 @@ export class UrunController {
       sayfa: sayfa ? Number(sayfa) : 1,
       boyut: boyut ? Number(boyut) : 50,
     });
+  }
+
+  // ──────────────────────────────────────────
+  // STOK OPERASYONLARI — Sayım, Devir, Maliyet Override
+  // ──────────────────────────────────────────
+
+  @Post(':id/stok/sayim')
+  @RequireYetki('urun.stok-ayarla')
+  async stokSayim(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(StokSayimSemasi)) girdi: StokSayimGirdi,
+  ) {
+    return this.urunService.stokSayim(req.prisma!, id, girdi, kullanici.id);
+  }
+
+  @Post(':id/stok/devir')
+  @RequireYetki('urun.stok-ayarla')
+  async stokDevir(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(StokDevirSemasi)) girdi: StokDevirGirdi,
+  ) {
+    return this.urunService.stokDevir(req.prisma!, id, girdi, kullanici.id);
+  }
+
+  @Patch(':id/stok/ortalama-maliyet')
+  @RequireYetki('urun.stok-ayarla')
+  async ortalamaMaliyetOverride(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(OrtalamaMaliyetOverrideSemasi)) girdi: OrtalamaMaliyetOverrideGirdi,
+  ) {
+    return this.urunService.ortalamaMaliyetOverride(req.prisma!, id, girdi, kullanici.id);
   }
 }

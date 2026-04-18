@@ -278,6 +278,58 @@ export const VaryantGuncelleSemasi = VaryantOlusturSemasi.partial().extend({
 export type VaryantGuncelleGirdi = z.infer<typeof VaryantGuncelleSemasi>;
 
 // ════════════════════════════════════════════════════════════
+// STOK OPERASYONLARI — Sayım, Devir, Maliyet Override
+// ════════════════════════════════════════════════════════════
+
+/**
+ * StokSayimSemasi — Hızlı sayım fişi.
+ * Bir mağazada birden fazla varyantın fiziksel miktarı girilir.
+ * Fark (sayilan - sistem) otomatik UrunStokHareket'e yazılır.
+ */
+export const StokSayimSemasi = z.object({
+  magazaId: z.coerce.number().int().positive(),
+  aciklama: z.string().max(500).optional().nullable(),
+  kalemler: z.array(
+    z.object({
+      urunVaryantId: z.coerce.number().int().positive(),
+      sayilanMiktar: z.coerce.number().nonnegative(),
+      aciklama: z.string().max(300).optional().nullable(),
+    }),
+  ).min(1, 'En az bir kalem gerekli'),
+});
+export type StokSayimGirdi = z.infer<typeof StokSayimSemasi>;
+
+/**
+ * StokDevirSemasi — Açılış bakiyesi ekleme (tek seferlik).
+ * Her kalem bir varyant × mağaza başlangıç miktarıdır.
+ */
+export const StokDevirSemasi = z.object({
+  aciklama: z.string().max(500).optional().nullable(),
+  kalemler: z.array(
+    z.object({
+      urunVaryantId: z.coerce.number().int().positive(),
+      magazaId: z.coerce.number().int().positive(),
+      miktar: z.coerce.number().positive(),
+      birimMaliyet: z.coerce.number().nonnegative().optional().nullable(),
+      paraBirimiKod: z.string().length(3).optional().nullable(),
+    }),
+  ).min(1),
+});
+export type StokDevirGirdi = z.infer<typeof StokDevirSemasi>;
+
+/**
+ * OrtalamaMaliyetOverrideSemasi — Kullanıcı ortalama maliyeti manuel düzeltir.
+ * audit log'a kaynak belge tipi 'maliyet_duzeltme' olarak yazılır.
+ */
+export const OrtalamaMaliyetOverrideSemasi = z.object({
+  urunVaryantId: z.coerce.number().int().positive(),
+  magazaId: z.coerce.number().int().positive(),
+  yeniMaliyet: z.coerce.number().nonnegative(),
+  aciklama: z.string().min(1, 'Düzeltme sebebi gerekli').max(500),
+});
+export type OrtalamaMaliyetOverrideGirdi = z.infer<typeof OrtalamaMaliyetOverrideSemasi>;
+
+// ════════════════════════════════════════════════════════════
 // TOPLU İŞLEMLER
 // ════════════════════════════════════════════════════════════
 

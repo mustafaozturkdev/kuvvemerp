@@ -11,6 +11,9 @@ import type {
   SecenekOlusturGirdi,
   VaryantOlusturGirdi,
   VaryantGuncelleGirdi,
+  StokSayimGirdi,
+  StokDevirGirdi,
+  OrtalamaMaliyetOverrideGirdi,
 } from '@kuvvem/contracts';
 import { TenantClient } from '@kuvvem/database';
 import { kodIleOlustur } from '../../common/helpers/kod-uretici.js';
@@ -1390,6 +1393,281 @@ export class UrunService {
     ]);
 
     return { veriler, meta: { toplam, sayfa, boyut } };
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // STOK OPERASYONLARI — Sayım, Devir, Maliyet Override
+  // ════════════════════════════════════════════════════════════
+
+  /**
+   * Sayım — bir mağazada N varyantın fiziksel sayısı. Fark → UrunStokHareket.
+   * Transaction: her kalem için (fark varsa) hareket + UrunStok günceller.
+   * hareketTipi='sayim' girisMiktar/cikisMiktar fark yönüne göre.
+   */
+  async stokSayim(
+    prisma: TenantClient,
+    urunId: number,
+    girdi: StokSayimGirdi,
+    kullaniciId: bigint,
+  ) {
+    await this.detay(prisma, urunId);
+
+    const magazaId = BigInt(girdi.magazaId);
+    const varyantIdler = girdi.kalemler.map((k) => BigInt(k.urunVaryantId));
+
+    // Hedef varyantlar bu ürüne mi ait?
+    const varyantlar = await prisma.urunVaryant.findMany({
+      where: { id: { in: varyantIdler }, urunId: BigInt(urunId), silindiMi: false },
+      select: { id: true, paraBirimiKod: true },
+    });
+    if (varyantlar.length !== varyantIdler.length) {
+      throw new BadRequestException({
+        kod: 'VARYANT_HATALI',
+        mesaj: 'Bazı varyantlar bu ürüne ait değil',
+      });
+    }
+    const paraBirimiMap = new Map(varyantlar.map((v) => [String(v.id), v.paraBirimiKod]));
+
+    return prisma.$transaction(async (tx: any) => {
+      const sonuc: Array<{
+        varyantId: string;
+        sistemMiktar: number;
+        sayilanMiktar: number;
+        fark: number;
+      }> = [];
+
+      for (const kalem of girdi.kalemler) {
+        const varyantId = BigInt(kalem.urunVaryantId);
+
+        // Mevcut UrunStok — yoksa sıfırdan başla
+        const mevcut = await tx.urunStok.findUnique({
+          where: { urunVaryantId_magazaId: { urunVaryantId: varyantId, magazaId } },
+        });
+        const sistemMiktar = mevcut ? Number(mevcut.mevcutMiktar) : 0;
+        const sayilan = kalem.sayilanMiktar;
+        const fark = sayilan - sistemMiktar;
+
+        // Fark yoksa hareket yazma, sadece sonSayimTarihi güncelle
+        if (fark === 0) {
+          if (mevcut) {
+            await tx.urunStok.update({
+              where: { id: mevcut.id },
+              data: { sonSayimTarihi: new Date() },
+            });
+          } else {
+            await tx.urunStok.create({
+              data: {
+                urunVaryantId: varyantId,
+                magazaId,
+                mevcutMiktar: 0,
+                sonSayimTarihi: new Date(),
+              },
+            });
+          }
+          sonuc.push({ varyantId: String(varyantId), sistemMiktar, sayilanMiktar: sayilan, fark: 0 });
+          continue;
+        }
+
+        // UrunStok upsert
+        if (mevcut) {
+          await tx.urunStok.update({
+            where: { id: mevcut.id },
+            data: {
+              mevcutMiktar: sayilan,
+              sonSayimTarihi: new Date(),
+            },
+          });
+        } else {
+          await tx.urunStok.create({
+            data: {
+              urunVaryantId: varyantId,
+              magazaId,
+              mevcutMiktar: sayilan,
+              sonSayimTarihi: new Date(),
+            },
+          });
+        }
+
+        // Stok hareket kaydı — fark pozitif → giris, negatif → cikis
+        await tx.urunStokHareket.create({
+          data: {
+            urunVaryantId: varyantId,
+            magazaId,
+            hareketTipi: 'sayim',
+            girisMiktar: fark > 0 ? fark : 0,
+            cikisMiktar: fark < 0 ? Math.abs(fark) : 0,
+            oncesiMiktar: sistemMiktar,
+            sonrasiMiktar: sayilan,
+            paraBirimiKod: paraBirimiMap.get(String(varyantId)) ?? 'TRY',
+            kaynakBelgeTipi: 'sayim',
+            aciklama: kalem.aciklama ?? girdi.aciklama ?? null,
+            kullaniciId,
+          },
+        });
+
+        sonuc.push({ varyantId: String(varyantId), sistemMiktar, sayilanMiktar: sayilan, fark });
+      }
+
+      return {
+        kayitliKalem: sonuc.length,
+        farkliKalem: sonuc.filter((s) => s.fark !== 0).length,
+        toplamArtis: sonuc.reduce((t, s) => (s.fark > 0 ? t + s.fark : t), 0),
+        toplamAzalis: sonuc.reduce((t, s) => (s.fark < 0 ? t + Math.abs(s.fark) : t), 0),
+        kalemler: sonuc,
+      };
+    });
+  }
+
+  /**
+   * Devir / Açılış bakiyesi — sistem kurulumunda bir kez girilir.
+   * Her kalem: varyant × mağaza için başlangıç miktarı + birim maliyet.
+   * hareketTipi='devir' + UrunStok.mevcutMiktar + ortalamaMaliyet başlat.
+   */
+  async stokDevir(
+    prisma: TenantClient,
+    urunId: number,
+    girdi: StokDevirGirdi,
+    kullaniciId: bigint,
+  ) {
+    await this.detay(prisma, urunId);
+
+    const varyantIdler = Array.from(new Set(girdi.kalemler.map((k) => BigInt(k.urunVaryantId))));
+    const varyantlar = await prisma.urunVaryant.findMany({
+      where: { id: { in: varyantIdler }, urunId: BigInt(urunId), silindiMi: false },
+      select: { id: true, paraBirimiKod: true },
+    });
+    if (varyantlar.length !== varyantIdler.length) {
+      throw new BadRequestException({ kod: 'VARYANT_HATALI', mesaj: 'Bazı varyantlar bu ürüne ait değil' });
+    }
+    const paraBirimiMap = new Map(varyantlar.map((v) => [String(v.id), v.paraBirimiKod]));
+
+    return prisma.$transaction(async (tx: any) => {
+      let eklenenKalem = 0;
+      let atlananKalem = 0;
+
+      for (const kalem of girdi.kalemler) {
+        const varyantId = BigInt(kalem.urunVaryantId);
+        const magazaId = BigInt(kalem.magazaId);
+        const paraBirimi = kalem.paraBirimiKod ?? paraBirimiMap.get(String(varyantId)) ?? 'TRY';
+
+        const mevcut = await tx.urunStok.findUnique({
+          where: { urunVaryantId_magazaId: { urunVaryantId: varyantId, magazaId } },
+        });
+        // Devir sadece başlangıç için: eğer stok mevcut ve mevcutMiktar > 0 ise atla
+        if (mevcut && Number(mevcut.mevcutMiktar) > 0) {
+          atlananKalem++;
+          continue;
+        }
+
+        const birimMaliyet = kalem.birimMaliyet ?? 0;
+
+        if (mevcut) {
+          await tx.urunStok.update({
+            where: { id: mevcut.id },
+            data: {
+              mevcutMiktar: kalem.miktar,
+              ortalamaMaliyet: birimMaliyet,
+              sonGirisTarihi: new Date(),
+            },
+          });
+        } else {
+          await tx.urunStok.create({
+            data: {
+              urunVaryantId: varyantId,
+              magazaId,
+              mevcutMiktar: kalem.miktar,
+              ortalamaMaliyet: birimMaliyet,
+              sonGirisTarihi: new Date(),
+            },
+          });
+        }
+
+        await tx.urunStokHareket.create({
+          data: {
+            urunVaryantId: varyantId,
+            magazaId,
+            hareketTipi: 'devir',
+            girisMiktar: kalem.miktar,
+            cikisMiktar: 0,
+            oncesiMiktar: 0,
+            sonrasiMiktar: kalem.miktar,
+            birimMaliyet: birimMaliyet || null,
+            toplamMaliyet: birimMaliyet ? birimMaliyet * kalem.miktar : null,
+            paraBirimiKod: paraBirimi,
+            kaynakBelgeTipi: 'devir',
+            aciklama: girdi.aciklama ?? 'Açılış bakiyesi',
+            kullaniciId,
+          },
+        });
+
+        eklenenKalem++;
+      }
+
+      return { eklenenKalem, atlananKalem };
+    });
+  }
+
+  /**
+   * Ortalama maliyet override — kullanıcı manuel ortalama maliyeti düzeltir.
+   * Hareket kaydı açıklama ile yazılır, UrunStok.ortalamaMaliyet güncellenir.
+   * Fiziksel stok değişmez, sadece maliyet.
+   */
+  async ortalamaMaliyetOverride(
+    prisma: TenantClient,
+    urunId: number,
+    girdi: OrtalamaMaliyetOverrideGirdi,
+    kullaniciId: bigint,
+  ) {
+    await this.detay(prisma, urunId);
+
+    const varyantId = BigInt(girdi.urunVaryantId);
+    const magazaId = BigInt(girdi.magazaId);
+
+    const varyant = await prisma.urunVaryant.findFirst({
+      where: { id: varyantId, urunId: BigInt(urunId), silindiMi: false },
+      select: { paraBirimiKod: true },
+    });
+    if (!varyant) {
+      throw new NotFoundException({ kod: 'VARYANT_BULUNAMADI', mesaj: 'Varyant bulunamadı' });
+    }
+
+    const mevcut = await prisma.urunStok.findUnique({
+      where: { urunVaryantId_magazaId: { urunVaryantId: varyantId, magazaId } },
+    });
+    if (!mevcut) {
+      throw new BadRequestException({
+        kod: 'STOK_YOK',
+        mesaj: 'Bu mağazada bu varyant için stok kaydı yok — önce devir veya alış ile oluşturun',
+      });
+    }
+
+    const eskiMaliyet = Number(mevcut.ortalamaMaliyet);
+
+    return prisma.$transaction(async (tx: any) => {
+      await tx.urunStok.update({
+        where: { id: mevcut.id },
+        data: { ortalamaMaliyet: girdi.yeniMaliyet },
+      });
+
+      await tx.urunStokHareket.create({
+        data: {
+          urunVaryantId: varyantId,
+          magazaId,
+          hareketTipi: 'maliyet_duzeltme',
+          girisMiktar: 0,
+          cikisMiktar: 0,
+          oncesiMiktar: mevcut.mevcutMiktar,
+          sonrasiMiktar: mevcut.mevcutMiktar,
+          birimMaliyet: girdi.yeniMaliyet,
+          paraBirimiKod: varyant.paraBirimiKod,
+          kaynakBelgeTipi: 'maliyet_duzeltme',
+          aciklama: `Ort. maliyet: ${eskiMaliyet} → ${girdi.yeniMaliyet}. Sebep: ${girdi.aciklama}`,
+          kullaniciId,
+        },
+      });
+
+      return { eskiMaliyet, yeniMaliyet: girdi.yeniMaliyet };
+    });
   }
 
   // ════════════════════════════════════════════════════════════

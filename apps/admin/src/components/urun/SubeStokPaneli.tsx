@@ -12,7 +12,9 @@ import {
   TrendingUp,
   TrendingDown,
   Info,
+  ClipboardCheck,
 } from "lucide-react";
+import { SayimWizardModal } from "@/components/urun/SayimWizardModal";
 import { useTranslation } from "react-i18next";
 import { apiIstemci } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
@@ -121,6 +123,9 @@ export function SubeStokPaneli({ urunId }: SubeStokPaneliOzellik) {
     magazaAd: string;
   } | null>(null);
 
+  // Sayım modal
+  const [sayimAcik, setSayimAcik] = useState(false);
+
   const yukle = useCallback(async () => {
     if (!urunId) return;
     setYukleniyor(true);
@@ -189,13 +194,20 @@ export function SubeStokPaneli({ urunId }: SubeStokPaneliOzellik) {
 
   return (
     <div className="space-y-4">
-      {/* Bilgi kartı: Stok disiplini */}
-      <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 md:p-4 flex items-start gap-3">
+      {/* Bilgi kartı + aksiyonlar */}
+      <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 md:p-4 flex flex-col sm:flex-row items-start gap-3">
         <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
-        <div className="text-sm text-metin-ikinci">
+        <div className="text-sm text-metin-ikinci flex-1">
           <p className="font-medium text-metin mb-1">{t("urun.stok-disiplini-baslik")}</p>
           <p>{t("urun.stok-disiplini-aciklama")}</p>
         </div>
+        <Button
+          onClick={() => setSayimAcik(true)}
+          className="w-full sm:w-auto shrink-0 min-h-[44px] sm:min-h-[36px]"
+        >
+          <ClipboardCheck className="h-4 w-4" />
+          {t("urun.sayim-baslat")}
+        </Button>
       </div>
 
       {/* Varyant listesi — her biri collapsible */}
@@ -368,6 +380,14 @@ export function SubeStokPaneli({ urunId }: SubeStokPaneliOzellik) {
           kapat={() => setHareketDrawer(null)}
         />
       )}
+
+      {/* Sayım Wizard */}
+      <SayimWizardModal
+        acik={sayimAcik}
+        kapat={() => setSayimAcik(false)}
+        urunId={urunId}
+        onKaydet={() => void yukle()}
+      />
     </div>
   );
 }
