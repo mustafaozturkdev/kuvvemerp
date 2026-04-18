@@ -185,4 +185,84 @@ export class UrunController {
   ): Promise<void> {
     await this.urunService.varyantBarkodSil(req.prisma!, varyantId, barkodId);
   }
+
+  // ──────────────────────────────────────────
+  // RESİM YÖNETİMİ
+  // ──────────────────────────────────────────
+
+  @Get(':id/resim')
+  @RequireYetki('urun.goruntule')
+  async resimleriListele(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.urunService.resimleriListele(req.prisma!, id);
+  }
+
+  @Post(':id/resim')
+  @RequireYetki('urun.resim-yonet')
+  async resimYukle(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const data = await (req as any).file();
+    if (!data) {
+      throw new BadRequestException({
+        kod: 'DOSYA_BULUNAMADI',
+        mesaj: 'Lütfen bir resim dosyası seçin',
+      });
+    }
+    const buffer = await data.toBuffer();
+    const tenantSlug = (req as any).tenant?.slug ?? 'genel';
+
+    const altText = data.fields?.altText?.value as string | undefined;
+    const varyantIdStr = data.fields?.varyantId?.value as string | undefined;
+    const varyantId = varyantIdStr ? Number(varyantIdStr) : undefined;
+
+    return this.urunService.resimYukle(
+      req.prisma!,
+      id,
+      { buffer, filename: data.filename, mimetype: data.mimetype },
+      tenantSlug,
+      kullanici.id,
+      { altText, varyantId },
+    );
+  }
+
+  @Patch(':id/resim/:resimId/ana')
+  @RequireYetki('urun.resim-yonet')
+  async resimAnaYap(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('resimId', ParseIntPipe) resimId: number,
+  ) {
+    return this.urunService.resimAnaYap(req.prisma!, id, resimId, kullanici.id);
+  }
+
+  @Patch(':id/resim-siralama')
+  @RequireYetki('urun.resim-yonet')
+  async resimSiralama(
+    @Req() req: FastifyRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { resimIds: number[] },
+  ) {
+    if (!Array.isArray(body?.resimIds)) {
+      throw new BadRequestException({ kod: 'GECERSIZ_ISTEK', mesaj: 'resimIds dizisi gerekli' });
+    }
+    return this.urunService.resimSiralama(req.prisma!, id, body.resimIds);
+  }
+
+  @Delete(':id/resim/:resimId')
+  @RequireYetki('urun.resim-yonet')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resimSil(
+    @Req() req: FastifyRequest,
+    @CurrentKullanici() kullanici: KullaniciBilgi,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('resimId', ParseIntPipe) resimId: number,
+  ): Promise<void> {
+    await this.urunService.resimSil(req.prisma!, id, resimId, kullanici.id);
+  }
 }
