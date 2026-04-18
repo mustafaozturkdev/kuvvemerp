@@ -244,9 +244,9 @@ export function ResimGalerisi({ urunId, urunAdi }: ResimGalerisiOzellik) {
                 />
               </div>
 
-              {/* Aksiyon overlay */}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                <div className="flex gap-1">
+              {/* Aksiyon overlay — mobilde her zaman görünür, md+ hover */}
+              <div className="absolute inset-0 bg-black/30 md:bg-black/0 md:group-hover:bg-black/50 transition-colors flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100">
+                <div className="flex flex-wrap gap-1 justify-center max-w-full p-1">
                   {!resim.anaResimMi && (
                     <Button
                       size="sm"

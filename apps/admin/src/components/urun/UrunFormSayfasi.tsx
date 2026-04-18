@@ -398,30 +398,30 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
 
   return (
     <div className="flex flex-col gap-4 min-h-full">
-      {/* ─── Sticky Başlık ─── */}
-      <header className="flex items-center justify-between gap-4 bg-arkaplan border-b border-kenarlik -mx-6 -mt-6 px-6 py-4 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={geriDon}>
+      {/* ─── Sticky Başlık — mobilde compact ─── */}
+      <header className="flex items-center justify-between gap-2 md:gap-4 bg-arkaplan border-b border-kenarlik -mx-4 md:-mx-6 -mt-4 md:-mt-6 px-4 md:px-6 py-3 md:py-4 sticky top-0 z-10">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+          <Button variant="ghost" size="sm" onClick={geriDon} className="shrink-0" title={t("genel.geri")}>
             <ArrowLeft className="h-4 w-4" />
-            {t("genel.geri")}
+            <span className="hidden md:inline">{t("genel.geri")}</span>
           </Button>
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight text-metin">
+          <div className="min-w-0">
+            <h1 className="text-base md:text-xl font-semibold tracking-tight text-metin truncate">
               {duzenlemeModu ? t("urun.duzenle") : t("urun.yeni-kayit")}
             </h1>
             {duzenlemeModu && form.kod && (
-              <p className="text-xs text-metin-pasif font-mono">{form.kod}</p>
+              <p className="text-[11px] md:text-xs text-metin-pasif font-mono truncate">{form.kod}</p>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
           {dirty && (
-            <span className="text-xs text-metin-pasif italic">{t("genel.kaydedilmemis-degisiklik")}</span>
+            <span className="hidden lg:inline text-xs text-metin-pasif italic">{t("genel.kaydedilmemis-degisiklik")}</span>
           )}
-          <Button variant="outline" onClick={geriDon} disabled={kaydediyor}>
+          <Button variant="outline" size="sm" onClick={geriDon} disabled={kaydediyor} className="hidden md:inline-flex">
             {t("genel.iptal")}
           </Button>
-          <Button onClick={kaydet} disabled={kaydediyor || yukleniyor}>
+          <Button size="sm" onClick={kaydet} disabled={kaydediyor || yukleniyor}>
             {kaydediyor && <Loader2 className="h-4 w-4 animate-spin" />}
             {duzenlemeModu ? t("genel.guncelle") : t("genel.kaydet")}
           </Button>
@@ -433,30 +433,30 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
           <Loader2 className="h-6 w-6 animate-spin text-metin-pasif" />
         </div>
       ) : (
-        <div className="grid grid-cols-[220px_1fr] gap-6 flex-1">
-          {/* ─── Sol Tab Nav ─── */}
-          <nav className="flex flex-col gap-1 sticky top-20 self-start">
+        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4 md:gap-6 flex-1">
+          {/* ─── Tab Nav — mobilde yatay scroll, md+ sol sidebar ─── */}
+          <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible -mx-4 md:mx-0 px-4 md:px-0 pb-1 md:pb-0 md:sticky md:top-20 md:self-start border-b md:border-b-0 border-kenarlik">
             {tablar.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setAktifTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-left transition-colors",
+                  "flex items-center gap-2 md:gap-2.5 px-3 py-2 md:py-2 rounded-md text-sm whitespace-nowrap md:whitespace-normal text-left transition-colors shrink-0 md:shrink",
                   aktifTab === tab.id
                     ? "bg-birincil/10 text-birincil font-medium"
                     : "text-metin-ikinci hover:bg-yuzey hover:text-metin",
                 )}
               >
                 {tab.ikon}
-                <span className="flex-1">{tab.label}</span>
+                <span className="md:flex-1">{tab.label}</span>
                 {tabZorunluEksik[tab.id] && <AlertCircle className="h-3.5 w-3.5 text-red-500" />}
               </button>
             ))}
           </nav>
 
           {/* ─── İçerik ─── */}
-          <Card className="p-6 space-y-6">
+          <Card className="p-4 md:p-6 space-y-6">
             {/* ══════ TAB 1: TEMEL ══════ */}
             {aktifTab === "temel" && (
               <>
@@ -469,7 +469,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                     placeholder={t("urun.ad-placeholder")}
                     hata={hatalar.ad}
                   />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Metin
                       etiket={t("urun.kod")}
                       deger={form.kod}
@@ -486,7 +486,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                       yardim={t("urun.tip-yardim")}
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <KategoriSelect
                       mod="tekli"
                       etiket={t("urun.kategori")}
@@ -511,7 +511,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                   {markaModelleri.length > 0 && (
                     <FormAlani.Secim etiket={t("urun.model")} deger={form.markaModelId} secenekler={markaModelSec} onChange={(v) => alan("markaModelId", v)} />
                   )}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Secim etiket={t("urun.birim")} zorunlu deger={form.anaBirimId} secenekler={[{ deger: "", etiket: t("urun.birim-sec") }, ...birimSec]} onChange={(v) => alan("anaBirimId", v)} hata={hatalar.anaBirimId} />
                     <FormAlani.Secim etiket={t("urun.vergi-orani")} zorunlu deger={form.vergiOraniId} secenekler={[{ deger: "", etiket: t("urun.vergi-sec") }, ...vergiSec]} onChange={(v) => alan("vergiOraniId", v)} hata={hatalar.vergiOraniId} />
                   </div>
@@ -520,7 +520,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
 
                 <FormAlani.Bolum baslik={t("urun.bolum-isim-kod")} altyazi={t("urun.bolum-isim-altyazi")}>
                   <FormAlani.Metin etiket={t("urun.fatura-kalem-adi")} deger={form.faturaKalemAdi} onChange={(v) => alan("faturaKalemAdi", v)} placeholder={form.ad} yardim={t("urun.fatura-kalem-yardim")} />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Metin etiket={t("urun.takma-ad")} deger={form.takmaAdi} onChange={(v) => alan("takmaAdi", v)} yardim={t("urun.takma-ad-yardim")} />
                     <FormAlani.Metin etiket={t("urun.muhasebe-kodu")} deger={form.muhasebeKodu} onChange={(v) => alan("muhasebeKodu", v)} placeholder="153.01.001" />
                   </div>
@@ -549,15 +549,15 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                     onChange={(v) => alan("paraBirimiKod", v)}
                     yardim={t("urun.para-birimi-yardim")}
                   />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Sayi etiket={`${t("urun.alis-fiyati")} (${form.paraBirimiKod})`} deger={form.alisFiyati} onChange={(v) => alan("alisFiyati", v)} step={0.01} min={0} placeholder="0.00" />
                     <FormAlani.Sayi etiket={`${t("urun.son-alis-fiyati")} (${form.paraBirimiKod})`} deger={form.sonAlisFiyati} onChange={(v) => alan("sonAlisFiyati", v)} step={0.01} min={0} yardim={t("urun.son-alis-yardim")} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Sayi etiket={`${t("urun.piyasa-fiyati")} (${form.paraBirimiKod})`} deger={form.piyasaFiyati} onChange={(v) => alan("piyasaFiyati", v)} step={0.01} min={0} yardim={t("urun.piyasa-yardim")} />
                     <FormAlani.Sayi etiket={`${t("urun.satis-fiyati")} (${form.paraBirimiKod})`} deger={form.satisFiyati} onChange={(v) => alan("satisFiyati", v)} step={0.01} min={0} yardim={t("urun.satis-yardim")} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Sayi etiket={`${t("urun.satilabilir-son-fiyat")} (${form.paraBirimiKod})`} deger={form.satilabilirSonFiyat} onChange={(v) => alan("satilabilirSonFiyat", v)} step={0.01} min={0} yardim={t("urun.satilabilir-son-fiyat-yardim")} />
                     <FormAlani.Sayi etiket={t("urun.kar-marji")} deger={form.karMarji} onChange={(v) => alan("karMarji", v)} step={0.01} placeholder="%" yardim={t("urun.kar-marji-yardim")} />
                   </div>
@@ -567,11 +567,11 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                   <FormAlani.Onay etiket={t("urun.stok-takibi")} aciklama={t("urun.stok-takibi-aciklama")} deger={form.stokTakibi} onChange={(v) => alan("stokTakibi", v)} />
                   {form.stokTakibi && (
                     <>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <FormAlani.Sayi etiket={t("urun.kritik-stok")} deger={form.kritikStok} onChange={(v) => alan("kritikStok", v)} step={1} min={0} yardim={t("urun.kritik-stok-yardim")} />
                         <FormAlani.Sayi etiket={t("urun.minimum-stok")} deger={form.minimumStok} onChange={(v) => alan("minimumStok", v)} step={1} min={0} />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <FormAlani.Onay etiket={t("urun.seri-no-takibi")} deger={form.seriNoTakibi} onChange={(v) => alan("seriNoTakibi", v)} />
                         <FormAlani.Onay etiket={t("urun.lot-takibi")} deger={form.lotTakibi} onChange={(v) => alan("lotTakibi", v)} />
                       </div>
@@ -580,12 +580,12 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                 </FormAlani.Bolum>
 
                 <FormAlani.Bolum baslik={t("urun.bolum-sepet")} altyazi={t("urun.bolum-sepet-altyazi")}>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Onay etiket={t("urun.iskonto-uygulanir")} deger={form.iskontoUygulanirMi} onChange={(v) => alan("iskontoUygulanirMi", v)} />
                     <FormAlani.Onay etiket={t("urun.puan-kazandirir")} deger={form.puanKazandirirMi} onChange={(v) => alan("puanKazandirirMi", v)} />
                   </div>
                   <FormAlani.Sayi etiket={t("urun.minimum-satis-miktar")} deger={form.minimumSatisMiktar} onChange={(v) => alan("minimumSatisMiktar", v)} step={0.01} min={0.01} yardim={t("urun.minimum-satis-yardim")} />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Sayi etiket={t("urun.sepet-indirim-eticaret")} deger={form.sepetIndirimEticaret} onChange={(v) => alan("sepetIndirimEticaret", v)} step={0.01} min={0} max={100} placeholder="%" />
                     <FormAlani.Sayi etiket={t("urun.sepet-indirim-b2b")} deger={form.sepetIndirimB2b} onChange={(v) => alan("sepetIndirimB2b", v)} step={0.01} min={0} max={100} placeholder="%" />
                   </div>
@@ -597,13 +597,13 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
             {aktifTab === "fiziksel" && (
               <>
                 <FormAlani.Bolum baslik={t("urun.bolum-fiziksel")} altyazi={t("urun.bolum-fiziksel-altyazi")}>
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <FormAlani.Sayi etiket={t("urun.agirlik-gr")} deger={form.agirlikGr} onChange={(v) => alan("agirlikGr", v)} step={1} min={0} />
                     <FormAlani.Sayi etiket={t("urun.en-cm")} deger={form.enCm} onChange={(v) => alan("enCm", v)} step={0.1} min={0} />
                     <FormAlani.Sayi etiket={t("urun.boy-cm")} deger={form.boyCm} onChange={(v) => alan("boyCm", v)} step={0.1} min={0} />
                     <FormAlani.Sayi etiket={t("urun.yukseklik-cm")} deger={form.yukseklikCm} onChange={(v) => alan("yukseklikCm", v)} step={0.1} min={0} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Sayi etiket={t("urun.desi1")} deger={form.desi1} onChange={(v) => alan("desi1", v)} step={0.01} min={0} yardim={t("urun.desi-yardim")} />
                     <FormAlani.Sayi etiket={t("urun.desi2")} deger={form.desi2} onChange={(v) => alan("desi2", v)} step={0.01} min={0} />
                   </div>
@@ -611,7 +611,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
 
                 <FormAlani.Bolum baslik={t("urun.bolum-kargo")}>
                   <FormAlani.Onay etiket={t("urun.ucretsiz-kargo")} deger={form.ucretsizKargo} onChange={(v) => alan("ucretsizKargo", v)} />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Sayi etiket={t("urun.tahmini-teslim-gun")} deger={form.tahminiTeslimSuresiGun} onChange={(v) => alan("tahminiTeslimSuresiGun", v)} step={1} min={0} />
                     <FormAlani.Sayi etiket={t("urun.garanti-ay")} deger={form.garantiAy} onChange={(v) => alan("garantiAy", v)} step={1} min={0} placeholder={t("urun.garanti-yok")} />
                   </div>
@@ -635,11 +635,11 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                 </FormAlani.Bolum>
 
                 <FormAlani.Bolum baslik={t("urun.bolum-vitrin")}>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Onay etiket={t("urun.vitrinde-goster")} deger={form.vitrindeGoster} onChange={(v) => alan("vitrindeGoster", v)} />
                     <FormAlani.Sayi etiket={t("urun.vitrin-sira")} deger={form.vitrinSira} onChange={(v) => alan("vitrinSira", v)} step={1} min={0} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Onay etiket={t("urun.yeni-urun")} deger={form.yeniUrun} onChange={(v) => alan("yeniUrun", v)} />
                     <FormAlani.Onay etiket={t("urun.firsat-urun")} deger={form.firsatUrun} onChange={(v) => alan("firsatUrun", v)} />
                   </div>
@@ -701,7 +701,7 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
             {aktifTab === "ek" && (
               <>
                 <FormAlani.Bolum baslik={t("urun.bolum-ek-bilgi")}>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Metin etiket={t("urun.menshei-ulke")} deger={form.mensheiUlkeKodu} onChange={(v) => alan("mensheiUlkeKodu", v.toUpperCase())} placeholder="TR" maxLength={2} yardim={t("urun.menshei-yardim")} />
                     <FormAlani.Metin etiket={t("urun.uretici")} deger={form.uretici} onChange={(v) => alan("uretici", v)} />
                   </div>
@@ -710,11 +710,11 @@ export function UrunFormSayfasi({ urunId }: UrunFormSayfasiOzellik) {
                 </FormAlani.Bolum>
 
                 <FormAlani.Bolum baslik={t("urun.bolum-ozel-alanlar")} altyazi={t("urun.bolum-ozel-altyazi")}>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Metin etiket={t("urun.ozel-alan", { n: 1 })} deger={form.ozelAlan1} onChange={(v) => alan("ozelAlan1", v)} />
                     <FormAlani.Metin etiket={t("urun.ozel-alan", { n: 2 })} deger={form.ozelAlan2} onChange={(v) => alan("ozelAlan2", v)} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <FormAlani.Metin etiket={t("urun.ozel-alan", { n: 3 })} deger={form.ozelAlan3} onChange={(v) => alan("ozelAlan3", v)} />
                     <FormAlani.Metin etiket={t("urun.ozel-alan", { n: 4 })} deger={form.ozelAlan4} onChange={(v) => alan("ozelAlan4", v)} />
                   </div>
